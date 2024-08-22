@@ -39,7 +39,7 @@ void setup()
 {
     logs.begin();
     delay(1000);
-    logs.info(LOG_MOD_MAIN, F("Starting controller..."));
+    logs.info(LOG_MOD_MAIN, F("\nStarting controller..."));
     if (!configs.begin()) return;
     plc.begin();
     wifi.begin();

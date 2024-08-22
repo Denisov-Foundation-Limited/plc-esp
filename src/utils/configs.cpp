@@ -13,7 +13,6 @@
 #include "boards/boards.hpp"
 
 #include <LittleFS.h>
-#include <ArduinoJson.h>
 #include <SD.h>
 
 /*********************************************************************/
@@ -21,6 +20,27 @@
 /*                          PRIVATE FUNCTIONS                        */
 /*                                                                   */
 /*********************************************************************/
+
+bool Configs::printFile(const String &name)
+{
+    File    file;
+
+    if (_src == CFG_SRC_SD) {
+        file = SD.open(name, "r");
+    } else {
+        file = LittleFS.open(name, "r");
+    }
+    if (!file) {
+        return false;
+    }
+    while (file.available()) {
+        Serial.print(file.readString());
+    }
+    Serial.println("");
+    file.close();  
+
+    return true;
+}
 
 bool Configs::initDevice()
 {
@@ -133,23 +153,38 @@ bool Configs::initDevice()
     return true;
 }
 
-bool Configs::readBoardConfigs(ConfigsSource src)
+bool Configs::readAll(ConfigsSource src)
 {
     JsonDocument    doc;
     File            file;
+    GpioPin         *pin = nullptr;
+
+    _src = src;
+
+    /*
+     * Loading configs from file
+     */
 
     if (src == CFG_SRC_SD) {
-        file = SD.open(CONFIGS_BOARD_FILE, "r");
+        file = SD.open(CONFIGS_STARTUP_FILE, "r");
     } else {
-        file = LittleFS.open(CONFIGS_BOARD_FILE, "r");
+        file = LittleFS.open(CONFIGS_STARTUP_FILE, "r");
     }
     deserializeJson(doc, file);
     file.close();
+
+    /*
+     * Extenders configurations
+     */
 
     JsonArray exts = doc["extenders"];
     for (uint8_t i = 0; i < exts.size(); i++) {
         _ext->addExtender(new Extender(static_cast<ExtenderId>(exts[i]["id"]), exts[i]["addr"]));
     }
+
+    /*
+     * GPIO configurations
+     */
 
     JsonArray gpios = doc["gpio"];
     for (uint8_t i = 0; i < gpios.size(); i++) {
@@ -161,7 +196,7 @@ bool Configs::readBoardConfigs(ConfigsSource src)
         } else if (gpios[i]["type"] == "output") {
             type = GPIO_TYPE_OUTPUT;
         } else {
-            _log->error(LOG_MOD_CFG, String(F("GPIO type not found: ")) + String(gpios[i]["type"]));
+            _log->error(LOG_MOD_CFG, String(F("GPIO type not found: ")) + gpios[i]["type"].as<String>());
             doc.clear();
             return false;
         }
@@ -173,7 +208,7 @@ bool Configs::readBoardConfigs(ConfigsSource src)
         } else if (gpios[i]["pull"] == "down") {
             pull = GPIO_PULL_DOWN;
         } else {
-            _log->error(LOG_MOD_CFG, String(F("GPIO pull not found: ")) + String(gpios[i]["pull"]));
+            _log->error(LOG_MOD_CFG, String(F("GPIO pull not found: ")) + gpios[i]["pull"].as<String>());
             doc.clear();
             return false;
         }
@@ -181,23 +216,9 @@ bool Configs::readBoardConfigs(ConfigsSource src)
         _gpio->addGpio(new GpioPin(_log, _ext, gpios[i]["name"], gpios[i]["pin"], type, pull, gpios[i]["ext"]));
     }
 
-    doc.clear();
-    return true;
-}
-
-bool Configs::readPLCConfigs(ConfigsSource src)
-{
-    JsonDocument    doc;
-    File            file;
-    GpioPin         *pin = nullptr;
-
-    if (src == CFG_SRC_SD) {
-        file = SD.open(CONFIGS_PLC_FILE, "r");
-    } else {
-        file = LittleFS.open(CONFIGS_PLC_FILE, "r");
-    }
-    deserializeJson(doc, file);
-    file.close();
+    /*
+     * PLC general configurations
+     */
 
     _plc->setName(doc["plc"]["name"]);
     if ((pin = _gpio->getPin(doc["plc"]["gpio"]["alarm"])) == nullptr) {
@@ -209,6 +230,10 @@ bool Configs::readPLCConfigs(ConfigsSource src)
     }
     _plc->setPin(PLC_GPIO_BUZZER, pin);
 
+    /*
+     * Wi-Fi configurations
+     */
+
     _wifi->setCreds(doc["wifi"]["ssid"], doc["wifi"]["passwd"]);
     _wifi->setAP(doc["wifi"]["ap"]);
     if ((pin = _gpio->getPin(doc["wifi"]["gpio"]["status"])) == nullptr) {
@@ -216,6 +241,10 @@ bool Configs::readPLCConfigs(ConfigsSource src)
      }
     _wifi->setStatusLed(pin);
     _wifi->setEnabled(doc["wifi"]["enabled"]);
+
+    /*
+     * GSM modem configurations
+     */
 
     if ((pin = _gpio->getPin(doc["gsm"]["gpio"]["rx"])) == nullptr) {
         _log->warning(LOG_MOD_CFG, F("Gpio GSM rx not found"));
@@ -233,27 +262,53 @@ bool Configs::readPLCConfigs(ConfigsSource src)
     _modem->setRate(doc["gsm"]["rate"]);
     _modem->begin();
 
+    doc.clear();
     return true;
 }
 
-bool Configs::readAll(ConfigsSource src)
+bool Configs::generateRunning(JsonDocument &doc)
 {
-    _src = src;
-    if (!readBoardConfigs(src)) return false;
-    if (!readPLCConfigs(src)) return false;
-    return true;
-}
+    /*
+     * PLC general configurations
+     */
 
-bool Configs::saveBoardConfigs()
-{
-    JsonDocument    doc;
-    File            file;
+    doc["plc"]["name"] = _plc->getName();
+    doc["plc"]["gpio"]["alarm"] = (_plc->getPin(PLC_GPIO_ALARM_LED) == nullptr) ? "" : _plc->getPin(PLC_GPIO_ALARM_LED)->getName();
+    doc["plc"]["gpio"]["buzzer"] = (_plc->getPin(PLC_GPIO_BUZZER) == nullptr) ? "" : _plc->getPin(PLC_GPIO_BUZZER)->getName();
+
+    /*
+     * Wi-Fi configurations
+     */
+
+    doc["wifi"]["ssid"] = _wifi->getSSID();
+    doc["wifi"]["passwd"] = _wifi->getPasswd();
+    doc["wifi"]["ap"] = _wifi->getAP();
+    doc["wifi"]["gpio"]["status"] = (_wifi->getStatusLed() == nullptr) ? "" : _wifi->getStatusLed()->getName();
+    doc["wifi"]["enabled"] = _wifi->getEnabled();
+
+    /*
+     * GSM modem configurations
+     */
+
+    doc["gsm"]["gpio"]["rx"] = (_modem->getGpio(GSM_GPIO_RX) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_RX)->getName();
+    doc["gsm"]["gpio"]["tx"] = (_modem->getGpio(GSM_GPIO_TX) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_TX)->getName();
+    doc["gsm"]["gpio"]["rst"] = (_modem->getGpio(GSM_GPIO_RST) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_RST)->getName();
+    doc["gsm"]["enabled"] = _modem->getEnabled();
+    doc["gsm"]["rate"] = _modem->getRate();
+
+    /*
+     * Extenders configurations
+     */
 
     for (uint8_t i = 0; i < _ext->getExtenders().size(); i++) {
         auto e = _ext->getExtenders()[i];
         doc["extenders"][i]["id"] = e->getID();
         doc["extenders"][i]["addr"] = e->getAddr();
     }
+
+    /*
+     * GPIO configurations
+     */
 
     for (uint8_t i = 0; i < _gpio->getPins().size(); i++) {
         auto p = _gpio->getPins()[i];
@@ -287,46 +342,6 @@ bool Configs::saveBoardConfigs()
         doc["gpio"][i]["ext"] = p->getExtId();
     }
 
-    if (_src == CFG_SRC_SD) {
-        file = SD.open(CONFIGS_BOARD_FILE, "w");
-    } else {
-        file = LittleFS.open(CONFIGS_BOARD_FILE, "w");
-    }
-    serializeJsonPretty(doc, file);
-    file.close();
-
-    return true;
-}
-
-bool Configs::savePLCConfigs()
-{
-    JsonDocument    doc;
-    File            file;
-
-    doc["plc"]["name"] = _plc->getName();
-    doc["plc"]["gpio"]["alarm"] = (_plc->getPin(PLC_GPIO_ALARM_LED) == nullptr) ? "" : _plc->getPin(PLC_GPIO_ALARM_LED)->getName();
-    doc["plc"]["gpio"]["buzzer"] = (_plc->getPin(PLC_GPIO_BUZZER) == nullptr) ? "" : _plc->getPin(PLC_GPIO_BUZZER)->getName();
-
-    doc["wifi"]["ssid"] = _wifi->getSSID();
-    doc["wifi"]["passwd"] = _wifi->getPasswd();
-    doc["wifi"]["ap"] = _wifi->getAP();
-    doc["wifi"]["gpio"]["status"] = (_wifi->getStatusLed() == nullptr) ? "" : _wifi->getStatusLed()->getName();
-    doc["wifi"]["enabled"] = _wifi->getEnabled();
-
-    doc["gsm"]["gpio"]["rx"] = (_modem->getGpio(GSM_GPIO_RX) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_RX)->getName();
-    doc["gsm"]["gpio"]["tx"] = (_modem->getGpio(GSM_GPIO_TX) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_TX)->getName();
-    doc["gsm"]["gpio"]["rst"] = (_modem->getGpio(GSM_GPIO_RST) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_RST)->getName();
-    doc["gsm"]["enabled"] = _modem->getEnabled();
-    doc["gsm"]["rate"] = _modem->getRate();
-
-    if (_src == CFG_SRC_SD) {
-        file = SD.open(CONFIGS_PLC_FILE, "w");
-    } else {
-        file = LittleFS.open(CONFIGS_PLC_FILE, "w");
-    }
-    serializeJsonPretty(doc, file);
-    file.close();
-
     return true;
 }
 
@@ -352,8 +367,7 @@ bool Configs::begin()
 
     if (SD.begin(SPI_SS_PIN)) {
         _log->info(LOG_MOD_CFG, F("SD card found. Reading files"));
-        if (!SD.exists(CONFIGS_BOARD_FILE) ||
-            !SD.exists(CONFIGS_PLC_FILE))
+        if (!SD.exists(CONFIGS_STARTUP_FILE))
         {
             _src = CFG_SRC_SD;
             return initDevice();
@@ -376,8 +390,7 @@ bool Configs::begin()
         _log->error(LOG_MOD_CFG, F("Failed to flash memory"));
     }
 
-    if (!LittleFS.exists(CONFIGS_BOARD_FILE) ||
-        !LittleFS.exists(CONFIGS_PLC_FILE))
+    if (!LittleFS.exists(CONFIGS_STARTUP_FILE))
     {
         _src = CFG_SRC_FLASH;
         return initDevice();
@@ -388,12 +401,50 @@ bool Configs::begin()
 
 bool Configs::writeAll()
 {
-    if (!saveBoardConfigs()) return false;
-    if (!savePLCConfigs()) return false;
+    JsonDocument    doc;
+    File            file;
+
+    if (!generateRunning(doc)) {
+        return false;
+    }
+
+    /*
+     * Save configs to file
+     */
+
+    if (_src == CFG_SRC_SD) {
+        file = SD.open(CONFIGS_STARTUP_FILE, "w");
+    } else {
+        file = LittleFS.open(CONFIGS_STARTUP_FILE, "w");
+    }
+    serializeJsonPretty(doc, file);
+    file.close();
+    doc.clear();
+
     return true;
 }
 
 bool Configs::eraseAll()
 {
+    return true;
+}
+
+bool Configs::showStartup()
+{
+    return printFile(CONFIGS_STARTUP_FILE);
+}
+
+bool Configs::showRunning()
+{
+    JsonDocument    doc;
+
+    if (!generateRunning(doc)) {
+        return false;
+    }
+
+    serializeJsonPretty(doc, Serial);
+    Serial.println("");
+    doc.clear();
+
     return true;
 }

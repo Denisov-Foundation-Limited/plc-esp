@@ -64,7 +64,7 @@ void Logger::logging(LogType type, LogModule mod, const String &msg)
         break;
     }
 
-    Serial.print("\n[" + sType + "][" + sMod + "] " + msg);
+    Serial.println("[" + sType + "][" + sMod + "] " + msg);
 }
 
 /*********************************************************************/

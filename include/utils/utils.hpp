@@ -13,6 +13,7 @@
 #define __UTILS_HPP__
 
 #include <Arduino.h>
+#include <vector>
 
 bool splitString(String str, String delim, std::vector<String> &result);
 

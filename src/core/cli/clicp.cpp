@@ -22,23 +22,31 @@ void CLIProcessor::printCall()
     switch (_level)
     {
     case CON_LEVEL_ENABLE:
-        Serial.printf("%s", "console#");
+        Serial.printf("%s", F("console#"));
         break;
 
     case CON_LEVEL_CONFIG:
-        Serial.printf("%s", "(config)#");
+        Serial.printf("%s", F("(config)#"));
         break;
 
     case CON_LEVEL_WIFI:
-        Serial.printf("%s", "config(wifi)#");
+        Serial.printf("%s", F("config(wifi)#"));
         break;
 
     case CON_LEVEL_TANKS:
-        Serial.printf("%s", "config(tanks)#");
+        Serial.printf("%s", F("config(tanks)#"));
         break;
 
     case CON_LEVEL_TANK:
-        Serial.printf("%s", "config(tanks-tnk)#");
+        Serial.printf("%s", F("config(tanks-tnk)#"));
+        break;
+
+    case CON_LEVEL_GPIO:
+        Serial.printf("%s", F("config(gpio)#"));
+        break;
+
+    case CON_LEVEL_EXT:
+        Serial.printf("%s", F("config(ext)#"));
         break;
     }
 }
@@ -59,7 +67,7 @@ CLIProcessor::CLIProcessor(Logger  *log, Configs *cfg, CLIConfigurator *cliCfg, 
 
 void CLIProcessor::begin()
 {
-    Serial.printf("\n\n%s", "console#");
+    Serial.printf("\n\n%s", F("console#"));
 }
 
 bool CLIProcessor::parse(const String &cmd)
@@ -69,8 +77,13 @@ bool CLIProcessor::parse(const String &cmd)
         {
         case CON_LEVEL_WIFI:
         case CON_LEVEL_TANKS:
-        case CON_LEVEL_TANK:
+        case CON_LEVEL_GPIO:
+        case CON_LEVEL_EXT:
             _level = CON_LEVEL_CONFIG;
+            break;
+
+        case CON_LEVEL_TANK:
+            _level = CON_LEVEL_TANKS;
             break;
 
         case CON_LEVEL_CONFIG:
@@ -110,6 +123,14 @@ bool CLIProcessor::parse(const String &cmd)
             isOk = _cliCfg->configTank(_objName, cmd);
             break;
 
+        case CON_LEVEL_GPIO:
+            isOk = _cliCfg->configTank(_objName, cmd);
+            break;
+
+        case CON_LEVEL_EXT:
+            isOk = _cliCfg->configTank(_objName, cmd);
+            break;
+
         case CON_LEVEL_ENABLE:
             if (cmd == "reset" || cmd == "reload") {
                 ESP.restart();
@@ -125,6 +146,14 @@ bool CLIProcessor::parse(const String &cmd)
                 isOk = true;
             } else if (cmd == "show wifi") {
                 _cliInfo->showWiFi();
+                isOk = true;
+            } else if ((cmd == "show start") || (cmd == "show startup")) {
+                if (!_cfg->showStartup()) {
+                    _log->error(LOG_MOD_CLI, F("Startup configs not found"));
+                }
+                isOk = true;
+            } else if ((cmd == "show run") || (cmd == "show running")) {
+                _cfg->showRunning();
                 isOk = true;
             } else if (cmd == "show wifi status") {
                 _cliInfo->showWiFiStatus();
@@ -152,6 +181,8 @@ bool CLIProcessor::parse(const String &cmd)
                 Serial.println(F("\tshow gpio        : GPIO configurations"));
                 Serial.println(F("\tshow gpio status : GPIO statuses"));
                 Serial.println(F("\tshow ext         : I2C extenders configurations"));
+                Serial.println(F("\tshow startup     : Print configs saved to flash"));
+                Serial.println(F("\tshow running     : Print configs from RAM"));
                 Serial.println(F("\treload           : Reboot device"));
                 Serial.println(F("\twrite            : Save all configurations to flash"));
                 Serial.println(F("\terase            : Erase configurations and load default\n"));

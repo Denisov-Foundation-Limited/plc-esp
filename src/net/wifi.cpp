@@ -28,46 +28,46 @@ void Wireless::timerHandler()
         case WL_CONNECTED:
             if (_statusLed != nullptr) { _statusLed->write(true); }
             _plc->setAlarm(PLC_MOD_WIFI, false);
-            _log->info(LOG_MOD_WIFI, String(F("Device was connected to SSID: ")) + _ssid);
-            _log->info(LOG_MOD_WIFI, String(F("Device IP address: ")) + getIP());
+            _log->info(LOG_MOD_WIFI, String(F("PLC was connected to SSID: ")) + _ssid);
+            _log->info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
             break;
 
         case WL_CONNECTION_LOST:
             if (_statusLed != nullptr) { _statusLed->write(false); }
             _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("Device connection lost to SSID: ")) + _ssid);
+            _log->info(LOG_MOD_WIFI, String(F("PLC connection lost to SSID: ")) + _ssid);
             break;
 
 #ifndef ESP32
         case WL_WRONG_PASSWORD:
             if (_statusLed != nullptr) { _statusLed->write(false); }
             _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("Device wrong password to SSID: ")) + _ssid);
+            _log->info(LOG_MOD_WIFI, String(F("PLC wrong password to SSID: ")) + _ssid);
             break;
 #endif
 
         case WL_IDLE_STATUS:
             if (_statusLed != nullptr) { _statusLed->write(false); }
             _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("Device idle connection to SSID: ")) + _ssid);
+            _log->info(LOG_MOD_WIFI, String(F("PLC idle connection to SSID: ")) + _ssid);
             break;
 
         case WL_NO_SSID_AVAIL:
             if (_statusLed != nullptr) { _statusLed->write(false); }
             _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("Device no available SSID: ")) + _ssid);
+            _log->info(LOG_MOD_WIFI, String(F("PLC no available SSID: ")) + _ssid);
             break;
 
         case WL_SCAN_COMPLETED:
             if (_statusLed != nullptr) { _statusLed->write(false); }
             _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("Device scan completed for SSID: ")) + _ssid);
+            _log->info(LOG_MOD_WIFI, String(F("PLC scan completed for SSID: ")) + _ssid);
             break;
         
         default:
             if (_statusLed != nullptr) { _statusLed->write(false); }
             _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("Device has been disconnected from SSID: ")) + _ssid);
+            _log->info(LOG_MOD_WIFI, String(F("PLC has been disconnected from SSID: ")) + _ssid);
             break;
         }
     }
@@ -159,7 +159,7 @@ void Wireless::begin()
         _log->info(LOG_MOD_WIFI, String(F("Starting AP: ")) + _ssid);
         WiFi.mode(WIFI_AP);
         WiFi.softAP(_ssid, _passwd);
-        _log->info(LOG_MOD_WIFI, String(F("Device IP address: ")) + getIP());
+        _log->info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
         if (_statusLed != nullptr) { _statusLed->write(true); }
         _plc->setAlarm(PLC_MOD_WIFI, false);
     }

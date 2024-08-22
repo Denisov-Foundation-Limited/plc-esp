@@ -13,6 +13,7 @@
 #define __CONFIGS_HPP__
 
 #include <Arduino.h>
+#include <ArduinoJson.h>
 
 #include "utils/log.hpp"
 #include "core/ext.hpp"
@@ -21,8 +22,7 @@
 #include "net/wifi.hpp"
 #include "core/plc.hpp"
 
-#define CONFIGS_BOARD_FILE  F("board.json")
-#define CONFIGS_PLC_FILE    F("plc.json")
+#define CONFIGS_STARTUP_FILE  F("/startup-config.json")
 
 typedef enum {
     CFG_SRC_SD,
@@ -43,15 +43,15 @@ private:
 
     bool initDevice();
     bool readAll(ConfigsSource src);
-    bool readPLCConfigs(ConfigsSource src);
-    bool readBoardConfigs(ConfigsSource src);
-    bool saveBoardConfigs();
-    bool savePLCConfigs();
+    bool printFile(const String &name);
+    bool generateRunning(JsonDocument &doc);
 public:
     Configs(Logger *log, GsmModem *modem, Extenders *ext, Gpio *gpio, Wireless *wifi, Plc *plc);
     bool begin();
     bool writeAll();
     bool eraseAll();
+    bool showStartup();
+    bool showRunning();
 };
 
 #endif /* __CONFIGS_HPP__ */

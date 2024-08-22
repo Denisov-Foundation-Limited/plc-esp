@@ -28,8 +28,8 @@
 #define OW_1_PIN    6
 #define OW_2_PIN    7
 
-#define GSM_RX_PIN  D6
-#define GSM_TX_PIN  D5
+#define GSM_RX_PIN  10
+#define GSM_TX_PIN  10
 #define GSM_RST_PIN 9
 
 #define RS485_RX_PIN    10

@@ -23,7 +23,9 @@ typedef enum {
     CON_LEVEL_CONFIG,
     CON_LEVEL_WIFI,
     CON_LEVEL_TANKS,
-    CON_LEVEL_TANK
+    CON_LEVEL_TANK,
+    CON_LEVEL_GPIO,
+    CON_LEVEL_EXT
 } ConsoleLevel;
 
 class CLIProcessor
