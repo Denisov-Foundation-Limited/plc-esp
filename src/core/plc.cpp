@@ -106,7 +106,7 @@ void Plc::begin()
 
 void Plc::loop()
 {
-    if (millis() - _timer >= PLC_DELAY_MS) {
+    if (millis() - _timer >= PLC_TIMER_MS) {
         _timer = millis();
         timerHandler();
     }

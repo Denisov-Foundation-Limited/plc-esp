@@ -32,14 +32,15 @@ Gpio            gpio(&logs, &ext);
 GsmModem        modem(&logs, &gsmSerial, &gsmModem);
 Configs         configs(&logs, &modem, &ext, &gpio, &wifi, &plc);
 CLIInformer     cliInfo(&wifi, &gpio, &ext);
-CLIConfigurator cliCfg(&wifi);
-CLIProcessor    cliCp(&logs, &configs, &cliCfg, &cliInfo);
+CLIConfigurator cliCfg(&logs, &wifi, &gpio, &ext);
+CLIProcessor    cliCp(&logs, &configs, &cliCfg, &cliInfo, &gpio, &ext);
 
 void setup()
 {
     logs.begin();
     delay(1000);
-    logs.info(LOG_MOD_MAIN, F("\nStarting controller..."));
+    Serial.println("");
+    logs.info(LOG_MOD_MAIN, F("Starting controller..."));
     if (!configs.begin()) return;
     plc.begin();
     wifi.begin();

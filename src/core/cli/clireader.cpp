@@ -35,7 +35,7 @@ void CLIReader::read()
         Serial.print(inChar);
         if (inChar == '\n') {
             _complete = true;
-            _inStr[_inStr.length() - 1] = '\0';
+            _inStr.remove(_inStr.length() - 1, 1);
         } else {
             _inStr += inChar;
         }

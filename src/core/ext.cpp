@@ -48,18 +48,28 @@ bool Extender::read(uint8_t pin)
     return (_mcp.digitalRead(pin) == HIGH) ? true : false;
 }
 
+void Extender::setID(ExtenderId id)
+{
+    _id = id;
+}
+
+void Extender::setAddr(unsigned addr)
+{
+    _addr = addr;
+}
+
 
 
 void Extenders::addExtender(Extender *ext)
 {
-    _exts.push_back(ext);
     if (ext->begin()) {
         _log->info(LOG_MOD_GPIO, "Add Extender " + String(ext->getID()) +
             " addr: " + String(ext->getAddr()));
     } else {
-        _log->info(LOG_MOD_GPIO, "Failed to add Extender " + String(ext->getID()) +
-            " addr: " + String(ext->getAddr()));
+        _log->warning(LOG_MOD_GPIO, "Extender " + String(ext->getID()) +
+            " addr: " + String(ext->getAddr()) + " is not online");
     }
+    _exts.push_back(ext);
 }
 
 Extender *Extenders::getById(ExtenderId id) const
@@ -75,4 +85,34 @@ Extender *Extenders::getById(ExtenderId id) const
 std::vector<Extender*> &Extenders::getExtenders()
 {
     return _exts;
+}
+
+bool Extenders::isExists(ExtenderId id)
+{
+    for (auto *e : _exts) {
+        if (e->getID() == id) {
+            return true;
+        }
+    }
+    return false;
+}
+
+unsigned Extenders::getLastFreeAddr() const
+{
+    bool found = false;
+
+    for (auto addr : _addrs) {
+        found = false;
+        for (auto *e : _exts) {
+            if (e->getAddr() == addr) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return addr;
+        }
+    }
+
+    return 0;
 }

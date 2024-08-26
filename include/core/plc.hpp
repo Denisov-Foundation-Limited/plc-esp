@@ -16,7 +16,7 @@
 
 #include "core/gpio.hpp"
 
-#define PLC_DELAY_MS    1000
+#define PLC_TIMER_MS    500
 
 typedef enum {
     PLC_MOD_WIFI

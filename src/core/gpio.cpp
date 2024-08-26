@@ -50,6 +50,31 @@ GpioPull GpioPin::getPull() const
     return _pull;
 }
 
+void GpioPin::setName(const String &name)
+{
+    _name = name;
+}
+
+void GpioPin::setPin(uint8_t pin)
+{
+    _pin = pin;
+}
+
+void GpioPin::setPull(GpioPull pull)
+{
+    _pull = pull;
+}
+
+void GpioPin::setType(GpioType type)
+{
+    _type = type;
+}
+
+void GpioPin::setExtId(ExtenderId id)
+{
+    _extId = id;
+}
+
 void GpioPin::write(bool val)
 {
     if (_extId == EXT_NOT_USED) {

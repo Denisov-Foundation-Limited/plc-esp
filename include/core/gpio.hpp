@@ -46,6 +46,11 @@ public:
     GpioPin() { }
     GpioPin(Logger *log, Extenders *ext, const String &name, uint8_t pin, GpioType type, GpioPull pull, ExtenderId extId);
     const String &getName() const;
+    void setName(const String &name);
+    void setPin(uint8_t pin);
+    void setPull(GpioPull pull);
+    void setType(GpioType type);
+    void setExtId(ExtenderId id);
     uint8_t getPin() const;
     GpioType getType() const;
     GpioPull getPull() const;

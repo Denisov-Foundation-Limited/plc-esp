@@ -17,6 +17,8 @@
 #include "utils/configs.hpp"
 #include "cliinfo.hpp"
 #include "clicfg.hpp"
+#include "core/gpio.hpp"
+#include "core/ext.hpp"
 
 typedef enum {
     CON_LEVEL_ENABLE,
@@ -25,6 +27,8 @@ typedef enum {
     CON_LEVEL_TANKS,
     CON_LEVEL_TANK,
     CON_LEVEL_GPIO,
+    CON_LEVEL_PIN,
+    CON_LEVEL_EXTS,
     CON_LEVEL_EXT
 } ConsoleLevel;
 
@@ -38,10 +42,15 @@ private:
     Configs         *_cfg;
     CLIConfigurator *_cliCfg;
     CLIInformer     *_cliInfo;
+    Gpio            *_gpio;
+    Extenders       *_ext;
 
     void printCall();
+    bool parseEnableCmd(const String &cmd);
+    bool parseConfigCmd(const String &cmd);
+    void processExit();
 public:
-    CLIProcessor(Logger  *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo);
+    CLIProcessor(Logger *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo, Gpio *gpio, Extenders *ext);
     void begin();
     bool parse(const String &cmd);
 };

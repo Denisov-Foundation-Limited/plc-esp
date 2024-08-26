@@ -25,11 +25,18 @@ class CLIConfigurator
 {
 private:
     Wireless    *_wifi;
+    Gpio        *_gpio;
+    Extenders   *_ext;
+    Logger      *_log; 
 public:
-    CLIConfigurator(Wireless *wifi);
+    CLIConfigurator(Logger *log, Wireless *wifi, Gpio *gpio, Extenders *ext);
     bool configWiFi(const String &cmd);
     bool configTanks(const String &cmd);
     bool configTank(const String &tankName, const String &cmd);
+    bool configGpio(const String &cmd);
+    bool configPin(const String &tankName, const String &cmd);
+    bool configExts(const String &cmd);
+    bool configExt(ExtenderId extId, const String &cmd);
 };
 
 #endif /* __CLI_CONFIGURATOR_HPP__*/
