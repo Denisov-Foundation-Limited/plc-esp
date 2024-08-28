@@ -14,6 +14,10 @@
 
 #include <Arduino.h>
 
+#define CLI_BACK_CHAR   8
+#define CLI_TAB_CHAR    9
+#define CLI_ESC_CHAR    27
+
 class CLIReader
 {
 private:

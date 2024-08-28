@@ -20,41 +20,50 @@
 #include "core/cli/clicfg.hpp"
 #include "core/cli/cliinfo.hpp"
 #include "core/cli/clicp.hpp"
+#include "net/tgbot.hpp"
+#include "net/websrv.hpp"
 
-UART            gsmSerial;
-Logger          logs;
-CLIReader       cliReader;
-Plc             plc;
-TinyGsm         gsmModem(gsmSerial);
-Extenders       ext(&logs);
-Wireless        wifi(&logs, &plc);
-Gpio            gpio(&logs, &ext);
-GsmModem        modem(&logs, &gsmSerial, &gsmModem);
-Configs         configs(&logs, &modem, &ext, &gpio, &wifi, &plc);
-CLIInformer     cliInfo(&wifi, &gpio, &ext);
-CLIConfigurator cliCfg(&logs, &wifi, &gpio, &ext);
-CLIProcessor    cliCp(&logs, &configs, &cliCfg, &cliInfo, &gpio, &ext);
+auto gsmSerial = new UART();
+auto logs = new Logger();
+auto cliReader = new CLIReader();
+auto plc = new Plc();
+auto fb2 = new FastBot2();
+auto aSrv = new AsyncWebServer(80);
+auto gsmModem = new TinyGsm(*gsmSerial);
+auto ext = new Extenders(logs);
+auto webSrv = new WebServer(logs, aSrv);
+auto tgBot = new TgBot(logs, fb2);
+auto wifi = new Wireless(logs, plc);
+auto gpio = new Gpio(logs, ext);
+auto modem = new GsmModem(logs, gsmSerial, gsmModem);
+auto configs = new Configs(logs, modem, ext, gpio, wifi, plc);
+auto cliInfo = new CLIInformer(wifi, gpio, ext);
+auto cliCfg = new CLIConfigurator(logs, wifi, gpio, ext);
+auto cliCp = new CLIProcessor(logs, configs, cliCfg, cliInfo, gpio, ext);
 
 void setup()
 {
-    logs.begin();
+    logs->begin();
     delay(1000);
     Serial.println("");
-    logs.info(LOG_MOD_MAIN, F("Starting controller..."));
-    if (!configs.begin()) return;
-    plc.begin();
-    wifi.begin();
-    modem.begin();
-    cliCp.begin();
+    logs->info(LOG_MOD_MAIN, F("Starting controller..."));
+    if (!configs->begin()) return;
+    plc->begin();
+    wifi->begin();
+    tgBot->begin();
+    modem->begin();
+    webSrv->begin();
+    cliCp->begin();
 }
 
 void loop()
 {
-    cliReader.read();
-    if (cliReader.isNewString()) {
-        cliCp.parse(cliReader.getString());
-        cliReader.reset();
+    cliReader->read();
+    if (cliReader->isNewString()) {
+        cliCp->parse(cliReader->getString());
+        cliReader->reset();
     }
-    wifi.loop();
-    plc.loop();
+    wifi->loop();
+    plc->loop();
+    tgBot->loop();
 }

@@ -1,0 +1,89 @@
+/**********************************************************************/
+/*                                                                    */
+/* Programmable Logic Controller for ESP microcontrollers             */
+/*                                                                    */
+/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* License: GPLv3                                                     */
+/* Written by Sergey Denisov aka LittleBuster                         */
+/* Email: DenisovFoundationLtd@gmail.com                              */
+/*                                                                    */
+/**********************************************************************/
+
+#ifndef __TG_BOT_HPP__
+#define __TG_BOT_HPP__
+
+#include <FastBot2.h>
+#include <Arduino.h>
+#include "vector"
+#include <functional>
+
+#include <WiFiClient.h>
+#include <WiFiServer.h>
+#include <GyverHTTP.h>
+
+#include "utils/log.hpp"
+
+typedef enum {
+    TG_MENU_MAIN,
+    TG_MENU_METEO,
+    TG_MENU_SECURITY,
+    TG_MENU_TANKS,
+    TG_MENU_TANK,
+    TG_MENU_SOCKETS,
+    TG_MENU_LIGHTS,
+    TG_MENU_CAMS,
+    TG_MENU_WATERING,
+    TG_MENU_WATERER,
+    TG_MENU_THERMS,
+    TG_MENU_THERM
+} TgMenuLevel;
+
+typedef struct {
+    String      name;
+    unsigned    chatId;
+    bool        notify;
+    bool        admin;
+    TgMenuLevel level;
+} TgUser;
+
+typedef struct {
+    String      ip;
+    unsigned    port;
+} TgProxy;
+
+class TgBot
+{
+private:
+    std::vector<TgUser *>   _users;
+    fb::Poll                _mode = fb::Poll::Sync;
+    unsigned                _period = 4000U;
+    TgProxy                 _proxy;
+    bool                    _enabled = false;
+
+    FastBot2    *_fb;
+    Logger      *_log;
+    String      _key;
+
+    void backMenu(TgUser *user);
+    bool processLevel(TgUser *user, const String &msg);
+    void updateHandler(fb::Update& upd);
+public:
+    TgBot(Logger *log, FastBot2 *fb);
+    void setEnabled(bool status);
+    bool getEnabled() const;
+    void setPollMode(fb::Poll mode);
+    fb::Poll getPollMode() const;
+    void setProxy(const TgProxy &proxy);
+    const TgProxy &getProxy();
+    void setPeriod(unsigned period);
+    unsigned getPeriod() const;
+    void addUser(TgUser *user);
+    TgUser *getUser(const String &name);
+    TgUser *getUser(unsigned chatId);
+    const std::vector<TgUser *> &getUsers();
+    void setKey(const String &key);
+    void begin();
+    void loop();
+};
+
+#endif /* __TG_BOT_HPP__ */

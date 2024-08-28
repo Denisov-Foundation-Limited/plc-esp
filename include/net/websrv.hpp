@@ -9,37 +9,29 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __LOG_HPP__
-#define __LOG_HPP__
+#ifndef __WEB_SERVER_H__
+#define __WEB_SERVER_H__
 
+#include <utils/log.hpp>
 #include <Arduino.h>
+#include <WiFi.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 
-typedef enum {
-    LOG_MOD_MAIN,
-    LOG_MOD_CFG,
-    LOG_MOD_GPIO,
-    LOG_MOD_GSM,
-    LOG_MOD_WIFI,
-    LOG_MOD_CLI,
-    LOG_MOD_WEB,
-    LOG_MOD_TG
-} LogModule;
-
-typedef enum {
-    LOG_TYPE_ERROR,
-    LOG_TYPE_INFO,
-    LOG_TYPE_WARNING
-} LogType;
-
-class Logger
+class WebServer
 {
 private:
-    void logging(LogType type, LogModule mod, const String &msg);
+    bool    _enabled = true;
+
+    AsyncWebServer  *_srv;
+    Logger          *_log;
+
+    void indexReq(AsyncWebServerRequest *req);
 public:
+    WebServer(Logger *log, AsyncWebServer *srv);
+    void setEnabled(bool status);
+    bool getEnabled() const;
     void begin();
-    void info(LogModule mod, const String &msg);
-    void error(LogModule mod, const String &msg);
-    void warning(LogModule mod, const String &msg);
 };
 
-#endif /* __LOG_HPP__ */
+#endif /* __WEB_SERVER_H__ */
