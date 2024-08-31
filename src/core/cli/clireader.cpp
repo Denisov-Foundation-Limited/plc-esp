@@ -11,24 +11,24 @@
 
 #include "core/cli/clireader.hpp"
 
-CLIReader::CLIReader()
+CLIReaderClass::CLIReaderClass()
 {
     _inStr.reserve(200);
     _inStr = "";
     _complete = false;
 }
 
-bool CLIReader::isNewString() const
+bool CLIReaderClass::isNewString() const
 {
     return _complete;
 }
 
-const String& CLIReader::getString() const
+const String& CLIReaderClass::getString() const
 {
     return _inStr;
 }
 
-void CLIReader::read()
+void CLIReaderClass::read()
 {
     while (Serial.available()) {
         char inChar = (char)Serial.read();
@@ -42,8 +42,10 @@ void CLIReader::read()
     }
 }
 
-void CLIReader::reset()
+void CLIReaderClass::reset()
 {
     _inStr = "";
     _complete = false;
 }
+
+CLIReaderClass CLIReader;

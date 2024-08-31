@@ -46,44 +46,26 @@ typedef struct {
     TgMenuLevel level;
 } TgUser;
 
-typedef struct {
-    String      ip;
-    unsigned    port;
-} TgProxy;
-
-class TgBot
+class TgBotClass : public FastBot2
 {
 private:
     std::vector<TgUser *>   _users;
-    fb::Poll                _mode = fb::Poll::Sync;
-    unsigned                _period = 4000U;
-    TgProxy                 _proxy;
     bool                    _enabled = false;
-
-    FastBot2    *_fb;
-    Logger      *_log;
-    String      _key;
 
     void backMenu(TgUser *user);
     bool processLevel(TgUser *user, const String &msg);
     void updateHandler(fb::Update& upd);
 public:
-    TgBot(Logger *log, FastBot2 *fb);
     void setEnabled(bool status);
     bool getEnabled() const;
-    void setPollMode(fb::Poll mode);
-    fb::Poll getPollMode() const;
-    void setProxy(const TgProxy &proxy);
-    const TgProxy &getProxy();
-    void setPeriod(unsigned period);
-    unsigned getPeriod() const;
     void addUser(TgUser *user);
     TgUser *getUser(const String &name);
     TgUser *getUser(unsigned chatId);
     const std::vector<TgUser *> &getUsers();
-    void setKey(const String &key);
     void begin();
     void loop();
 };
+
+extern TgBotClass TgBot;
 
 #endif /* __TG_BOT_HPP__ */

@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void WebServer::indexReq(AsyncWebServerRequest *req)
+void WebServerClass::indexReq(AsyncWebServerRequest *req)
 {
     req->send(200, "text/html", "<h1>FCPLC</h1>");
 }
@@ -28,28 +28,24 @@ void WebServer::indexReq(AsyncWebServerRequest *req)
 /*                                                                   */
 /*********************************************************************/
 
-WebServer::WebServer(Logger *log, AsyncWebServer *srv)
-{
-    _srv = srv;
-    _log = log;
-}
-
-void WebServer::setEnabled(bool status)
+void WebServerClass::setEnabled(bool status)
 {
     _enabled = status;
 }
 
-bool WebServer::getEnabled() const
+bool WebServerClass::getEnabled() const
 {
     return _enabled;
 }
 
-void WebServer::begin()
+void WebServerClass::begin()
 {
     if (!_enabled) return;
 
-    _log->info(LOG_MOD_WEB, "Starting web server");
+    Log.info(LOG_MOD_WEB, "Starting web server");
 
-    _srv->on("/", HTTP_GET, std::bind(&WebServer::indexReq, this, std::placeholders::_1));
-    _srv->begin();
+    AsyncWebServer::on("/", HTTP_GET, std::bind(&WebServerClass::indexReq, this, std::placeholders::_1));
+    AsyncWebServer::begin();
 }
+
+WebServerClass WebServer(WEB_SERVER_DEFAULT_PORT);

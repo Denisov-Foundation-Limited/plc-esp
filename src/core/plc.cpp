@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void Plc::alarmBuzzerTask()
+void PlcClass::alarmBuzzerTask()
 {
     if (_alarm > 0) {
         if (!_lastAlarm) {
@@ -45,12 +45,12 @@ void Plc::alarmBuzzerTask()
 /*                                                                   */
 /*********************************************************************/
 
-Plc::Plc()
+PlcClass::PlcClass()
 {
     _name = F("FutCityPLC");
 }
 
-void Plc::setAlarm(PlcMod mod, bool status)
+void PlcClass::setAlarm(PlcMod mod, bool status)
 {
     if (status) {
         _alarm |= (1 << mod);
@@ -64,7 +64,7 @@ void Plc::setAlarm(PlcMod mod, bool status)
     }
 }
 
-void Plc::setBuzzer(PlcMod mod, bool status)
+void PlcClass::setBuzzer(PlcMod mod, bool status)
 {
     if (status) {
         _buzzer |= (1 << mod);
@@ -78,36 +78,38 @@ void Plc::setBuzzer(PlcMod mod, bool status)
     }
 }
 
-GPIOIface *Plc::getPin(PlcGpioType type) const
+GPIOIface *PlcClass::getPin(PlcGpioType type) const
 {
     return _pins[type];
 }
 
-void Plc::setPin(PlcGpioType type, GPIOIface *pin)
+void PlcClass::setPin(PlcGpioType type, GPIOIface *pin)
 {
     _pins[type] = pin;
 }
 
-const String& Plc::getName() const
+const String& PlcClass::getName() const
 {
     return _name;
 }
 
-void Plc::setName(const String &name)
+void PlcClass::setName(const String &name)
 {
     _name = name;
 }
 
-void Plc::begin()
+void PlcClass::begin()
 {
     if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(false); }
     if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(false); }
 }
 
-void Plc::loop()
+void PlcClass::loop()
 {
     if (millis() - _timer >= PLC_TIMER_MS) {
         _timer = millis();
         alarmBuzzerTask();
     }
 }
+
+PlcClass Plc;

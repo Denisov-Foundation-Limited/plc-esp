@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-String GsmModem::getRegStatus(const SIM800RegStatus state) const
+String GsmModemClass::getRegStatus(const SIM800RegStatus state) const
 {
     switch (state)
     {
@@ -38,7 +38,7 @@ String GsmModem::getRegStatus(const SIM800RegStatus state) const
     return F("Unknown");
 }
 
-String GsmModem::getSigLevel(int level) const
+String GsmModemClass::getSigLevel(int level) const
 {
     switch (level)
     {
@@ -63,62 +63,62 @@ String GsmModem::getSigLevel(int level) const
 /*                                                                   */
 /*********************************************************************/
 
-GsmModem::GsmModem(Logger *log, UART *gsmUart, TinyGsm *modem)
+GsmModemClass::GsmModemClass()
 {
-    _gsmUart = gsmUart;
-    _modem = modem;
-    _log = log;
+    _modem = new TinyGsm(_gsmUart);
 }
 
-void GsmModem::setUart(UARTIface *uart)
+void GsmModemClass::setUart(UARTIface *uart)
 {
     _uart = uart;
 }
 
-void GsmModem::setEnabled(bool status)
+void GsmModemClass::setEnabled(bool status)
 {
     _enabled = status;
 }
 
-bool GsmModem::getEnabled() const
+bool GsmModemClass::getEnabled() const
 {
     return _enabled;
 }
 
-UARTIface *GsmModem::getUart() const
+UARTIface *GsmModemClass::getUart() const
 {
     return _uart;
 }
 
-void GsmModem::begin()
+void GsmModemClass::begin()
 {
     if (!_enabled) return;
 
-    _log->info(LOG_MOD_GSM, F("Starting GSM modem"));
-    _gsmUart->begin(_uart->getRate(), SWSERIAL_8N1, _uart->getPin(UART_PIN_RX), _uart->getPin(UART_PIN_TX));
+    Log.info(LOG_MOD_GSM, F("Starting GSM modem"));
+    _gsmUart.begin(_uart->getRate(), SWSERIAL_8N1, _uart->getPin(UART_PIN_RX), _uart->getPin(UART_PIN_TX));
     _modem->restart();
 
-    _log->info(LOG_MOD_GSM, String(F("Modem Info: ")) + _modem->getModemInfo());
+    Log.info(LOG_MOD_GSM, String(F("Modem Info: ")) + _modem->getModemInfo());
 
     if (_modem->getSimStatus() != SIM_READY) {
-        _log->error(LOG_MOD_GSM, F("SIM not ready"));
+        Log.error(LOG_MOD_GSM, F("SIM not ready"));
         return;
     } else {
-        _log->info(LOG_MOD_GSM, F("SIM is ready"));
+        Log.info(LOG_MOD_GSM, F("SIM is ready"));
     }
     
     if (!_modem->waitForNetwork()) 
     {
-        _log->error(LOG_MOD_GSM, F("Failed to connect to network"));
+        Log.error(LOG_MOD_GSM, F("Failed to connect to network"));
         return;
     }
     else
     {
         auto regStatus = _modem->getRegistrationStatus();
-        _log->info(LOG_MOD_GSM, String(F("Registration : ")) + getRegStatus(regStatus));
-        _log->info(LOG_MOD_GSM, String(F("CCID         : ")) + _modem->getSimCCID());
-        _log->info(LOG_MOD_GSM, String(F("IMEI         : ")) + _modem->getIMEI());
-        _log->info(LOG_MOD_GSM, String(F("Operator     : ")) + _modem->getOperator());
-        _log->info(LOG_MOD_GSM, String(F("Signal       : ")) + getSigLevel(_modem->getSignalQuality()));
+        Log.info(LOG_MOD_GSM, String(F("Registration : ")) + getRegStatus(regStatus));
+        Log.info(LOG_MOD_GSM, String(F("CCID         : ")) + _modem->getSimCCID());
+        Log.info(LOG_MOD_GSM, String(F("IMEI         : ")) + _modem->getIMEI());
+        Log.info(LOG_MOD_GSM, String(F("Operator     : ")) + _modem->getOperator());
+        Log.info(LOG_MOD_GSM, String(F("Signal       : ")) + getSigLevel(_modem->getSignalQuality()));
     }
 }
+
+GsmModemClass GsmModem;

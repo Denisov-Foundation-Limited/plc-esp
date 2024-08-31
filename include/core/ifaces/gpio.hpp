@@ -40,11 +40,8 @@ private:
     ExtenderId      _extId;
 
     bool        _state = false;
-
-    Extenders   *_ext;
-    Logger      *_log;
 public:
-    GPIOIface(Logger *log, Extenders *ext, const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId);
+    GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId);
     void setPin(uint8_t pin);
     void setPull(GpioPull pull);
     void setMode(GpioMode mode);

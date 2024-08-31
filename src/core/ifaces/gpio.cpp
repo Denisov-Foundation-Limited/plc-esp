@@ -19,15 +19,13 @@
 /*                                                                   */
 /*********************************************************************/
 
-GPIOIface::GPIOIface(Logger *log, Extenders *ext, const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId)
+GPIOIface::GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId)
 {
     _name = name;
     _pin = pin;
     _mode = mode;
     _pull = pull;
     _extId = extId;
-    _log = log;
-    _ext = ext;
 }
 
 const String &GPIOIface::getName() const
@@ -82,8 +80,8 @@ void GPIOIface::write(bool val)
     } else {
         Extender *e = nullptr;
 
-        if ((e = _ext->getById(_extId)) == nullptr) {
-            _log->error(LOG_MOD_GPIO, String(F("Extender ")) + String(_extId) + String(F(" not found")));
+        if ((e = Extenders.getById(_extId)) == nullptr) {
+            Log.error(LOG_MOD_GPIO, String(F("Extender ")) + String(_extId) + String(F(" not found")));
             return;
         }
 
@@ -99,8 +97,8 @@ bool GPIOIface::read()
     } else {
         Extender *e = nullptr;
 
-        if ((e = _ext->getById(_extId)) == nullptr) {
-            _log->error(LOG_MOD_GPIO, String(F("Extender ")) + String(_extId) + String(F(" not found")));
+        if ((e = Extenders.getById(_extId)) == nullptr) {
+            Log.error(LOG_MOD_GPIO, String(F("Extender ")) + String(_extId) + String(F(" not found")));
             return false;
         }
 

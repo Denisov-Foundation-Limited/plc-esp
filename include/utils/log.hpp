@@ -32,7 +32,7 @@ typedef enum {
     LOG_TYPE_WARNING
 } LogType;
 
-class Logger
+class LogClass
 {
 private:
     void logging(LogType type, LogModule mod, const String &msg);
@@ -42,5 +42,7 @@ public:
     void error(LogModule mod, const String &msg);
     void warning(LogModule mod, const String &msg);
 };
+
+extern LogClass Log;
 
 #endif /* __LOG_HPP__ */

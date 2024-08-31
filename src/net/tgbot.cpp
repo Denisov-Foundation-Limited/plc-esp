@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void TgBot::backMenu(TgUser *user)
+void TgBotClass::backMenu(TgUser *user)
 {
     switch (user->level) {
         case TG_MENU_MAIN:
@@ -45,7 +45,7 @@ void TgBot::backMenu(TgUser *user)
     }
 }
 
-bool TgBot::processLevel(TgUser *user, const String &msg)
+bool TgBotClass::processLevel(TgUser *user, const String &msg)
 {
     switch (user->level) {
         case TG_MENU_MAIN:
@@ -96,7 +96,7 @@ bool TgBot::processLevel(TgUser *user, const String &msg)
                 menu.addButton("Полив");
 
                 resp.setMenu(menu);
-                _fb->sendMessage(resp);
+                FastBot2::sendMessage(resp);
             }
             break;
 
@@ -112,14 +112,14 @@ bool TgBot::processLevel(TgUser *user, const String &msg)
                 menu.addButton("Назад");
 
                 resp.setMenu(menu);
-                _fb->sendMessage(resp);
+                FastBot2::sendMessage(resp);
             }
             break;
     }
     return false;
 }
 
-void TgBot::updateHandler(fb::Update& upd)
+void TgBotClass::updateHandler(fb::Update& upd)
 {
     bool    changeLvl = false;
 
@@ -130,7 +130,7 @@ void TgBot::updateHandler(fb::Update& upd)
         fb::Message msg;
         msg.chatID = id;
         msg.text = F("Доступ запрещён");
-        _fb->sendMessage(msg);
+        FastBot2::sendMessage(msg);
         return;
     }
 
@@ -149,59 +149,22 @@ void TgBot::updateHandler(fb::Update& upd)
 /*                                                                   */
 /*********************************************************************/
 
-TgBot::TgBot(Logger *log, FastBot2 *fb)
-{
-    _log = log;
-    _fb = fb;
-}
-
-void TgBot::setEnabled(bool status)
+void TgBotClass::setEnabled(bool status)
 {
     _enabled = status;
 }
 
-bool TgBot::getEnabled() const
+bool TgBotClass::getEnabled() const
 {
     return _enabled;
 }
 
-void TgBot::setPollMode(fb::Poll mode)
-{
-    _mode = mode;
-}
-
-fb::Poll TgBot::getPollMode() const
-{
-    return _mode;
-}
-
-void TgBot::setProxy(const TgProxy &proxy)
-{
-    _proxy.ip = proxy.ip;
-    _proxy.port = proxy.port;
-}
-
-const TgProxy &TgBot::getProxy()
-{
-    return _proxy;
-}
-
-void TgBot::setPeriod(unsigned period)
-{
-    _period = period;
-}
-
-unsigned TgBot::getPeriod() const
-{
-    return _period;
-}
-
-void TgBot::addUser(TgUser *user)
+void TgBotClass::addUser(TgUser *user)
 {
     _users.push_back(user);
 }
 
-TgUser *TgBot::getUser(const String &name)
+TgUser *TgBotClass::getUser(const String &name)
 {
     for (auto u : _users) {
         if (u->name == name) {
@@ -211,7 +174,7 @@ TgUser *TgBot::getUser(const String &name)
     return nullptr;
 }
 
-TgUser *TgBot::getUser(unsigned chatId)
+TgUser *TgBotClass::getUser(unsigned chatId)
 {
     for (auto u : _users) {
         if (u->chatId == chatId) {
@@ -221,34 +184,26 @@ TgUser *TgBot::getUser(unsigned chatId)
     return nullptr;
 }
 
-const std::vector<TgUser *> &TgBot::getUsers()
+const std::vector<TgUser *> &TgBotClass::getUsers()
 {
     return _users;
 }
 
-void TgBot::setKey(const String &key)
-{
-    _key = key;
-}
-
-void TgBot::begin()
+void TgBotClass::begin()
 {
     if (!_enabled) return;
 
-    _log->info(LOG_MOD_TG, "Starting Telegram Bot");
+    Log.info(LOG_MOD_TG, "Starting Telegram Bot");
 
-    _fb->attachUpdate([this](fb::Update& u){ updateHandler(u); });
-    _fb->setPollMode(_mode, _period);
-    _fb->setToken(_key);
-    if (_proxy.ip != "") {
-        _fb->setProxy(_proxy.ip.c_str(), _proxy.port);
-    }
-    _fb->skipUpdates();
-    _fb->begin();
+    FastBot2::attachUpdate([this](fb::Update& u){ updateHandler(u); });
+    FastBot2::skipUpdates();
+    FastBot2::begin();
 }
 
-void TgBot::loop()
+void TgBotClass::loop()
 {
     if (!_enabled) return;
-    _fb->tick();
+    FastBot2::tick();
 }
+
+TgBotClass TgBot;

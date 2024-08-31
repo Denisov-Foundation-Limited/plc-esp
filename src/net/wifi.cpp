@@ -18,7 +18,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void Wireless::statusTask()
+void WirelessClass::statusTask()
 {
     if ((WiFi.status() != _status) && (!_ap)) {
         _status = WiFi.status();
@@ -27,15 +27,15 @@ void Wireless::statusTask()
         {
         case WL_CONNECTED:
             if (_statusLed != nullptr) { _statusLed->write(true); }
-            _plc->setAlarm(PLC_MOD_WIFI, false);
-            _log->info(LOG_MOD_WIFI, String(F("PLC was connected to SSID: ")) + _ssid);
-            _log->info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
+            Plc.setAlarm(PLC_MOD_WIFI, false);
+            Log.info(LOG_MOD_WIFI, String(F("PLC was connected to SSID: ")) + _ssid);
+            Log.info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
             break;
 
         case WL_CONNECTION_LOST:
             if (_statusLed != nullptr) { _statusLed->write(false); }
-            _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("PLC connection lost to SSID: ")) + _ssid);
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC connection lost to SSID: ")) + _ssid);
             break;
 
         case WL_IDLE_STATUS:
@@ -43,20 +43,20 @@ void Wireless::statusTask()
 
         case WL_NO_SSID_AVAIL:
             if (_statusLed != nullptr) { _statusLed->write(false); }
-            _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("PLC no available SSID: ")) + _ssid);
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC no available SSID: ")) + _ssid);
             break;
 
         case WL_SCAN_COMPLETED:
             if (_statusLed != nullptr) { _statusLed->write(false); }
-            _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("PLC scan completed for SSID: ")) + _ssid);
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC scan completed for SSID: ")) + _ssid);
             break;
         
         default:
             if (_statusLed != nullptr) { _statusLed->write(false); }
-            _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("PLC has been disconnected from SSID: ")) + _ssid);
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC has been disconnected from SSID: ")) + _ssid);
             break;
         }
     }
@@ -68,65 +68,63 @@ void Wireless::statusTask()
 /*                                                                   */
 /*********************************************************************/
 
-Wireless::Wireless(Logger *log, Plc *plc)
+WirelessClass::WirelessClass()
 {
-    _log = log;
-    _plc = plc;
     _ssid = F("FutCityPLC");
 }
 
-void Wireless::setCreds(const String &ssid, const String &passwd)
+void WirelessClass::setCreds(const String &ssid, const String &passwd)
 {
     _ssid = ssid;
     _passwd = passwd;
 }
 
-const String &Wireless::getSSID() const
+const String &WirelessClass::getSSID() const
 {
     return _ssid;
 }
 
-wl_status_t Wireless::getStatus() const
+wl_status_t WirelessClass::getStatus() const
 {
     return _status;
 }
 
-const String &Wireless::getPasswd() const
+const String &WirelessClass::getPasswd() const
 {
     return _passwd;
 }
 
-GPIOIface *Wireless::getStatusLed() const
+GPIOIface *WirelessClass::getStatusLed() const
 {
     return _statusLed;
 }
 
-void Wireless::setStatusLed(GPIOIface *gpio)
+void WirelessClass::setStatusLed(GPIOIface *gpio)
 {
     _statusLed = gpio;
 }
 
-void Wireless::setEnabled(bool status)
+void WirelessClass::setEnabled(bool status)
 {
     _enabled = status;
 }
 
-bool Wireless::getEnabled() const
+bool WirelessClass::getEnabled() const
 {
     return _enabled;
 }
 
-void Wireless::setAP(bool status)
+void WirelessClass::setAP(bool status)
 {
     _ap = status;
 }
 
-bool Wireless::getAP() const
+bool WirelessClass::getAP() const
 {
     return _ap;
 }
 
-String Wireless::getIP() const
+String WirelessClass::getIP() const
 {
     if (_ap)
         return WiFi.softAPIP().toString();
@@ -134,30 +132,32 @@ String Wireless::getIP() const
         return WiFi.localIP().toString();
 }
 
-void Wireless::begin()
+void WirelessClass::begin()
 {
     if (!_enabled) return;
 
     if (_statusLed != nullptr) { _statusLed->write(false); }
 
     if (!_ap) {
-        _log->info(LOG_MOD_WIFI, String(F("Connecting to SSID: ")) + _ssid);
+        Log.info(LOG_MOD_WIFI, String(F("Connecting to SSID: ")) + _ssid);
         WiFi.mode(WIFI_STA);
         WiFi.begin(_ssid, _passwd);
     } else {
-        _log->info(LOG_MOD_WIFI, String(F("Starting AP: ")) + _ssid);
+        Log.info(LOG_MOD_WIFI, String(F("Starting AP: ")) + _ssid);
         WiFi.mode(WIFI_AP);
         WiFi.softAP(_ssid, _passwd);
-        _log->info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
+        Log.info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
         if (_statusLed != nullptr) { _statusLed->write(true); }
-        _plc->setAlarm(PLC_MOD_WIFI, false);
+        Plc.setAlarm(PLC_MOD_WIFI, false);
     }
 }
 
-void Wireless::loop()
+void WirelessClass::loop()
 {
     if (millis() - _timer >= WIFI_DELAY_MS) {
         _timer = millis();
         statusTask();
     }
 }
+
+WirelessClass Wireless;

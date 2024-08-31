@@ -23,47 +23,29 @@
 #include "net/tgbot.hpp"
 #include "net/websrv.hpp"
 
-auto gsmSerial = new UART();
-auto logs = new Logger();
-auto cliReader = new CLIReader();
-auto plc = new Plc();
-auto fb2 = new FastBot2();
-auto aSrv = new AsyncWebServer(80);
-auto gsmModem = new TinyGsm(*gsmSerial);
-auto ext = new Extenders(logs);
-auto webSrv = new WebServer(logs, aSrv);
-auto tgBot = new TgBot(logs, fb2);
-auto wifi = new Wireless(logs, plc);
-auto ifaces = new Interfaces(logs);
-auto modem = new GsmModem(logs, gsmSerial, gsmModem);
-auto configs = new Configs(logs, modem, ext, ifaces, wifi, plc);
-auto cliInfo = new CLIInformer(wifi, ifaces, ext);
-auto cliCfg = new CLIConfigurator(logs, wifi, ifaces, ext);
-auto cliCp = new CLIProcessor(logs, configs, cliCfg, cliInfo, ifaces, ext);
-
 void setup()
 {
-    logs->begin();
+    Log.begin();
     delay(1000);
     Serial.println("");
-    logs->info(LOG_MOD_MAIN, F("Starting controller..."));
-    if (!configs->begin()) return;
-    plc->begin();
-    wifi->begin();
-    tgBot->begin();
-    modem->begin();
-    webSrv->begin();
-    cliCp->begin();
+    Log.info(LOG_MOD_MAIN, F("Starting controller..."));
+    if (!Configs.begin()) return;
+    Plc.begin();
+    Wireless.begin();
+    TgBot.begin();
+    GsmModem.begin();
+    WebServer.begin();
+    CLIProcessor.begin();
 }
 
 void loop()
 {
-    cliReader->read();
-    if (cliReader->isNewString()) {
-        cliCp->parse(cliReader->getString());
-        cliReader->reset();
+    CLIReader.read();
+    if (CLIReader.isNewString()) {
+        CLIProcessor.parse(CLIReader.getString());
+        CLIReader.reset();
     }
-    wifi->loop();
-    plc->loop();
-    tgBot->loop();
+    Wireless.loop();
+    Plc.loop();
+    TgBot.loop();
 }

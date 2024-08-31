@@ -29,16 +29,9 @@ typedef enum {
     CFG_SRC_FLASH
 } ConfigsSource;
 
-class Configs
+class ConfigsClass
 {
 private:
-    Logger      *_log;
-    GsmModem    *_modem;
-    Extenders   *_ext;
-    Interfaces  *_ifaces;
-    Wireless    *_wifi;
-    Plc         *_plc;
-
     ConfigsSource _src;
 
     bool initDevice();
@@ -46,12 +39,13 @@ private:
     bool printFile(const String &name);
     bool generateRunning(JsonDocument &doc);
 public:
-    Configs(Logger *log, GsmModem *modem, Extenders *ext, Interfaces *ifaces, Wireless *wifi, Plc *plc);
     bool begin();
     bool writeAll();
     bool eraseAll();
     bool showStartup();
     bool showRunning();
 };
+
+extern ConfigsClass Configs;
 
 #endif /* __CONFIGS_HPP__ */

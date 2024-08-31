@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void Logger::logging(LogType type, LogModule mod, const String &msg)
+void LogClass::logging(LogType type, LogModule mod, const String &msg)
 {
     String  sType;
     String  sMod;
@@ -85,22 +85,24 @@ void Logger::logging(LogType type, LogModule mod, const String &msg)
 /*                                                                   */
 /*********************************************************************/
 
-void Logger::begin()
+void LogClass::begin()
 {
     Serial.begin(115200);
 }
 
-void Logger::info(LogModule mod, const String &msg)
+void LogClass::info(LogModule mod, const String &msg)
 {
     logging(LOG_TYPE_INFO, mod, msg);
 }
 
-void Logger::error(LogModule mod, const String &msg)
+void LogClass::error(LogModule mod, const String &msg)
 {
     logging(LOG_TYPE_ERROR, mod, msg);
 }
 
-void Logger::warning(LogModule mod, const String &msg)
+void LogClass::warning(LogModule mod, const String &msg)
 {
     logging(LOG_TYPE_WARNING, mod, msg);
 }
+
+LogClass Log;

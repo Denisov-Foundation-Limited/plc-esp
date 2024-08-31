@@ -18,17 +18,19 @@
 #define CLI_TAB_CHAR    9
 #define CLI_ESC_CHAR    27
 
-class CLIReader
+class CLIReaderClass
 {
 private:
     String  _inStr;
     bool    _complete;
 public:
-    CLIReader();
+    CLIReaderClass();
     bool isNewString() const;
     const String& getString() const;
     void read();
     void reset();
 };
+
+extern CLIReaderClass CLIReader;
 
 #endif /* __CLI_READER_HPP__ */

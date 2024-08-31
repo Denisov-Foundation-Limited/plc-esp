@@ -16,30 +16,23 @@
 #include "core/ifaces/spi.hpp"
 #include "core/ifaces/i2c.hpp"
 
-CLIInformer::CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext)
-{
-    _wifi = wifi;
-    _ifaces = ifaces;
-    _ext = ext;
-}
-
-void CLIInformer::showWiFi()
+void CLIInformerClass::showWiFi()
 {
     Serial.println(F("\nWiFi configuration:"));
-    Serial.printf("\tEnabled    : %s\n", (_wifi->getEnabled() == true) ? "true" : "false");
-    Serial.printf("\tSSID       : %s\n", _wifi->getSSID().c_str());
-    Serial.printf("\tPassword   : %s\n", _wifi->getPasswd().c_str());
-    Serial.printf("\tAP         : %s\n\n", (_wifi->getAP() == true) ? "on" : "off");
+    Serial.printf("\tEnabled    : %s\n", (Wireless.getEnabled() == true) ? "true" : "false");
+    Serial.printf("\tSSID       : %s\n", Wireless.getSSID().c_str());
+    Serial.printf("\tPassword   : %s\n", Wireless.getPasswd().c_str());
+    Serial.printf("\tAP         : %s\n\n", (Wireless.getAP() == true) ? "on" : "off");
 }
 
-void CLIInformer::showWiFiStatus()
+void CLIInformerClass::showWiFiStatus()
 {
     String wifiStatus = F("Error");
 
-    if (_wifi->getAP()) {
+    if (Wireless.getAP()) {
         wifiStatus = "AP";
     } else {
-        switch (_wifi->getStatus())
+        switch (Wireless.getStatus())
         {
             case WL_CONNECTED:
                 wifiStatus = F("Connected");
@@ -83,16 +76,16 @@ void CLIInformer::showWiFiStatus()
 
     Serial.println(F("\nWiFi status:"));
     Serial.printf("\tStatus : %s\n", wifiStatus.c_str());
-    Serial.printf("\tIP     : %s\n\n", _wifi->getIP().c_str());
+    Serial.printf("\tIP     : %s\n\n", Wireless.getIP().c_str());
 }
 
-void CLIInformer::showInterfaces()
+void CLIInformerClass::showInterfaces()
 {
     Serial.println("");
     Serial.println(F("\tName         Type       Pin           Mode      Pull    Ext"));
     Serial.println(F("\t----------   --------   -----------   -------   -----   ----"));
 
-    for (auto iface : _ifaces->getInterfaces()) {
+    for (auto iface : Interfaces.getInterfaces()) {
         if (iface->getType() != INT_TYPE_GPIO) {
             continue;
         }
@@ -131,7 +124,7 @@ void CLIInformer::showInterfaces()
             (gpio->getExtId() == EXT_NOT_USED) ? "CPU" : String(gpio->getExtId()).c_str());
     }
 
-    for (auto iface : _ifaces->getInterfaces()) {
+    for (auto iface : Interfaces.getInterfaces()) {
         if (iface->getType() != INT_TYPE_OW) {
             continue;
         }
@@ -143,7 +136,7 @@ void CLIInformer::showInterfaces()
             F("N/S"), F("CPU"));
     }
 
-    for (auto iface : _ifaces->getInterfaces()) {
+    for (auto iface : Interfaces.getInterfaces()) {
         if (iface->getType() != INT_TYPE_I2C) {
             continue;
         }
@@ -158,7 +151,7 @@ void CLIInformer::showInterfaces()
             F("N/S"), F("CPU"));
     }
 
-    for (auto iface : _ifaces->getInterfaces()) {
+    for (auto iface : Interfaces.getInterfaces()) {
         if (iface->getType() != INT_TYPE_SPI) {
             continue;
         }
@@ -177,13 +170,13 @@ void CLIInformer::showInterfaces()
     Serial.println("");
 }
 
-void CLIInformer::showInterfacesStatus()
+void CLIInformerClass::showInterfacesStatus()
 {
     Serial.println("");
     Serial.println(F("\tName         State"));
     Serial.println(F("\t----------   -----"));
 
-    for (auto iface : _ifaces->getInterfaces()) {
+    for (auto iface : Interfaces.getInterfaces()) {
         if (iface->getType() != INT_TYPE_GPIO) {
             continue;
         }
@@ -197,19 +190,19 @@ void CLIInformer::showInterfacesStatus()
     Serial.println("");
 }
 
-void CLIInformer::showExtenders()
+void CLIInformerClass::showExtenders()
 {
     Serial.println("");
     Serial.println(F("\tId    Address"));
     Serial.println(F("\t---   -------"));
 
-    for (auto ext : _ext->getExtenders()) {
+    for (auto ext : Extenders.getExtenders()) {
         Serial.printf("\t%-3d   0x%-X\n", ext->getID(), ext->getAddr());
     }
     Serial.println("");
 }
 
-void CLIInformer::showTankStatus()
+void CLIInformerClass::showTankStatus()
 {
     Serial.println("");
     Serial.println(F("\tId   Name                     Status   Pump   Valve   Level"));
@@ -224,3 +217,5 @@ void CLIInformer::showTankStatus()
     }
     Serial.println("");*/
 }
+
+CLIInformerClass CLIInformer;

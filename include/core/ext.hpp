@@ -63,7 +63,7 @@ public:
     void setAddr(unsigned addr);
 };
 
-class Extenders
+class ExtendersClass
 {
 private:
     std::vector<Extender*>   _exts;
@@ -71,14 +71,14 @@ private:
                                                         EXT_ADDR_4, EXT_ADDR_5, EXT_ADDR_6,
                                                         EXT_ADDR_7, EXT_ADDR_8 };
 
-    Logger *_log;
 public:
-    Extenders(Logger *log) : _log(log) { }
     void addExtender(Extender *ext);
     Extender *getById(ExtenderId id) const;
     std::vector<Extender*> &getExtenders();
     bool isExists(ExtenderId id);
     unsigned getLastFreeAddr() const;
 };
+
+extern ExtendersClass Extenders;
 
 #endif /* __EXTENDERS_HPP__ */

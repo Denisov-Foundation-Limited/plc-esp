@@ -11,12 +11,7 @@
 
 #include "core/ifaces/ifaces.hpp"
 
-Interfaces::Interfaces(Logger *log)
-{
-    _log = log;
-}
-
-void Interfaces::addInterface(Interface *iface)
+void InterfacesClass::addInterface(Interface *iface)
 {
     String sType;
 
@@ -36,13 +31,17 @@ void Interfaces::addInterface(Interface *iface)
         case INT_TYPE_OW:
             sType = F("OneWire");
             break;
+
+        case INT_TYPE_UART:
+            sType = F("UART");
+            break;
     }
 
     _ifaces.push_back(iface);
-    _log->info(LOG_MOD_IFACES, String(F("Add interface: ")) + iface->getName() + String(F(" type: ")) + sType);
+    Log.info(LOG_MOD_IFACES, String(F("Add interface: ")) + iface->getName() + String(F(" type: ")) + sType);
 }
 
-Interface *Interfaces::getInterface(const String &name)
+Interface *InterfacesClass::getInterface(const String &name)
 {
     for (auto *iface : _ifaces) {
         if (iface->getName() == name) {
@@ -52,7 +51,9 @@ Interface *Interfaces::getInterface(const String &name)
     return nullptr;
 }
 
-const std::vector<Interface *> &Interfaces::getInterfaces() const
+const std::vector<Interface *> &InterfacesClass::getInterfaces() const
 {
     return _ifaces;
 }
+
+InterfacesClass Interfaces;

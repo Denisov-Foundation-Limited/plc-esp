@@ -26,7 +26,7 @@
 
 #define WIFI_DELAY_MS   1000
 
-class Wireless
+class WirelessClass
 {
 private:
     String      _ssid;
@@ -37,12 +37,9 @@ private:
     wl_status_t _status = WL_DISCONNECTED;
     unsigned    _timer = 0;
 
-    Logger  *_log;
-    Plc     *_plc;
-
     void statusTask();
 public:
-    Wireless(Logger *log, Plc *plc);
+    WirelessClass();
     void setCreds(const String &ssid, const String &passwd);
     const String &getSSID() const;
     const String &getPasswd() const;
@@ -57,5 +54,7 @@ public:
     void begin();
     void loop();
 };
+
+extern WirelessClass Wireless;
 
 #endif /* __WIRELESS_HPP__ */

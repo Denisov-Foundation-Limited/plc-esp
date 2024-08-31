@@ -22,15 +22,9 @@
 
 #include <vector>
 
-class CLIConfigurator
+class CLIConfiguratorClass
 {
-private:
-    Wireless    *_wifi;
-    Interfaces *_ifaces;
-    Extenders   *_ext;
-    Logger      *_log; 
 public:
-    CLIConfigurator(Logger *log, Wireless *wifi, Interfaces *ifaces, Extenders *ext);
     bool configWiFi(const String &cmd);
     bool configTanks(const String &cmd);
     bool configTank(const String &tankName, const String &cmd);
@@ -39,5 +33,7 @@ public:
     bool configExts(const String &cmd);
     bool configExt(ExtenderId extId, const String &cmd);
 };
+
+extern CLIConfiguratorClass CLIConfigurator;
 
 #endif /* __CLI_CONFIGURATOR_HPP__*/

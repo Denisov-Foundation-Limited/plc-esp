@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void CLIProcessor::printCall()
+void CLIProcessorClass::printCall()
 {
     switch (_level)
     {
@@ -65,22 +65,12 @@ void CLIProcessor::printCall()
 /*                                                                   */
 /*********************************************************************/
 
-CLIProcessor::CLIProcessor(Logger  *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo, Interfaces *ifaces, Extenders *ext)
-{
-    _log = log;
-    _cfg = cfg;
-    _cliCfg = cliCfg;
-    _cliInfo = cliInfo;
-    _ifaces = ifaces;
-    _ext = ext;
-}
-
-void CLIProcessor::begin()
+void CLIProcessorClass::begin()
 {
     Serial.printf("\n\n%s", F("console#"));
 }
 
-bool CLIProcessor::parse(const String &cmd)
+bool CLIProcessorClass::parse(const String &cmd)
 {
     if (cmd == "exit" || cmd == "ex") {
         processExit();
@@ -91,11 +81,11 @@ bool CLIProcessor::parse(const String &cmd)
         switch (_level)
         {
         case CON_LEVEL_WIFI:
-            isOk = _cliCfg->configWiFi(cmd);
+            isOk = CLIConfigurator.configWiFi(cmd);
             break;
 
         case CON_LEVEL_TANKS:
-            isOk = _cliCfg->configTanks(cmd);
+            isOk = CLIConfigurator.configTanks(cmd);
             if (!isOk && (cmd.indexOf("tank ") >= 0)) {
                 String value(cmd);
 
@@ -104,56 +94,56 @@ bool CLIProcessor::parse(const String &cmd)
                     _objName = value;
                     _level = CON_LEVEL_TANK;
                 } else {
-                    _log->error(LOG_MOD_CLI, "Tank " + value + " not found.");
+                    Log.error(LOG_MOD_CLI, "Tank " + value + " not found.");
                 }*/
                 isOk = true;
             }
             break;
 
         case CON_LEVEL_TANK:
-            isOk = _cliCfg->configTank(_objName, cmd);
+            isOk = CLIConfigurator.configTank(_objName, cmd);
             break;
 
         case CON_LEVEL_IFACES:
-            isOk = _cliCfg->configInterfaces(cmd);
+            isOk = CLIConfigurator.configInterfaces(cmd);
             if (!isOk && (cmd.indexOf("if ") >= 0)) {
                 String value(cmd);
 
                 value.remove(0, 3);
 
-                if (_ifaces->getInterface(value) != nullptr) {
+                if (Interfaces.getInterface(value) != nullptr) {
                     _objName = value;
                     _level = CON_LEVEL_IFACE;
                 } else {
-                    _log->error(LOG_MOD_CLI, String(F("Interface ")) + value + String(F(" not found.")));
+                    Log.error(LOG_MOD_CLI, String(F("Interface ")) + value + String(F(" not found.")));
                 }
                 isOk = true;
             }
             break;
 
         case CON_LEVEL_IFACE:
-            isOk = _cliCfg->configInterface(_objName, cmd);
+            isOk = CLIConfigurator.configInterface(_objName, cmd);
             break;
 
         case CON_LEVEL_EXTS:
-            isOk = _cliCfg->configExts(cmd);
+            isOk = CLIConfigurator.configExts(cmd);
             if (!isOk && (cmd.indexOf("ext ") >= 0)) {
                 String value(cmd);
 
                 value.remove(0, 4);
 
-                if (_ext->getById(static_cast<ExtenderId>(value.toInt())) != nullptr) {
+                if (Extenders.getById(static_cast<ExtenderId>(value.toInt())) != nullptr) {
                     _objName = value;
                     _level = CON_LEVEL_EXT;
                 } else {
-                    _log->error(LOG_MOD_CLI, String(F("Extender ")) + value + String(F(" not found.")));
+                    Log.error(LOG_MOD_CLI, String(F("Extender ")) + value + String(F(" not found.")));
                 }
                 isOk = true;
             }
             break;
 
         case CON_LEVEL_EXT:
-            isOk = _cliCfg->configExt(static_cast<ExtenderId>(_objName.toInt()), cmd);
+            isOk = CLIConfigurator.configExt(static_cast<ExtenderId>(_objName.toInt()), cmd);
             break;
 
         case CON_LEVEL_ENABLE:
@@ -186,39 +176,39 @@ bool CLIProcessor::parse(const String &cmd)
     return true;
 }
 
-bool CLIProcessor::parseEnableCmd(const String &cmd)
+bool CLIProcessorClass::parseEnableCmd(const String &cmd)
 {
     if (cmd == "reset" || cmd == "reload") {
         ESP.restart();
     } else if ((cmd == "show int") || (cmd == "show interfaces")) {
-        _cliInfo->showInterfaces();
+        CLIInformer.showInterfaces();
     } else if ((cmd == "show int status") || (cmd == "show interfaces status")) {
-        _cliInfo->showInterfacesStatus();
+        CLIInformer.showInterfacesStatus();
     } else if (cmd == "show ext") {
-        _cliInfo->showExtenders();
+        CLIInformer.showExtenders();
     } else if (cmd == "show wifi") {
-        _cliInfo->showWiFi();
+        CLIInformer.showWiFi();
     } else if ((cmd == "show start") || (cmd == "show startup")) {
-        if (!_cfg->showStartup()) {
-            _log->error(LOG_MOD_CLI, F("Startup configs not found"));
+        if (!Configs.showStartup()) {
+            Log.error(LOG_MOD_CLI, F("Startup configs not found"));
         }
     } else if ((cmd == "show run") || (cmd == "show running")) {
-        _cfg->showRunning();
+        Configs.showRunning();
     } else if (cmd == "show wifi status") {
-        _cliInfo->showWiFiStatus();
+        CLIInformer.showWiFiStatus();
     } else if (cmd == "show tank status") {
-        _cliInfo->showTankStatus();
+        CLIInformer.showTankStatus();
     } else if (cmd == "write") {
-        if (_cfg->writeAll()) {
-            _log->info(LOG_MOD_CLI, F("Configs was saved"));
+        if (Configs.writeAll()) {
+            Log.info(LOG_MOD_CLI, F("Configs was saved"));
         } else {
-            _log->error(LOG_MOD_CLI, F("Failed to save configs"));
+            Log.error(LOG_MOD_CLI, F("Failed to save configs"));
         }
     } else if (cmd == "erase") {
-        if (_cfg->eraseAll()) {
-            _log->info(LOG_MOD_CLI, F("Configs was erased"));
+        if (Configs.eraseAll()) {
+            Log.info(LOG_MOD_CLI, F("Configs was erased"));
         } else {
-            _log->error(LOG_MOD_CLI, F("Failed to erase configs"));
+            Log.error(LOG_MOD_CLI, F("Failed to erase configs"));
         }
     } else if (cmd == "config" || cmd == "con") {
         _level = CON_LEVEL_CONFIG;
@@ -241,7 +231,7 @@ bool CLIProcessor::parseEnableCmd(const String &cmd)
     return true;
 }
 
-bool CLIProcessor::parseConfigCmd(const String &cmd)
+bool CLIProcessorClass::parseConfigCmd(const String &cmd)
 {
     if (cmd == "wifi") {
         _level = CON_LEVEL_WIFI;
@@ -263,7 +253,7 @@ bool CLIProcessor::parseConfigCmd(const String &cmd)
     return true;
 }
 
-void CLIProcessor::processExit()
+void CLIProcessorClass::processExit()
 {
     switch (_level)
     {
@@ -294,3 +284,5 @@ void CLIProcessor::processExit()
         break;
     }
 }
+
+CLIProcessorClass CLIProcessor;

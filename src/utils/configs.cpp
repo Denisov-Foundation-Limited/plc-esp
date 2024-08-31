@@ -26,7 +26,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-bool Configs::printFile(const String &name)
+bool ConfigsClass::printFile(const String &name)
 {
     File    file;
 
@@ -47,44 +47,44 @@ bool Configs::printFile(const String &name)
     return true;
 }
 
-bool Configs::initDevice()
+bool ConfigsClass::initDevice()
 {
-    _log->info(LOG_MOD_CFG, F("Configs not found. Init new device"));
+    Log.info(LOG_MOD_CFG, F("Configs not found. Init new device"));
 
     for (auto& e : extenders) {
-        _ext->addExtender(new Extender(static_cast<ExtenderId>(e.id), e.addr));
+        Extenders.addExtender(new Extender(static_cast<ExtenderId>(e.id), e.addr));
     }
 
     /* GPIO Interface */
 
     int i = 1;
     for (auto& p : inputs) {
-        _ifaces->addInterface(new GPIOIface(_log, _ext, "in-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+        Interfaces.addInterface(new GPIOIface("in-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
         i++;
     }
 
     i = 1;
     for (auto& p : extInputs) {
-        if (_ext->getById(static_cast<ExtenderId>(p.extId)) != nullptr) {
-            _ifaces->addInterface(new GPIOIface(_log, _ext, "in-" + String(p.extId) + "/" + String(i), p.pin, GPIO_MOD_INPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId)));
+        if (Extenders.getById(static_cast<ExtenderId>(p.extId)) != nullptr) {
+            Interfaces.addInterface(new GPIOIface("in-" + String(p.extId) + "/" + String(i), p.pin, GPIO_MOD_INPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId)));
         }
         i++;
     }
 
     i = 1;
     for (auto& p : relays) {
-        auto pin = new GPIOIface(_log, _ext, "rly-0/" + String(i), p, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+        auto pin = new GPIOIface("rly-0/" + String(i), p, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
         pin->write(false);
-        _ifaces->addInterface(pin);
+        Interfaces.addInterface(pin);
         i++;
     }
 
     i = 1;
     for (auto& p : extRelays) {
-        if (_ext->getById(static_cast<ExtenderId>(p.extId)) != nullptr) {
-            auto pin = new GPIOIface(_log, _ext, "rly-" + String(p.extId) + "/" + String(i), p.pin, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId));
+        if (Extenders.getById(static_cast<ExtenderId>(p.extId)) != nullptr) {
+            auto pin = new GPIOIface("rly-" + String(p.extId) + "/" + String(i), p.pin, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId));
             pin->write(false);
-            _ifaces->addInterface(pin);
+            Interfaces.addInterface(pin);
         }
         i++;
     }
@@ -93,7 +93,7 @@ bool Configs::initDevice()
 
     i = 1;
     for (auto& p : sensors) {
-        _ifaces->addInterface(new GPIOIface(_log, _ext, "sens-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+        Interfaces.addInterface(new GPIOIface("sens-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
         i++;
     }
 
@@ -101,36 +101,36 @@ bool Configs::initDevice()
 
     i = 1;
     for (auto& p : ows) {
-        _ifaces->addInterface(new OneWireIface("ow-" + String(i), p));
+        Interfaces.addInterface(new OneWireIface("ow-" + String(i), p));
         i++;
     }
 
     /* I2C Interface */
 
-    _ifaces->addInterface(new I2CIface(F("i2c"), I2C_SDA_PIN, I2C_SCL_PIN));
+    Interfaces.addInterface(new I2CIface(F("i2c"), I2C_SDA_PIN, I2C_SCL_PIN));
 
     /* SPI Interface */
 
-    _ifaces->addInterface(new SPIface(F("spi"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_SS_PIN, 0));
+    Interfaces.addInterface(new SPIface(F("spi"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_SS_PIN, 0));
 
     /* UART Interface */
 
-    _ifaces->addInterface(new UARTIface(F("uart-gsm"), GSM_RX_PIN, GSM_TX_PIN, GSM_RST_PIN, GSM_MODEM_RATE));
-    _ifaces->addInterface(new UARTIface(F("uart-485"), RS485_RX_PIN, RS485_TX_PIN, RS485_IO_PIN, RS485_TRANSFER_RATE));
+    Interfaces.addInterface(new UARTIface(F("uart-gsm"), GSM_RX_PIN, GSM_TX_PIN, GSM_RST_PIN, GSM_MODEM_RATE));
+    Interfaces.addInterface(new UARTIface(F("uart-485"), RS485_RX_PIN, RS485_TX_PIN, RS485_IO_PIN, RS485_TRANSFER_RATE));
 
     /* GSM Modem setup */
 
     Interface *iface = nullptr;
 
-    if ((iface = _ifaces->getInterface("uart-gsm")) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Interface uart-gsm not found"));
+    if ((iface = Interfaces.getInterface("uart-gsm")) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface uart-gsm not found"));
     }
-    _modem->setUart(static_cast<UARTIface *>(iface));
+    GsmModem.setUart(static_cast<UARTIface *>(iface));
 
     return true;
 }
 
-bool Configs::readAll(ConfigsSource src)
+bool ConfigsClass::readAll(ConfigsSource src)
 {
     JsonDocument    doc;
     File            file;
@@ -156,7 +156,7 @@ bool Configs::readAll(ConfigsSource src)
 
     JsonArray exts = doc["extenders"];
     for (uint8_t i = 0; i < exts.size(); i++) {
-        _ext->addExtender(new Extender(static_cast<ExtenderId>(exts[i]["id"]), exts[i]["addr"]));
+        Extenders.addExtender(new Extender(static_cast<ExtenderId>(exts[i]["id"]), exts[i]["addr"]));
     }
 
     /*
@@ -174,7 +174,7 @@ bool Configs::readAll(ConfigsSource src)
             } else if (jifaces[i]["mode"] == "output") {
                 type = GPIO_MOD_OUTPUT;
             } else {
-                _log->error(LOG_MOD_CFG, String(F("GPIO mode not found: ")) + jifaces[i]["mode"].as<String>());
+                Log.error(LOG_MOD_CFG, String(F("GPIO mode not found: ")) + jifaces[i]["mode"].as<String>());
                 doc.clear();
                 return false;
             }
@@ -186,23 +186,23 @@ bool Configs::readAll(ConfigsSource src)
             } else if (jifaces[i]["pull"] == "down") {
                 pull = GPIO_PULL_DOWN;
             } else {
-                _log->error(LOG_MOD_CFG, String(F("GPIO pull not found: ")) + jifaces[i]["pull"].as<String>());
+                Log.error(LOG_MOD_CFG, String(F("GPIO pull not found: ")) + jifaces[i]["pull"].as<String>());
                 doc.clear();
                 return false;
             }
 
-            _ifaces->addInterface(new GPIOIface(_log, _ext, jifaces[i]["name"], jifaces[i]["pin"], type, pull, jifaces[i]["ext"]));
+            Interfaces.addInterface(new GPIOIface(jifaces[i]["name"], jifaces[i]["pin"], type, pull, jifaces[i]["ext"]));
         } else if (jifaces[i]["type"] == "ow") {
-            _ifaces->addInterface(new OneWireIface(jifaces[i]["name"], jifaces[i]["pin"]));
+            Interfaces.addInterface(new OneWireIface(jifaces[i]["name"], jifaces[i]["pin"]));
         } else if (jifaces[i]["type"] == "spi") {
-            _ifaces->addInterface(new SPIface(jifaces[i]["name"], jifaces[i]["miso"], jifaces[i]["mosi"],
+            Interfaces.addInterface(new SPIface(jifaces[i]["name"], jifaces[i]["miso"], jifaces[i]["mosi"],
                                                 jifaces[i]["sck"], jifaces[i]["ss"], jifaces[i]["freq"]));
         } else if (jifaces[i]["type"] == "i2c") {
-            _ifaces->addInterface(new I2CIface(jifaces[i]["name"], jifaces[i]["sda"], jifaces[i]["scl"]));
+            Interfaces.addInterface(new I2CIface(jifaces[i]["name"], jifaces[i]["sda"], jifaces[i]["scl"]));
         } else if (jifaces[i]["type"] == "uart") {
-            _ifaces->addInterface(new UARTIface(jifaces[i]["name"], jifaces[i]["rx"], jifaces[i]["tx"], jifaces[i]["ctrl"], jifaces[i]["rate"]));
+            Interfaces.addInterface(new UARTIface(jifaces[i]["name"], jifaces[i]["rx"], jifaces[i]["tx"], jifaces[i]["ctrl"], jifaces[i]["rate"]));
         } else {
-            _log->error(LOG_MOD_CFG, String(F("Interface type unknown: ")) + jifaces[i]["type"].as<String>());
+            Log.error(LOG_MOD_CFG, String(F("Interface type unknown: ")) + jifaces[i]["type"].as<String>());
             doc.clear();
             return false;
         }
@@ -212,76 +212,76 @@ bool Configs::readAll(ConfigsSource src)
      * PLC general configurations
      */
 
-    _plc->setName(doc["plc"]["name"]);
-    if ((pin = _ifaces->getInterface(doc["plc"]["iface"]["alarm"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("PLC gpio Alarm not found"));
+    Plc.setName(doc["plc"]["name"]);
+    if ((pin = Interfaces.getInterface(doc["plc"]["iface"]["alarm"])) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("PLC gpio Alarm not found"));
     }
-    _plc->setPin(PLC_GPIO_ALARM_LED, static_cast<GPIOIface *>(pin));
-    if ((pin = _ifaces->getInterface(doc["plc"]["iface"]["buzzer"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("PLC gpio Buzzer not found"));
+    Plc.setPin(PLC_GPIO_ALARM_LED, static_cast<GPIOIface *>(pin));
+    if ((pin = Interfaces.getInterface(doc["plc"]["iface"]["buzzer"])) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("PLC gpio Buzzer not found"));
     }
-    _plc->setPin(PLC_GPIO_BUZZER, static_cast<GPIOIface *>(pin));
+    Plc.setPin(PLC_GPIO_BUZZER, static_cast<GPIOIface *>(pin));
 
     /*
      * Wi-Fi configurations
      */
 
-    _wifi->setCreds(doc["wifi"]["ssid"], doc["wifi"]["passwd"]);
-    _wifi->setAP(doc["wifi"]["ap"]);
-    if ((pin = _ifaces->getInterface(doc["wifi"]["iface"]["status"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("PLC interface for WiFi status led not found"));
+    Wireless.setCreds(doc["wifi"]["ssid"], doc["wifi"]["passwd"]);
+    Wireless.setAP(doc["wifi"]["ap"]);
+    if ((pin = Interfaces.getInterface(doc["wifi"]["iface"]["status"])) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("PLC interface for WiFi status led not found"));
      }
-    _wifi->setStatusLed(static_cast<GPIOIface *>(pin));
-    _wifi->setEnabled(doc["wifi"]["enabled"]);
+    Wireless.setStatusLed(static_cast<GPIOIface *>(pin));
+    Wireless.setEnabled(doc["wifi"]["enabled"]);
 
     /*
      * GSM modem configurations
      */
 
-    if ((pin = _ifaces->getInterface(doc["gsm"]["iface"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Interface uart-gsm not found"));
+    if ((pin = Interfaces.getInterface(doc["gsm"]["iface"])) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface uart-gsm not found"));
     }
-    _modem->setUart(static_cast<UARTIface *>(pin));
-    _modem->setEnabled(doc["gsm"]["enabled"]);
-    _modem->begin();
+    GsmModem.setUart(static_cast<UARTIface *>(pin));
+    GsmModem.setEnabled(doc["gsm"]["enabled"]);
+    GsmModem.begin();
 
     doc.clear();
     return true;
 }
 
-bool Configs::generateRunning(JsonDocument &doc)
+bool ConfigsClass::generateRunning(JsonDocument &doc)
 {
     /*
      * PLC general configurations
      */
 
-    doc["plc"]["name"] = _plc->getName();
-    doc["plc"]["iface"]["alarm"] = (_plc->getPin(PLC_GPIO_ALARM_LED) == nullptr) ? "" : _plc->getPin(PLC_GPIO_ALARM_LED)->getName();
-    doc["plc"]["iface"]["buzzer"] = (_plc->getPin(PLC_GPIO_BUZZER) == nullptr) ? "" : _plc->getPin(PLC_GPIO_BUZZER)->getName();
+    doc["plc"]["name"] = Plc.getName();
+    doc["plc"]["iface"]["alarm"] = (Plc.getPin(PLC_GPIO_ALARM_LED) == nullptr) ? "" : Plc.getPin(PLC_GPIO_ALARM_LED)->getName();
+    doc["plc"]["iface"]["buzzer"] = (Plc.getPin(PLC_GPIO_BUZZER) == nullptr) ? "" : Plc.getPin(PLC_GPIO_BUZZER)->getName();
 
     /*
      * Wi-Fi configurations
      */
 
-    doc["wifi"]["ssid"] = _wifi->getSSID();
-    doc["wifi"]["passwd"] = _wifi->getPasswd();
-    doc["wifi"]["ap"] = _wifi->getAP();
-    doc["wifi"]["gpio"]["status"] = (_wifi->getStatusLed() == nullptr) ? "" : _wifi->getStatusLed()->getName();
-    doc["wifi"]["enabled"] = _wifi->getEnabled();
+    doc["wifi"]["ssid"] = Wireless.getSSID();
+    doc["wifi"]["passwd"] = Wireless.getPasswd();
+    doc["wifi"]["ap"] = Wireless.getAP();
+    doc["wifi"]["gpio"]["status"] = (Wireless.getStatusLed() == nullptr) ? "" : Wireless.getStatusLed()->getName();
+    doc["wifi"]["enabled"] = Wireless.getEnabled();
 
     /*
      * GSM modem configurations
      */
 
-    doc["gsm"]["iface"] = (_modem->getUart() == nullptr) ? "" : _modem->getUart()->getName();
-    doc["gsm"]["enabled"] = _modem->getEnabled();
+    doc["gsm"]["iface"] = (GsmModem.getUart() == nullptr) ? "" : GsmModem.getUart()->getName();
+    doc["gsm"]["enabled"] = GsmModem.getEnabled();
 
     /*
      * Extenders configurations
      */
 
-    for (uint8_t i = 0; i < _ext->getExtenders().size(); i++) {
-        auto e = _ext->getExtenders()[i];
+    for (uint8_t i = 0; i < Extenders.getExtenders().size(); i++) {
+        auto e = Extenders.getExtenders()[i];
         doc["extenders"][i]["id"] = e->getID();
         doc["extenders"][i]["addr"] = e->getAddr();
     }
@@ -290,8 +290,8 @@ bool Configs::generateRunning(JsonDocument &doc)
      * GPIO configurations
      */
 
-    for (uint8_t i = 0; i < _ifaces->getInterfaces().size(); i++) {
-        auto p = _ifaces->getInterfaces()[i];
+    for (uint8_t i = 0; i < Interfaces.getInterfaces().size(); i++) {
+        auto p = Interfaces.getInterfaces()[i];
         doc["interfaces"][i]["name"] = p->getName();
 
         switch (p->getType()) {
@@ -370,22 +370,12 @@ bool Configs::generateRunning(JsonDocument &doc)
 /*                                                                   */
 /*********************************************************************/
 
-Configs::Configs(Logger *log, GsmModem *modem, Extenders *ext, Interfaces *ifaces, Wireless *wifi, Plc *plc)
-{
-    _log = log;
-    _modem = modem;
-    _ext = ext;
-    _ifaces = ifaces;
-    _wifi = wifi;
-    _plc = plc;
-}
-
-bool Configs::begin()
+bool ConfigsClass::begin()
 {
     bool isOk = false;
 
     if (SD.begin(SPI_SS_PIN)) {
-        _log->info(LOG_MOD_CFG, F("SD card found. Reading files"));
+        Log.info(LOG_MOD_CFG, F("SD card found. Reading files"));
         if (!SD.exists(CONFIGS_STARTUP_FILE))
         {
             _src = CFG_SRC_SD;
@@ -395,7 +385,7 @@ bool Configs::begin()
         }
     }
 
-    _log->warning(LOG_MOD_CFG, F("SD card not found. Trying to read from flash memory"));
+    Log.warning(LOG_MOD_CFG, F("SD card not found. Trying to read from flash memory"));
 
 #ifdef ESP32
     isOk = LittleFS.begin(true);
@@ -404,9 +394,9 @@ bool Configs::begin()
 #endif
 
     if (isOk) {
-        _log->info(LOG_MOD_CFG, F("Flash memory initialized"));
+        Log.info(LOG_MOD_CFG, F("Flash memory initialized"));
     } else {
-        _log->error(LOG_MOD_CFG, F("Failed to flash memory"));
+        Log.error(LOG_MOD_CFG, F("Failed to flash memory"));
     }
 
     if (!LittleFS.exists(CONFIGS_STARTUP_FILE))
@@ -418,7 +408,7 @@ bool Configs::begin()
     return readAll(CFG_SRC_FLASH);
 }
 
-bool Configs::writeAll()
+bool ConfigsClass::writeAll()
 {
     JsonDocument    doc;
     File            file;
@@ -443,7 +433,7 @@ bool Configs::writeAll()
     return true;
 }
 
-bool Configs::eraseAll()
+bool ConfigsClass::eraseAll()
 {
     if (_src == CFG_SRC_SD) {
         return SD.remove(CONFIGS_STARTUP_FILE);
@@ -452,12 +442,12 @@ bool Configs::eraseAll()
     return LittleFS.remove(CONFIGS_STARTUP_FILE);;
 }
 
-bool Configs::showStartup()
+bool ConfigsClass::showStartup()
 {
     return printFile(CONFIGS_STARTUP_FILE);
 }
 
-bool Configs::showRunning()
+bool ConfigsClass::showRunning()
 {
     JsonDocument    doc;
 
@@ -471,3 +461,5 @@ bool Configs::showRunning()
 
     return true;
 }
+
+ConfigsClass Configs;

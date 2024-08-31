@@ -22,15 +22,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-CLIConfigurator::CLIConfigurator(Logger *log, Wireless *wifi, Interfaces *ifaces, Extenders *ext)
-{
-    _wifi = wifi;
-    _ifaces = ifaces;
-    _ext = ext;
-    _log = log;
-}
-
-bool CLIConfigurator::configWiFi(const String &cmd)
+bool CLIConfiguratorClass::configWiFi(const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nWiFi configurations commands:"));
@@ -45,24 +37,24 @@ bool CLIConfigurator::configWiFi(const String &cmd)
     }
 
     if (cmd == "shut" || cmd == "shutdown") {
-        _wifi->setEnabled(false);
+        Wireless.setEnabled(false);
         return true;
     } else if (cmd == "no shut" || cmd == "no shutdown") {
-        _wifi->setEnabled(true);
-        _wifi->begin();
+        Wireless.setEnabled(true);
+        Wireless.begin();
         return true;
     } else if (cmd.indexOf(F("ssid ")) >= 0) {
         String value(cmd);
 
         value.remove(0, 5);
-        _wifi->setCreds(value, _wifi->getPasswd());
+        Wireless.setCreds(value, Wireless.getPasswd());
 
         return true;
     } else if (cmd.indexOf(F("passwd ")) >= 0) {
         String value(cmd);
 
         value.remove(0, 7);
-        _wifi->setCreds(_wifi->getSSID(), value);
+        Wireless.setCreds(Wireless.getSSID(), value);
 
         return true;
     } else if (cmd.indexOf(F("ap ")) >= 0) {
@@ -70,9 +62,9 @@ bool CLIConfigurator::configWiFi(const String &cmd)
 
         value.remove(0, 3);
         if (value == "on") {
-            _wifi->setAP(true);
+            Wireless.setAP(true);
         } else if (value == "off") {
-            _wifi->setAP(false);
+            Wireless.setAP(false);
         } else {
             return false;
         }
@@ -83,19 +75,19 @@ bool CLIConfigurator::configWiFi(const String &cmd)
 
         value.remove(0, 11);
 
-        auto iface = _ifaces->getInterface(value);
+        auto iface = Interfaces.getInterface(value);
 
         if (iface == nullptr) {
-            _log->error(LOG_MOD_CLI, "Interface not found");
+            Log.error(LOG_MOD_CLI, "Interface not found");
             return true;
         }
 
         if (iface->getType() != INT_TYPE_GPIO) {
-            _log->error(LOG_MOD_CLI, "Interface is not GPIO");
+            Log.error(LOG_MOD_CLI, "Interface is not GPIO");
             return true;
         }
 
-        _wifi->setStatusLed(static_cast<GPIOIface *>(iface));
+        Wireless.setStatusLed(static_cast<GPIOIface *>(iface));
 
         return true;
     }
@@ -103,7 +95,7 @@ bool CLIConfigurator::configWiFi(const String &cmd)
     return false;
 }
 
-bool CLIConfigurator::configTanks(const String &cmd)
+bool CLIConfiguratorClass::configTanks(const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nTanks configurations commands:"));
@@ -137,7 +129,7 @@ bool CLIConfigurator::configTanks(const String &cmd)
     return false;
 }
 
-bool CLIConfigurator::configTank(const String &tankName, const String &cmd)
+bool CLIConfiguratorClass::configTank(const String &tankName, const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nTanks configurations commands:"));
@@ -171,7 +163,7 @@ bool CLIConfigurator::configTank(const String &tankName, const String &cmd)
     return false;
 }
 
-bool CLIConfigurator::configInterfaces(const String &cmd)
+bool CLIConfiguratorClass::configInterfaces(const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nInterfaces configurations commands:"));
@@ -193,17 +185,17 @@ bool CLIConfigurator::configInterfaces(const String &cmd)
             return false;
 
         if (params[0] == "gpio") {
-            _ifaces->addInterface(static_cast<Interface *>(new GPIOIface(_log, _ext, params[1], 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED)));
+            Interfaces.addInterface(static_cast<Interface *>(new GPIOIface(params[1], 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED)));
         } else if (params[0] == "ow") {
-            _ifaces->addInterface(static_cast<Interface *>(new OneWireIface(params[1], 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new OneWireIface(params[1], 0)));
         } else if (params[0] == "i2c") {
-            _ifaces->addInterface(static_cast<Interface *>(new I2CIface(params[1], 0, 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new I2CIface(params[1], 0, 0)));
         } else if (params[0] == "spi") {
-            _ifaces->addInterface(static_cast<Interface *>(new SPIface(params[1], 0, 0, 0, 0, 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new SPIface(params[1], 0, 0, 0, 0, 0)));
         } else if (params[0] == "uart") {
-            _ifaces->addInterface(static_cast<Interface *>(new UARTIface(params[1], 0, 0, 0, 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new UARTIface(params[1], 0, 0, 0, 0)));
         } else {
-            _log->error(LOG_MOD_CLI, "Unknown interface type");
+            Log.error(LOG_MOD_CLI, "Unknown interface type");
             return true;
         }
 
@@ -213,9 +205,9 @@ bool CLIConfigurator::configInterfaces(const String &cmd)
     return false;
 }
 
-bool CLIConfigurator::configInterface(const String &ifaceName, const String &cmd)
+bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String &cmd)
 {
-    auto iface = _ifaces->getInterface(ifaceName);
+    auto iface = Interfaces.getInterface(ifaceName);
 
     if (cmd == "?" || cmd == "help") {
         Serial.println(    F("\nInterface configurations commands:"));
@@ -317,7 +309,7 @@ bool CLIConfigurator::configInterface(const String &ifaceName, const String &cmd
                     }
                     ext = static_cast<ExtenderId>(value.toInt());
 
-                    if (!_ext->isExists(ext)) {
+                    if (!Extenders.isExists(ext)) {
                         Serial.println(F("\n\tError: Extender not found\n"));
                         return true;
                     }
@@ -437,7 +429,7 @@ bool CLIConfigurator::configInterface(const String &ifaceName, const String &cmd
     return false;
 }
 
-bool CLIConfigurator::configExts(const String &cmd)
+bool CLIConfiguratorClass::configExts(const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nExtenders configurations commands:"));
@@ -453,7 +445,7 @@ bool CLIConfigurator::configExts(const String &cmd)
 
         value.remove(0, 8);
 
-        if ((addr = _ext->getLastFreeAddr()) == 0x0) {
+        if ((addr = Extenders.getLastFreeAddr()) == 0x0) {
             Serial.println(F("\n\tError: No free adresses\n"));
             return true;
         }
@@ -462,7 +454,7 @@ bool CLIConfigurator::configExts(const String &cmd)
             return false;
         }
 
-        _ext->addExtender(new Extender(static_cast<ExtenderId>(value.toInt()), addr));
+        Extenders.addExtender(new Extender(static_cast<ExtenderId>(value.toInt()), addr));
 
         return true;
     }
@@ -470,7 +462,7 @@ bool CLIConfigurator::configExts(const String &cmd)
     return false;
 }
 
-bool CLIConfigurator::configExt(ExtenderId extId, const String &cmd)
+bool CLIConfiguratorClass::configExt(ExtenderId extId, const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nExtender configurations commands:"));
@@ -480,7 +472,7 @@ bool CLIConfigurator::configExt(ExtenderId extId, const String &cmd)
         return true;
     }
 
-    auto ext = _ext->getById(extId);
+    auto ext = Extenders.getById(extId);
     if (ext == nullptr) return false;
 
     if (cmd.indexOf("id ") >= 0) {
@@ -511,3 +503,5 @@ bool CLIConfigurator::configExt(ExtenderId extId, const String &cmd)
 
     return false;
 }
+
+CLIConfiguratorClass CLIConfigurator;

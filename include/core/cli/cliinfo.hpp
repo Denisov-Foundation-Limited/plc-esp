@@ -18,14 +18,9 @@
 #include "core/ifaces/ifaces.hpp"
 #include "core/ext.hpp"
 
-class CLIInformer
+class CLIInformerClass
 {
-private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
 public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
     void showWiFi();
     void showWiFiStatus();
     void showTankStatus();
@@ -33,5 +28,7 @@ public:
     void showInterfacesStatus();
     void showExtenders();
 };
+
+extern CLIInformerClass CLIInformer;
 
 #endif /* __CLI_INFO_HPP__ */

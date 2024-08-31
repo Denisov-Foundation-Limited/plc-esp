@@ -28,7 +28,7 @@ typedef enum {
     PLC_GPIO_MAX
 } PlcGpioType;
 
-class Plc
+class PlcClass
 {
 private:
     String      _name;
@@ -41,7 +41,7 @@ private:
 
     void alarmBuzzerTask();
 public:
-    Plc();
+    PlcClass();
     void setAlarm(PlcMod mod, bool status);
     void setBuzzer(PlcMod mod, bool status);
     GPIOIface *getPin(PlcGpioType type) const;
@@ -51,5 +51,7 @@ public:
     void begin();
     void loop();
 };
+
+extern PlcClass Plc;
 
 #endif /* __PLC_HPP__ */

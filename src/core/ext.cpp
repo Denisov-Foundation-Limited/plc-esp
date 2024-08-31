@@ -58,21 +58,19 @@ void Extender::setAddr(unsigned addr)
     _addr = addr;
 }
 
-
-
-void Extenders::addExtender(Extender *ext)
+void ExtendersClass::addExtender(Extender *ext)
 {
     if (ext->begin()) {
-        _log->info(LOG_MOD_GPIO, "Add Extender " + String(ext->getID()) +
+        Log.info(LOG_MOD_GPIO, "Add Extender " + String(ext->getID()) +
             " addr: " + String(ext->getAddr()));
     } else {
-        _log->warning(LOG_MOD_GPIO, "Extender " + String(ext->getID()) +
+        Log.warning(LOG_MOD_GPIO, "Extender " + String(ext->getID()) +
             " addr: " + String(ext->getAddr()) + " is not online");
     }
     _exts.push_back(ext);
 }
 
-Extender *Extenders::getById(ExtenderId id) const
+Extender *ExtendersClass::getById(ExtenderId id) const
 {
     for (auto *e : _exts) {
         if (e->getID() == id) {
@@ -82,12 +80,12 @@ Extender *Extenders::getById(ExtenderId id) const
     return nullptr;
 }
 
-std::vector<Extender*> &Extenders::getExtenders()
+std::vector<Extender*> &ExtendersClass::getExtenders()
 {
     return _exts;
 }
 
-bool Extenders::isExists(ExtenderId id)
+bool ExtendersClass::isExists(ExtenderId id)
 {
     for (auto *e : _exts) {
         if (e->getID() == id) {
@@ -97,7 +95,7 @@ bool Extenders::isExists(ExtenderId id)
     return false;
 }
 
-unsigned Extenders::getLastFreeAddr() const
+unsigned ExtendersClass::getLastFreeAddr() const
 {
     bool found = false;
 
@@ -116,3 +114,5 @@ unsigned Extenders::getLastFreeAddr() const
 
     return 0;
 }
+
+ExtendersClass Extenders;

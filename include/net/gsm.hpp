@@ -22,25 +22,26 @@
 
 using namespace EspSoftwareSerial;
 
-class GsmModem
+class GsmModemClass
 {
 private:
     bool        _enabled = false;
     UARTIface   *_uart;
 
-    Logger  *_log;
-    UART    *_gsmUart;
-    TinyGsm *_modem;
+    UART        _gsmUart;
+    TinyGsm     *_modem;
 
     String getRegStatus(const SIM800RegStatus state) const;
     String getSigLevel(int level) const;
 public:
-    GsmModem(Logger *log, UART *gsmUart, TinyGsm *modem);
+    GsmModemClass();
     void setUart(UARTIface *uart);
     UARTIface *getUart() const;
     void setEnabled(bool status);
     bool getEnabled() const;
     void begin();
 };
+
+extern GsmModemClass GsmModem;
 
 #endif /* __GSM_HPP__ */

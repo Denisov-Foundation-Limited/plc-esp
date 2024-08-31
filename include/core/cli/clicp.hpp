@@ -32,27 +32,21 @@ typedef enum {
     CON_LEVEL_EXT
 } ConsoleLevel;
 
-class CLIProcessor
+class CLIProcessorClass
 {
 private:
     ConsoleLevel    _level = CON_LEVEL_ENABLE;
     String          _objName = "";
-
-    Logger          *_log;
-    Configs         *_cfg;
-    CLIConfigurator *_cliCfg;
-    CLIInformer     *_cliInfo;
-    Interfaces      *_ifaces;
-    Extenders       *_ext;
 
     void printCall();
     bool parseEnableCmd(const String &cmd);
     bool parseConfigCmd(const String &cmd);
     void processExit();
 public:
-    CLIProcessor(Logger *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo, Interfaces *ifaces, Extenders *ext);
     void begin();
     bool parse(const String &cmd);
 };
+
+extern CLIProcessorClass CLIProcessor;
 
 #endif /* __CLI_COMMAND_PROCESSOR_HPP__ */

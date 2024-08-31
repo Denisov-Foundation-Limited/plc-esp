@@ -18,18 +18,17 @@
 #include "core/ifaces/iface.hpp"
 #include "utils/log.hpp"
 
-class Interfaces
+class InterfacesClass
 {
 private:
     std::vector<Interface *>  _ifaces;
 
-    Logger  *_log;
-
 public:
-    Interfaces(Logger *log);
     void addInterface(Interface *iface);
     Interface *getInterface(const String &name);
     const std::vector<Interface *> &getInterfaces() const;
 };
+
+extern InterfacesClass Interfaces;
 
 #endif /* __INTERFACES_HPP__ */
