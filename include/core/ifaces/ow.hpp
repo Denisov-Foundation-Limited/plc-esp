@@ -9,29 +9,29 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#ifndef __OW_HPP__
+#define __OW_HPP__
 
 #include <Arduino.h>
+#include <vector>
+#include <GyverDS18.h>
 
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
+#include "core/ifaces/iface.hpp"
 
-class CLIInformer
+class OneWireIface : public Interface
 {
 private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
+    uint8_t     _pin;
+    String      _name;
+
 public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
+    OneWireIface(const String &name, uint8_t pin);
+    void setPin(uint8_t gpio);
+    uint8_t getPin() const;
+    const String &getName() const;
+    void setName(const String &name);
+    void findAddresses(std::vector<String> &addrs);
+    IntType getType() const;
 };
 
-#endif /* __CLI_INFO_HPP__ */
+#endif /* __OW_HPP__ */

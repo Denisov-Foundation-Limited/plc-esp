@@ -9,29 +9,41 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#include "core/ifaces/i2c.hpp"
 
-#include <Arduino.h>
-
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
-
-class CLIInformer
+I2CIface::I2CIface(const String &name, uint8_t sda, uint8_t scl)
 {
-private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
-public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
-};
+    _name = name;
+    _pins[I2C_PIN_SDA] = sda;
+    _pins[I2C_PIN_SCL] = scl;
+}
 
-#endif /* __CLI_INFO_HPP__ */
+void I2CIface::setPin(I2cPin pin, uint8_t gpio)
+{
+    _pins[pin] = gpio;
+}
+
+uint8_t I2CIface::getPin(I2cPin pin) const
+{
+    return _pins[pin];
+}
+
+const String &I2CIface::getName() const
+{
+    return _name;
+}
+
+void I2CIface::findDevices(std::vector<unsigned> &devices)
+{
+
+}
+
+IntType I2CIface::getType() const
+{
+    return INT_TYPE_I2C;
+}
+
+void I2CIface::setName(const String &name)
+{
+    _name = name;
+}

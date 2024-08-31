@@ -14,7 +14,7 @@
 
 #include <Arduino.h>
 
-#include "core/gpio.hpp"
+#include "core/ifaces/gpio.hpp"
 
 #define PLC_TIMER_MS    500
 
@@ -32,20 +32,20 @@ class Plc
 {
 private:
     String      _name;
-    GpioPin     *_pins[PLC_GPIO_MAX];
+    GPIOIface  *_pins[PLC_GPIO_MAX];
     unsigned    _timer = 0;
     unsigned    _alarm = 0;
     unsigned    _buzzer = 0;
     bool        _lastAlarm = false;
     bool        _lastBuzzer = false;
 
-    void timerHandler();
+    void alarmBuzzerTask();
 public:
     Plc();
     void setAlarm(PlcMod mod, bool status);
     void setBuzzer(PlcMod mod, bool status);
-    GpioPin *getPin(PlcGpioType type) const;
-    void setPin(PlcGpioType type, GpioPin *pin);
+    GPIOIface *getPin(PlcGpioType type) const;
+    void setPin(PlcGpioType type, GPIOIface *pin);
     const String& getName() const;
     void setName(const String &name);
     void begin();

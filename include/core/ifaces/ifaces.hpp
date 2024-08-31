@@ -9,29 +9,27 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#ifndef __INTERFACES_HPP__
+#define __INTERFACES_HPP__
 
 #include <Arduino.h>
+#include <vector>
 
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
+#include "core/ifaces/iface.hpp"
+#include "utils/log.hpp"
 
-class CLIInformer
+class Interfaces
 {
 private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
+    std::vector<Interface *>  _ifaces;
+
+    Logger  *_log;
+
 public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
+    Interfaces(Logger *log);
+    void addInterface(Interface *iface);
+    Interface *getInterface(const String &name);
+    const std::vector<Interface *> &getInterfaces() const;
 };
 
-#endif /* __CLI_INFO_HPP__ */
+#endif /* __INTERFACES_HPP__ */

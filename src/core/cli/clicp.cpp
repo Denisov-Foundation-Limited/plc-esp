@@ -41,12 +41,12 @@ void CLIProcessor::printCall()
         Serial.printf("%s", F("config(tanks-tnk)#"));
         break;
 
-    case CON_LEVEL_GPIO:
-        Serial.printf("%s", F("config(gpio)#"));
+    case CON_LEVEL_IFACES:
+        Serial.printf("%s", F("config(ifaces)#"));
         break;
 
-    case CON_LEVEL_PIN:
-        Serial.printf("%s", F("config(gpio-pin)#"));
+    case CON_LEVEL_IFACE:
+        Serial.printf("%s", F("config(ifaces-if)#"));
         break;
 
     case CON_LEVEL_EXTS:
@@ -65,13 +65,13 @@ void CLIProcessor::printCall()
 /*                                                                   */
 /*********************************************************************/
 
-CLIProcessor::CLIProcessor(Logger  *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo, Gpio *gpio, Extenders *ext)
+CLIProcessor::CLIProcessor(Logger  *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo, Interfaces *ifaces, Extenders *ext)
 {
     _log = log;
     _cfg = cfg;
     _cliCfg = cliCfg;
     _cliInfo = cliInfo;
-    _gpio = gpio;
+    _ifaces = ifaces;
     _ext = ext;
 }
 
@@ -82,7 +82,7 @@ void CLIProcessor::begin()
 
 bool CLIProcessor::parse(const String &cmd)
 {
-    if (cmd == "exit") {
+    if (cmd == "exit" || cmd == "ex") {
         processExit();
     } else if (cmd == "") {
     } else {
@@ -114,25 +114,25 @@ bool CLIProcessor::parse(const String &cmd)
             isOk = _cliCfg->configTank(_objName, cmd);
             break;
 
-        case CON_LEVEL_GPIO:
-            isOk = _cliCfg->configGpio(cmd);
-            if (!isOk && (cmd.indexOf("pin ") >= 0)) {
+        case CON_LEVEL_IFACES:
+            isOk = _cliCfg->configInterfaces(cmd);
+            if (!isOk && (cmd.indexOf("if ") >= 0)) {
                 String value(cmd);
 
-                value.remove(0, 4);
+                value.remove(0, 3);
 
-                if (_gpio->getPin(value) != nullptr) {
+                if (_ifaces->getInterface(value) != nullptr) {
                     _objName = value;
-                    _level = CON_LEVEL_PIN;
+                    _level = CON_LEVEL_IFACE;
                 } else {
-                    _log->error(LOG_MOD_CLI, String(F("GPIO Pin ")) + value + String(F(" not found.")));
+                    _log->error(LOG_MOD_CLI, String(F("Interface ")) + value + String(F(" not found.")));
                 }
                 isOk = true;
             }
             break;
 
-        case CON_LEVEL_PIN:
-            isOk = _cliCfg->configPin(_objName, cmd);
+        case CON_LEVEL_IFACE:
+            isOk = _cliCfg->configInterface(_objName, cmd);
             break;
 
         case CON_LEVEL_EXTS:
@@ -190,10 +190,10 @@ bool CLIProcessor::parseEnableCmd(const String &cmd)
 {
     if (cmd == "reset" || cmd == "reload") {
         ESP.restart();
-    } else if (cmd == "show gpio") {
-        _cliInfo->showGpio();
-    } else if (cmd == "show gpio status") {
-        _cliInfo->showGpioStatus();
+    } else if ((cmd == "show int") || (cmd == "show interfaces")) {
+        _cliInfo->showInterfaces();
+    } else if ((cmd == "show int status") || (cmd == "show interfaces status")) {
+        _cliInfo->showInterfacesStatus();
     } else if (cmd == "show ext") {
         _cliInfo->showExtenders();
     } else if (cmd == "show wifi") {
@@ -215,21 +215,25 @@ bool CLIProcessor::parseEnableCmd(const String &cmd)
             _log->error(LOG_MOD_CLI, F("Failed to save configs"));
         }
     } else if (cmd == "erase") {
-        _cfg->eraseAll();
+        if (_cfg->eraseAll()) {
+            _log->info(LOG_MOD_CLI, F("Configs was erased"));
+        } else {
+            _log->error(LOG_MOD_CLI, F("Failed to erase configs"));
+        }
     } else if (cmd == "config" || cmd == "con") {
         _level = CON_LEVEL_CONFIG;
     } else if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nDevice console commands:"));
-        Serial.println(F("\tshow wifi        : WiFi configurations"));
-        Serial.println(F("\tshow wifi status : WiFi connection status"));
-        Serial.println(F("\tshow gpio        : GPIO configurations"));
-        Serial.println(F("\tshow gpio status : GPIO statuses"));
-        Serial.println(F("\tshow ext         : I2C extenders configurations"));
-        Serial.println(F("\tshow startup     : Print configs saved to flash"));
-        Serial.println(F("\tshow running     : Print configs from RAM"));
-        Serial.println(F("\treload           : Reboot device"));
-        Serial.println(F("\twrite            : Save all configurations to flash"));
-        Serial.println(F("\terase            : Erase configurations and load default\n"));
+        Serial.println(F("\tshow wifi               : WiFi configurations"));
+        Serial.println(F("\tshow wifi status        : WiFi connection status"));
+        Serial.println(F("\tshow interfaces         : Interfaces configurations"));
+        Serial.println(F("\tshow interfaces status  : Interfaces statuses"));
+        Serial.println(F("\tshow ext                : I2C extenders configurations"));
+        Serial.println(F("\tshow startup            : Print configs saved to flash"));
+        Serial.println(F("\tshow running            : Print configs from RAM"));
+        Serial.println(F("\treload                  : Reboot device"));
+        Serial.println(F("\twrite                   : Save all configurations to flash"));
+        Serial.println(F("\terase                   : Erase configurations and load default\n"));
     } else {
         return false;
     }
@@ -245,14 +249,14 @@ bool CLIProcessor::parseConfigCmd(const String &cmd)
         _level = CON_LEVEL_TANKS;
     } else if (cmd == "ext") {
         _level = CON_LEVEL_EXTS;
-    } else if (cmd == "gpio") {
-        _level = CON_LEVEL_GPIO;
+    } else if (cmd == "interfaces" || cmd == "int") {
+        _level = CON_LEVEL_IFACES;
     } else if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nDevice configuration console commands:"));
-        Serial.println(F("\twifi : WiFi module configurations"));
-        Serial.println(F("\tgpio : GPIO configurations"));
-        Serial.println(F("\text  : Extenders configurations"));
-        Serial.println(F("\texit : Exit from configuration\n"));
+        Serial.println(F("\twifi        : WiFi module configurations"));
+        Serial.println(F("\tinterfaces  : Interfaces configurations"));
+        Serial.println(F("\text         : Extenders configurations"));
+        Serial.println(F("\texit        : Exit from configuration\n"));
     } else {
         return false;
     }
@@ -265,7 +269,7 @@ void CLIProcessor::processExit()
     {
     case CON_LEVEL_WIFI:
     case CON_LEVEL_TANKS:
-    case CON_LEVEL_GPIO:
+    case CON_LEVEL_IFACES:
     case CON_LEVEL_EXTS:
         _level = CON_LEVEL_CONFIG;
         break;
@@ -278,8 +282,8 @@ void CLIProcessor::processExit()
         _level = CON_LEVEL_ENABLE;
         break;
 
-    case CON_LEVEL_PIN:
-        _level = CON_LEVEL_GPIO;
+    case CON_LEVEL_IFACE:
+        _level = CON_LEVEL_IFACES;
         break;
 
     case CON_LEVEL_EXT:

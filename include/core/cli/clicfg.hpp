@@ -18,6 +18,7 @@
 #include "core/cli/cliinfo.hpp"
 #include "utils/utils.hpp"
 #include "net/wifi.hpp"
+#include "core/ifaces/ifaces.hpp"
 
 #include <vector>
 
@@ -25,16 +26,16 @@ class CLIConfigurator
 {
 private:
     Wireless    *_wifi;
-    Gpio        *_gpio;
+    Interfaces *_ifaces;
     Extenders   *_ext;
     Logger      *_log; 
 public:
-    CLIConfigurator(Logger *log, Wireless *wifi, Gpio *gpio, Extenders *ext);
+    CLIConfigurator(Logger *log, Wireless *wifi, Interfaces *ifaces, Extenders *ext);
     bool configWiFi(const String &cmd);
     bool configTanks(const String &cmd);
     bool configTank(const String &tankName, const String &cmd);
-    bool configGpio(const String &cmd);
-    bool configPin(const String &tankName, const String &cmd);
+    bool configInterfaces(const String &cmd);
+    bool configInterface(const String &ifaceName, const String &cmd);
     bool configExts(const String &cmd);
     bool configExt(ExtenderId extId, const String &cmd);
 };

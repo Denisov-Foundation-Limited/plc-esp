@@ -9,29 +9,37 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#ifndef __UART_HPP__
+#define __UART_HPP__
 
 #include <Arduino.h>
+#include <vector>
 
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
+#include "core/ifaces/iface.hpp"
 
-class CLIInformer
+typedef enum {
+    UART_PIN_RX,
+    UART_PIN_TX,
+    UART_PIN_CTRL,
+    UART_PIN_MAX
+} UARTPin;
+
+class UARTIface : public Interface
 {
 private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
+    uint8_t     _pins[UART_PIN_MAX] = { 0 };
+    String      _name;
+    unsigned    _rate;
+
 public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
+    UARTIface(const String &name, uint8_t rx, uint8_t tx, uint8_t ctrl, unsigned rate);
+    void setPin(UARTPin pin, uint8_t gpio);
+    uint8_t getPin(UARTPin pin) const;
+    const String &getName() const;
+    unsigned getRate() const;
+    void setRate(unsigned rate);
+    IntType getType() const;
+    void setName(const String &name);
 };
 
-#endif /* __CLI_INFO_HPP__ */
+#endif /* __UART_HPP__ */

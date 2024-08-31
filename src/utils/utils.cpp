@@ -19,14 +19,12 @@ bool splitString(String str, String delim, std::vector<String> &result)
 
     do {
         String subStr = str.substring(0, str.indexOf(delim));
-        Serial.println(subStr);
         result.push_back(subStr);
         str.remove(0, subStr.length() + 1);
     } while ((str.indexOf(delim) > -1));
 
     if (str != "") {
-        result.push_back(str + '\0');
-        Serial.println(str + '\0');
+        result.push_back(str);
     }
 
     return true;

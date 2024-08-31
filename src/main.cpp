@@ -12,7 +12,7 @@
 #include "utils/log.hpp"
 #include "utils/configs.hpp"
 #include "core/ext.hpp"
-#include "core/gpio.hpp"
+#include "core/ifaces/ifaces.hpp"
 #include "core/cli/clireader.hpp"
 #include "net/gsm.hpp"
 #include "net/wifi.hpp"
@@ -34,12 +34,12 @@ auto ext = new Extenders(logs);
 auto webSrv = new WebServer(logs, aSrv);
 auto tgBot = new TgBot(logs, fb2);
 auto wifi = new Wireless(logs, plc);
-auto gpio = new Gpio(logs, ext);
+auto ifaces = new Interfaces(logs);
 auto modem = new GsmModem(logs, gsmSerial, gsmModem);
-auto configs = new Configs(logs, modem, ext, gpio, wifi, plc);
-auto cliInfo = new CLIInformer(wifi, gpio, ext);
-auto cliCfg = new CLIConfigurator(logs, wifi, gpio, ext);
-auto cliCp = new CLIProcessor(logs, configs, cliCfg, cliInfo, gpio, ext);
+auto configs = new Configs(logs, modem, ext, ifaces, wifi, plc);
+auto cliInfo = new CLIInformer(wifi, ifaces, ext);
+auto cliCfg = new CLIConfigurator(logs, wifi, ifaces, ext);
+auto cliCp = new CLIProcessor(logs, configs, cliCfg, cliInfo, ifaces, ext);
 
 void setup()
 {

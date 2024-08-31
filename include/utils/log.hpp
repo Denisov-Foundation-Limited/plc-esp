@@ -22,7 +22,8 @@ typedef enum {
     LOG_MOD_WIFI,
     LOG_MOD_CLI,
     LOG_MOD_WEB,
-    LOG_MOD_TG
+    LOG_MOD_TG,
+    LOG_MOD_IFACES
 } LogModule;
 
 typedef enum {

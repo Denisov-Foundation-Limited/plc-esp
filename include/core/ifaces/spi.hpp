@@ -9,29 +9,38 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#ifndef __SPI_HPP__
+#define __SPI_HPP__
 
 #include <Arduino.h>
 
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
+#include "core/ifaces/iface.hpp"
 
-class CLIInformer
+typedef enum {
+    SPI_PIN_MISO,
+    SPI_PIN_MOSI,
+    SPI_PIN_SCK,
+    SPI_PIN_SS,
+    SPI_PIN_MAX
+} SpiPin;
+
+
+class SPIface : public Interface
 {
 private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
+    uint8_t     _pins[SPI_PIN_MAX] = { 0 };
+    String      _name;
+    unsigned    _freq;
+
 public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
+    SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq);
+    void setPin(SpiPin pin, uint8_t gpio);
+    uint8_t getPin(SpiPin pin) const;
+    void setFrequency(unsigned freq);
+    unsigned getFrequency() const;
+    const String &getName() const;
+    void setName(const String &name);
+    IntType getType() const;
 };
 
-#endif /* __CLI_INFO_HPP__ */
+#endif /* __SPI_HPP__ */

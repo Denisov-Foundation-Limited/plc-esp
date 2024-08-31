@@ -19,7 +19,7 @@
 
 void WebServer::indexReq(AsyncWebServerRequest *req)
 {
-    req->send(200, "text/html", "FCPLC");
+    req->send(200, "text/html", "<h1>FCPLC</h1>");
 }
 
 /*********************************************************************/

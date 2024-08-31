@@ -17,7 +17,7 @@
 
 #include "utils/log.hpp"
 #include "core/ext.hpp"
-#include "core/gpio.hpp"
+#include "core/ifaces/ifaces.hpp"
 #include "net/gsm.hpp"
 #include "net/wifi.hpp"
 #include "core/plc.hpp"
@@ -35,7 +35,7 @@ private:
     Logger      *_log;
     GsmModem    *_modem;
     Extenders   *_ext;
-    Gpio        *_gpio;
+    Interfaces  *_ifaces;
     Wireless    *_wifi;
     Plc         *_plc;
 
@@ -46,7 +46,7 @@ private:
     bool printFile(const String &name);
     bool generateRunning(JsonDocument &doc);
 public:
-    Configs(Logger *log, GsmModem *modem, Extenders *ext, Gpio *gpio, Wireless *wifi, Plc *plc);
+    Configs(Logger *log, GsmModem *modem, Extenders *ext, Interfaces *ifaces, Wireless *wifi, Plc *plc);
     bool begin();
     bool writeAll();
     bool eraseAll();

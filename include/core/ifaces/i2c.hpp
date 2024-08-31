@@ -9,29 +9,35 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#ifndef __I2C_HPP__
+#define __I2C_HPP__
 
 #include <Arduino.h>
+#include <vector>
 
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
+#include "core/ifaces/iface.hpp"
 
-class CLIInformer
+typedef enum {
+    I2C_PIN_SDA,
+    I2C_PIN_SCL,
+    I2C_PIN_MAX
+} I2cPin;
+
+
+class I2CIface : public Interface
 {
 private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
+    uint8_t _pins[I2C_PIN_MAX] = { 0 };
+    String  _name;
+
 public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
+    I2CIface(const String &name, uint8_t sda, uint8_t scl);
+    void setPin(I2cPin pin, uint8_t gpio);
+    uint8_t getPin(I2cPin pin) const;
+    const String &getName() const;
+    void findDevices(std::vector<unsigned> &devices);
+    IntType getType() const;
+    void setName(const String &name);
 };
 
-#endif /* __CLI_INFO_HPP__ */
+#endif /* __I2C_HPP__ */

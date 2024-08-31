@@ -14,7 +14,7 @@
 
 #include <Arduino.h>
 
-#include "core/gpio.hpp"
+#include "core/ifaces/gpio.hpp"
 #include "utils/log.hpp"
 #include "core/plc.hpp"
 
@@ -31,7 +31,7 @@ class Wireless
 private:
     String      _ssid;
     String      _passwd;
-    GpioPin     *_statusLed = nullptr;
+    GPIOIface  *_statusLed = nullptr;
     bool        _enabled = true;
     bool        _ap = true;
     wl_status_t _status = WL_DISCONNECTED;
@@ -40,14 +40,14 @@ private:
     Logger  *_log;
     Plc     *_plc;
 
-    void timerHandler();
+    void statusTask();
 public:
     Wireless(Logger *log, Plc *plc);
     void setCreds(const String &ssid, const String &passwd);
     const String &getSSID() const;
     const String &getPasswd() const;
-    GpioPin *getStatusLed() const;
-    void setStatusLed(GpioPin *gpio);
+    GPIOIface *getStatusLed() const;
+    void setStatusLed(GPIOIface *gpio);
     void setEnabled(bool status);
     bool getEnabled() const;
     void setAP(bool status);

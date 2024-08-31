@@ -62,6 +62,18 @@ void Logger::logging(LogType type, LogModule mod, const String &msg)
     case LOG_MOD_CLI:
         sMod = "CLI";
         break;
+
+    case LOG_MOD_IFACES:
+        sMod = "IFACE";
+        break;
+
+    case LOG_MOD_TG:
+        sMod = "TGBOT";
+        break;
+
+    case LOG_MOD_WEB:
+        sMod = "WEB";
+        break;
     }
 
     Serial.println("[" + sType + "][" + sMod + "] " + msg);

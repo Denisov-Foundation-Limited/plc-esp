@@ -9,7 +9,7 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "core/gpio.hpp"
+#include "core/ifaces/gpio.hpp"
 
 #include "core/ext.hpp"
 
@@ -19,63 +19,63 @@
 /*                                                                   */
 /*********************************************************************/
 
-GpioPin::GpioPin(Logger *log, Extenders *ext, const String &name, uint8_t pin, GpioType type, GpioPull pull, ExtenderId extId)
+GPIOIface::GPIOIface(Logger *log, Extenders *ext, const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId)
 {
     _name = name;
     _pin = pin;
-    _type = type;
+    _mode = mode;
     _pull = pull;
     _extId = extId;
     _log = log;
     _ext = ext;
 }
 
-const String &GpioPin::getName() const
+const String &GPIOIface::getName() const
 {
     return _name;
 }
 
-uint8_t GpioPin::getPin() const
+uint8_t GPIOIface::getPin() const
 {
     return _pin;
 }
 
-GpioType GpioPin::getType() const
+GpioMode GPIOIface::getMode() const
 {
-    return _type;
+    return _mode;
 }
 
-GpioPull GpioPin::getPull() const
+GpioPull GPIOIface::getPull() const
 {
     return _pull;
 }
 
-void GpioPin::setName(const String &name)
+void GPIOIface::setName(const String &name)
 {
     _name = name;
 }
 
-void GpioPin::setPin(uint8_t pin)
+void GPIOIface::setPin(uint8_t pin)
 {
     _pin = pin;
 }
 
-void GpioPin::setPull(GpioPull pull)
+void GPIOIface::setPull(GpioPull pull)
 {
     _pull = pull;
 }
 
-void GpioPin::setType(GpioType type)
+void GPIOIface::setMode(GpioMode mode)
 {
-    _type = type;
+    _mode = mode;
 }
 
-void GpioPin::setExtId(ExtenderId id)
+void GPIOIface::setExtId(ExtenderId id)
 {
     _extId = id;
 }
 
-void GpioPin::write(bool val)
+void GPIOIface::write(bool val)
 {
     if (_extId == EXT_NOT_USED) {
         digitalWrite(_pin, val);
@@ -92,7 +92,7 @@ void GpioPin::write(bool val)
     _state = val;
 }
 
-bool GpioPin::read()
+bool GPIOIface::read()
 {
     if (_extId == EXT_NOT_USED) {
         return (digitalRead(_pin) == HIGH) ? true : false;
@@ -108,64 +108,21 @@ bool GpioPin::read()
     }
 }
 
-bool GpioPin::getState()
+bool GPIOIface::getState()
 {
-    if (_type == GPIO_TYPE_INPUT) {
+    if (_mode == GPIO_MOD_INPUT) {
         return read();
     } else {
         return _state;
     }
 }
 
-ExtenderId GpioPin::getExtId() const
+ExtenderId GPIOIface::getExtId() const
 {
     return _extId;
 }
 
-Gpio::Gpio(Logger *log, Extenders *ext)
+IntType GPIOIface::getType() const
 {
-    _log = log;
-    _ext = ext;
-}
-
-void Gpio::addGpio(GpioPin *gpio)
-{
-    String sPull;
-
-    switch (gpio->getPull())
-    {
-    case GPIO_PULL_NONE:
-        sPull = "none";
-        break;
-    
-    case GPIO_PULL_DOWN:
-        sPull = "down";
-        break;
-    
-    case GPIO_PULL_UP:
-        sPull = "up";
-        break;
-    }
-
-    _log->info(LOG_MOD_GPIO, "Add GPIO " + gpio->getName() +
-        " pin: " + String(gpio->getPin()) +
-        " type: " + ((gpio->getType() == GPIO_TYPE_INPUT) ? "input" : "output") +
-        " pull: " + sPull);
-
-    _pins.push_back(gpio);
-}
-
-GpioPin *Gpio::getPin(const String &name) const
-{
-    for (auto *p : _pins) {
-        if (p->getName() == name) {
-            return p;
-        }
-    }
-    return nullptr;
-}
-
-const std::vector<GpioPin *>& Gpio::getPins() const
-{
-    return _pins;
+    return INT_TYPE_GPIO;
 }

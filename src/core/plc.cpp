@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void Plc::timerHandler()
+void Plc::alarmBuzzerTask()
 {
     if (_alarm > 0) {
         if (!_lastAlarm) {
@@ -78,12 +78,12 @@ void Plc::setBuzzer(PlcMod mod, bool status)
     }
 }
 
-GpioPin *Plc::getPin(PlcGpioType type) const
+GPIOIface *Plc::getPin(PlcGpioType type) const
 {
     return _pins[type];
 }
 
-void Plc::setPin(PlcGpioType type, GpioPin *pin)
+void Plc::setPin(PlcGpioType type, GPIOIface *pin)
 {
     _pins[type] = pin;
 }
@@ -108,6 +108,6 @@ void Plc::loop()
 {
     if (millis() - _timer >= PLC_TIMER_MS) {
         _timer = millis();
-        timerHandler();
+        alarmBuzzerTask();
     }
 }

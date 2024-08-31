@@ -249,5 +249,6 @@ void TgBot::begin()
 
 void TgBot::loop()
 {
+    if (!_enabled) return;
     _fb->tick();
 }

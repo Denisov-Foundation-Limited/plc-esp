@@ -17,7 +17,7 @@
 #include "utils/configs.hpp"
 #include "cliinfo.hpp"
 #include "clicfg.hpp"
-#include "core/gpio.hpp"
+#include "core/ifaces/ifaces.hpp"
 #include "core/ext.hpp"
 
 typedef enum {
@@ -26,8 +26,8 @@ typedef enum {
     CON_LEVEL_WIFI,
     CON_LEVEL_TANKS,
     CON_LEVEL_TANK,
-    CON_LEVEL_GPIO,
-    CON_LEVEL_PIN,
+    CON_LEVEL_IFACES,
+    CON_LEVEL_IFACE,
     CON_LEVEL_EXTS,
     CON_LEVEL_EXT
 } ConsoleLevel;
@@ -42,7 +42,7 @@ private:
     Configs         *_cfg;
     CLIConfigurator *_cliCfg;
     CLIInformer     *_cliInfo;
-    Gpio            *_gpio;
+    Interfaces      *_ifaces;
     Extenders       *_ext;
 
     void printCall();
@@ -50,7 +50,7 @@ private:
     bool parseConfigCmd(const String &cmd);
     void processExit();
 public:
-    CLIProcessor(Logger *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo, Gpio *gpio, Extenders *ext);
+    CLIProcessor(Logger *log, Configs *cfg, CLIConfigurator *cliCfg, CLIInformer *cliInfo, Interfaces *ifaces, Extenders *ext);
     void begin();
     bool parse(const String &cmd);
 };

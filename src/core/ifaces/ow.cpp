@@ -9,29 +9,40 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#include "core/ifaces/ow.hpp"
 
-#include <Arduino.h>
-
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
-
-class CLIInformer
+OneWireIface::OneWireIface(const String &name, uint8_t pin)
 {
-private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
-public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
-};
+    _name = name;
+    _pin = pin;
+}
 
-#endif /* __CLI_INFO_HPP__ */
+void OneWireIface::setPin(uint8_t gpio)
+{
+    _pin = gpio;
+}
+
+uint8_t OneWireIface::getPin() const
+{
+    return _pin;
+}
+
+const String &OneWireIface::getName() const
+{
+    return _name;
+}
+
+void OneWireIface::setName(const String &name)
+{
+    _name = name;
+}
+
+void OneWireIface::findAddresses(std::vector<String> &addrs)
+{
+
+}
+
+IntType OneWireIface::getType() const
+{
+    return INT_TYPE_OW;
+}

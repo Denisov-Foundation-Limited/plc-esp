@@ -11,10 +11,15 @@
 
 #include "core/cli/cliinfo.hpp"
 
-CLIInformer::CLIInformer(Wireless *wifi, Gpio *gpio, Extenders *ext)
+#include "core/ifaces/gpio.hpp"
+#include "core/ifaces/ow.hpp"
+#include "core/ifaces/spi.hpp"
+#include "core/ifaces/i2c.hpp"
+
+CLIInformer::CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext)
 {
     _wifi = wifi;
-    _gpio = gpio;
+    _ifaces = ifaces;
     _ext = ext;
 }
 
@@ -81,64 +86,120 @@ void CLIInformer::showWiFiStatus()
     Serial.printf("\tIP     : %s\n\n", _wifi->getIP().c_str());
 }
 
-void CLIInformer::showGpio()
+void CLIInformer::showInterfaces()
 {
-    Serial.println(F("\nGPIO configuration:"));
-    Serial.println(F("\tName                   Pin   Type     Pull   Extender"));
-    Serial.println(F("\t--------------------   ---   ------   ----   --------"));
+    Serial.println("");
+    Serial.println(F("\tName         Type       Pin           Mode      Pull    Ext"));
+    Serial.println(F("\t----------   --------   -----------   -------   -----   ----"));
 
-    for (auto pin : _gpio->getPins()) {
+    for (auto iface : _ifaces->getInterfaces()) {
+        if (iface->getType() != INT_TYPE_GPIO) {
+            continue;
+        }
+
+        auto gpio = static_cast<GPIOIface *>(iface);
+
         String sType, sPull;
 
-        switch (pin->getType()) {
-            case GPIO_TYPE_INPUT:
-                sType = "input";
+        switch (gpio->getMode()) {
+            case GPIO_MOD_INPUT:
+                sType = "Input";
                 break;
 
-            case GPIO_TYPE_OUTPUT:
-                sType = "output";
+            case GPIO_MOD_OUTPUT:
+                sType = "Output";
                 break;
         }
 
-        switch (pin->getPull()) {
+        switch (gpio->getPull()) {
             case GPIO_PULL_NONE:
-                sPull = "none";
+                sPull = "None";
                 break;
 
             case GPIO_PULL_UP:
-                sPull = "up";
+                sPull = "Up";
                 break;
 
             case GPIO_PULL_DOWN:
-                sPull = "down";
+                sPull = "Down";
                 break;
         }
 
-        Serial.printf("\t%-20s   %-3d   %-6s   %-4s   %-8s\n",
-            pin->getName().c_str(), pin->getPin(), sType.c_str(),
+        Serial.printf("\t%-10s   %-8s   %-11d   %-7s   %-5s   %-8s\n",
+            gpio->getName().c_str(), F("GPIO"), gpio->getPin(), sType.c_str(),
             sPull.c_str(),
-            (pin->getExtId() == 0) ? "N/S" : String(pin->getExtId()).c_str());
+            (gpio->getExtId() == EXT_NOT_USED) ? "CPU" : String(gpio->getExtId()).c_str());
+    }
+
+    for (auto iface : _ifaces->getInterfaces()) {
+        if (iface->getType() != INT_TYPE_OW) {
+            continue;
+        }
+
+        auto ow = static_cast<OneWireIface *>(iface);
+
+        Serial.printf("\t%-10s   %-8s   %-11d   %-7s   %-5s   %-8s\n",
+            ow->getName().c_str(), F("OneWire"), ow->getPin(), F("N/S"),
+            F("N/S"), F("CPU"));
+    }
+
+    for (auto iface : _ifaces->getInterfaces()) {
+        if (iface->getType() != INT_TYPE_I2C) {
+            continue;
+        }
+
+        auto i2c = static_cast<I2CIface *>(iface);
+
+        String sPins = String(i2c->getPin(I2C_PIN_SDA)) + "," +
+                        String(i2c->getPin(I2C_PIN_SCL));
+
+        Serial.printf("\t%-10s   %-8s   %-11s   %-7s   %-5s   %-8s\n",
+            i2c->getName().c_str(), F("I2C"), sPins.c_str(), F("N/S"),
+            F("N/S"), F("CPU"));
+    }
+
+    for (auto iface : _ifaces->getInterfaces()) {
+        if (iface->getType() != INT_TYPE_SPI) {
+            continue;
+        }
+
+        auto spi = static_cast<SPIface *>(iface);
+
+        String sPins = String(spi->getPin(SPI_PIN_MISO)) + "," +
+                        String(spi->getPin(SPI_PIN_MOSI))  + "," +
+                        String(spi->getPin(SPI_PIN_SCK))  + "," +
+                        String(spi->getPin(SPI_PIN_SS));
+
+        Serial.printf("\t%-10s   %-8s   %-11s   %-7s   %-5s   %-8s\n",
+            spi->getName().c_str(), F("SPI"), sPins.c_str(), F("N/S"),
+            F("N/S"), F("CPU"));
     }
     Serial.println("");
 }
 
-void CLIInformer::showGpioStatus()
+void CLIInformer::showInterfacesStatus()
 {
-    Serial.println(F("\nGPIO status:"));
-    Serial.println(F("\tName                   State"));
-    Serial.println(F("\t--------------------   -----"));
+    Serial.println("");
+    Serial.println(F("\tName         State"));
+    Serial.println(F("\t----------   -----"));
 
-    for (auto pin : _gpio->getPins()) {
+    for (auto iface : _ifaces->getInterfaces()) {
+        if (iface->getType() != INT_TYPE_GPIO) {
+            continue;
+        }
+
+        auto gpio = static_cast<GPIOIface *>(iface);
+
         Serial.printf("\t%-20s   %-5s\n",
-            pin->getName().c_str(),
-            (pin->getState() == true) ? "High" : "Low");
+            gpio->getName().c_str(),
+            (gpio->getState() == true) ? "High" : "Low");
     }
     Serial.println("");
 }
 
 void CLIInformer::showExtenders()
 {
-    Serial.println(F("\nExtenders configuration:"));
+    Serial.println("");
     Serial.println(F("\tId    Address"));
     Serial.println(F("\t---   -------"));
 
@@ -150,7 +211,7 @@ void CLIInformer::showExtenders()
 
 void CLIInformer::showTankStatus()
 {
-    Serial.println(F("\nTanks configuration:"));
+    Serial.println("");
     Serial.println(F("\tId   Name                     Status   Pump   Valve   Level"));
     Serial.println(F("\t--   ----------------------   ------   ----   -----   -----"));
 

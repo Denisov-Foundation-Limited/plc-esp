@@ -11,6 +11,11 @@
 
 #include "utils/configs.hpp"
 #include "boards/boards.hpp"
+#include "core/ifaces/gpio.hpp"
+#include "core/ifaces/i2c.hpp"
+#include "core/ifaces/spi.hpp"
+#include "core/ifaces/ow.hpp"
+#include "core/ifaces/uart.hpp"
 
 #include <LittleFS.h>
 #include <SD.h>
@@ -50,105 +55,77 @@ bool Configs::initDevice()
         _ext->addExtender(new Extender(static_cast<ExtenderId>(e.id), e.addr));
     }
 
-    /* CPU GPIO */
+    /* GPIO Interface */
 
     int i = 1;
     for (auto& p : inputs) {
-        _gpio->addGpio(new GpioPin(_log, _ext, "in-0/" + String(i), p, GPIO_TYPE_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+        _ifaces->addInterface(new GPIOIface(_log, _ext, "in-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+        i++;
+    }
+
+    i = 1;
+    for (auto& p : extInputs) {
+        if (_ext->getById(static_cast<ExtenderId>(p.extId)) != nullptr) {
+            _ifaces->addInterface(new GPIOIface(_log, _ext, "in-" + String(p.extId) + "/" + String(i), p.pin, GPIO_MOD_INPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId)));
+        }
         i++;
     }
 
     i = 1;
     for (auto& p : relays) {
-        auto pin = new GpioPin(_log, _ext, "rly-0/" + String(i), p, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+        auto pin = new GPIOIface(_log, _ext, "rly-0/" + String(i), p, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
         pin->write(false);
-        _gpio->addGpio(pin);
-        i++;
-    }
-
-    /* Extenders GPIO */
-
-    i = 1;
-    for (auto& p : extInputs) {
-        if (_ext->getById(static_cast<ExtenderId>(p.extId)) != nullptr) {
-            _gpio->addGpio(new GpioPin(_log, _ext, "in-" + String(p.extId) + "/" + String(i), p.pin, GPIO_TYPE_INPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId)));
-        }
+        _ifaces->addInterface(pin);
         i++;
     }
 
     i = 1;
     for (auto& p : extRelays) {
         if (_ext->getById(static_cast<ExtenderId>(p.extId)) != nullptr) {
-            auto pin = new GpioPin(_log, _ext, "rly-" + String(p.extId) + "/" + String(i), p.pin, GPIO_TYPE_INPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId));
+            auto pin = new GPIOIface(_log, _ext, "rly-" + String(p.extId) + "/" + String(i), p.pin, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, static_cast<ExtenderId>(p.extId));
             pin->write(false);
-            _gpio->addGpio(pin);
+            _ifaces->addInterface(pin);
         }
         i++;
     }
 
-    /* I2C GPIO */
-
-    _gpio->addGpio(new GpioPin(_log, _ext, F("i2c-sda"), I2C_SDA_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-    _gpio->addGpio(new GpioPin(_log, _ext, F("i2c-scl"), I2C_SDA_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-
-    /* SPI GPIO */
-
-    _gpio->addGpio(new GpioPin(_log, _ext, F("spi-mosi"), SPI_MOSI_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-    _gpio->addGpio(new GpioPin(_log, _ext, F("spi-miso"), SPI_MISO_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-    _gpio->addGpio(new GpioPin(_log, _ext, F("spi-sck"), SPI_SCK_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-    _gpio->addGpio(new GpioPin(_log, _ext, F("spi-ss"), SPI_SS_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-
-    /* OneWire GPIO */
-
-    i = 1;
-    for (auto& p : ows) {
-        auto pin = new GpioPin(_log, _ext, "ow-0/" + String(i), p, GPIO_TYPE_INPUT, GPIO_PULL_NONE, EXT_NOT_USED);
-        pin->write(false);
-        _gpio->addGpio(pin);
-        i++;
-    }
-
-    /* RS485 GPIO */
-
-    i = 1;
-    for (auto& p : rs485pins) {
-        _gpio->addGpio(new GpioPin(_log, _ext, "rs485-0/" + String(i) + "-rx", p.rx, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-        _gpio->addGpio(new GpioPin(_log, _ext, "rs485-0/" + String(i) + "-tx", p.rx, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-        _gpio->addGpio(new GpioPin(_log, _ext, "rs485-0/" + String(i) + "-io", p.rx, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-        i++;
-    }
-
-    /* GSM Modem GPIO */
-
-    _gpio->addGpio(new GpioPin(_log, _ext, F("gsm-rx"), GSM_RX_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-    _gpio->addGpio(new GpioPin(_log, _ext, F("gsm-tx"), GSM_TX_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-    _gpio->addGpio(new GpioPin(_log, _ext, F("gsm-rst"), GSM_RST_PIN, GPIO_TYPE_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-
-    /* Sensors GPIO */
+    /* Sensors Interface */
 
     i = 1;
     for (auto& p : sensors) {
-        _gpio->addGpio(new GpioPin(_log, _ext, "sens-0/" + String(i), p, GPIO_TYPE_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+        _ifaces->addInterface(new GPIOIface(_log, _ext, "sens-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
         i++;
     }
 
+    /* OneWire Interface */
+
+    i = 1;
+    for (auto& p : ows) {
+        _ifaces->addInterface(new OneWireIface("ow-" + String(i), p));
+        i++;
+    }
+
+    /* I2C Interface */
+
+    _ifaces->addInterface(new I2CIface(F("i2c"), I2C_SDA_PIN, I2C_SCL_PIN));
+
+    /* SPI Interface */
+
+    _ifaces->addInterface(new SPIface(F("spi"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_SS_PIN, 0));
+
+    /* UART Interface */
+
+    _ifaces->addInterface(new UARTIface(F("uart-gsm"), GSM_RX_PIN, GSM_TX_PIN, GSM_RST_PIN, GSM_MODEM_RATE));
+    _ifaces->addInterface(new UARTIface(F("uart-485"), RS485_RX_PIN, RS485_TX_PIN, RS485_IO_PIN, RS485_TRANSFER_RATE));
+
     /* GSM Modem setup */
 
-    GpioPin *pin = nullptr;
+    Interface *iface = nullptr;
 
-    if ((pin = _gpio->getPin("gsm-rx")) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Gpio gsm-rx not found"));
+    if ((iface = _ifaces->getInterface("uart-gsm")) == nullptr) {
+        _log->warning(LOG_MOD_CFG, F("Interface uart-gsm not found"));
     }
-    _modem->setGpio(GSM_GPIO_RX, pin);
-    if ((pin = _gpio->getPin("gsm-tx")) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Gpio gsm-tx not found"));
-    }
-    _modem->setGpio(GSM_GPIO_TX, pin);
-    if ((pin = _gpio->getPin("gsm-rst")) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Gpio gsm-rst not found"));
-    }
-    _modem->setGpio(GSM_GPIO_RST, pin);
-    _modem->setRate(GSM_MODEM_RATE);
+    _modem->setUart(static_cast<UARTIface *>(iface));
 
     return true;
 }
@@ -157,7 +134,7 @@ bool Configs::readAll(ConfigsSource src)
 {
     JsonDocument    doc;
     File            file;
-    GpioPin         *pin = nullptr;
+    Interface       *pin = nullptr;
 
     _src = src;
 
@@ -186,34 +163,49 @@ bool Configs::readAll(ConfigsSource src)
      * GPIO configurations
      */
 
-    JsonArray gpios = doc["gpio"];
-    for (uint8_t i = 0; i < gpios.size(); i++) {
-        GpioType    type = GPIO_TYPE_INPUT;
-        GpioPull    pull = GPIO_PULL_NONE;
+    JsonArray jifaces = doc["interfaces"];
+    for (uint8_t i = 0; i < jifaces.size(); i++) {
+        if (jifaces[i]["type"] == "gpio") {
+            GpioMode    type = GPIO_MOD_INPUT;
+            GpioPull    pull = GPIO_PULL_NONE;
 
-        if (gpios[i]["type"] == "input") {
-            type = GPIO_TYPE_INPUT;
-        } else if (gpios[i]["type"] == "output") {
-            type = GPIO_TYPE_OUTPUT;
+            if (jifaces[i]["mode"] == "input") {
+                type = GPIO_MOD_INPUT;
+            } else if (jifaces[i]["mode"] == "output") {
+                type = GPIO_MOD_OUTPUT;
+            } else {
+                _log->error(LOG_MOD_CFG, String(F("GPIO mode not found: ")) + jifaces[i]["mode"].as<String>());
+                doc.clear();
+                return false;
+            }
+
+            if (jifaces[i]["pull"] == "none") {
+                pull = GPIO_PULL_NONE;
+            } else if (jifaces[i]["pull"] == "up") {
+                pull = GPIO_PULL_UP;
+            } else if (jifaces[i]["pull"] == "down") {
+                pull = GPIO_PULL_DOWN;
+            } else {
+                _log->error(LOG_MOD_CFG, String(F("GPIO pull not found: ")) + jifaces[i]["pull"].as<String>());
+                doc.clear();
+                return false;
+            }
+
+            _ifaces->addInterface(new GPIOIface(_log, _ext, jifaces[i]["name"], jifaces[i]["pin"], type, pull, jifaces[i]["ext"]));
+        } else if (jifaces[i]["type"] == "ow") {
+            _ifaces->addInterface(new OneWireIface(jifaces[i]["name"], jifaces[i]["pin"]));
+        } else if (jifaces[i]["type"] == "spi") {
+            _ifaces->addInterface(new SPIface(jifaces[i]["name"], jifaces[i]["miso"], jifaces[i]["mosi"],
+                                                jifaces[i]["sck"], jifaces[i]["ss"], jifaces[i]["freq"]));
+        } else if (jifaces[i]["type"] == "i2c") {
+            _ifaces->addInterface(new I2CIface(jifaces[i]["name"], jifaces[i]["sda"], jifaces[i]["scl"]));
+        } else if (jifaces[i]["type"] == "uart") {
+            _ifaces->addInterface(new UARTIface(jifaces[i]["name"], jifaces[i]["rx"], jifaces[i]["tx"], jifaces[i]["ctrl"], jifaces[i]["rate"]));
         } else {
-            _log->error(LOG_MOD_CFG, String(F("GPIO type not found: ")) + gpios[i]["type"].as<String>());
+            _log->error(LOG_MOD_CFG, String(F("Interface type unknown: ")) + jifaces[i]["type"].as<String>());
             doc.clear();
             return false;
         }
-
-        if (gpios[i]["pull"] == "none") {
-            pull = GPIO_PULL_NONE;
-        } else if (gpios[i]["pull"] == "up") {
-            pull = GPIO_PULL_UP;
-        } else if (gpios[i]["pull"] == "down") {
-            pull = GPIO_PULL_DOWN;
-        } else {
-            _log->error(LOG_MOD_CFG, String(F("GPIO pull not found: ")) + gpios[i]["pull"].as<String>());
-            doc.clear();
-            return false;
-        }
-
-        _gpio->addGpio(new GpioPin(_log, _ext, gpios[i]["name"], gpios[i]["pin"], type, pull, gpios[i]["ext"]));
     }
 
     /*
@@ -221,14 +213,14 @@ bool Configs::readAll(ConfigsSource src)
      */
 
     _plc->setName(doc["plc"]["name"]);
-    if ((pin = _gpio->getPin(doc["plc"]["gpio"]["alarm"])) == nullptr) {
+    if ((pin = _ifaces->getInterface(doc["plc"]["iface"]["alarm"])) == nullptr) {
         _log->warning(LOG_MOD_CFG, F("PLC gpio Alarm not found"));
     }
-    _plc->setPin(PLC_GPIO_ALARM_LED, pin);
-    if ((pin = _gpio->getPin(doc["plc"]["gpio"]["buzzer"])) == nullptr) {
+    _plc->setPin(PLC_GPIO_ALARM_LED, static_cast<GPIOIface *>(pin));
+    if ((pin = _ifaces->getInterface(doc["plc"]["iface"]["buzzer"])) == nullptr) {
         _log->warning(LOG_MOD_CFG, F("PLC gpio Buzzer not found"));
     }
-    _plc->setPin(PLC_GPIO_BUZZER, pin);
+    _plc->setPin(PLC_GPIO_BUZZER, static_cast<GPIOIface *>(pin));
 
     /*
      * Wi-Fi configurations
@@ -236,30 +228,21 @@ bool Configs::readAll(ConfigsSource src)
 
     _wifi->setCreds(doc["wifi"]["ssid"], doc["wifi"]["passwd"]);
     _wifi->setAP(doc["wifi"]["ap"]);
-    if ((pin = _gpio->getPin(doc["wifi"]["gpio"]["status"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("PLC gpio WiFi status led not found"));
+    if ((pin = _ifaces->getInterface(doc["wifi"]["iface"]["status"])) == nullptr) {
+        _log->warning(LOG_MOD_CFG, F("PLC interface for WiFi status led not found"));
      }
-    _wifi->setStatusLed(pin);
+    _wifi->setStatusLed(static_cast<GPIOIface *>(pin));
     _wifi->setEnabled(doc["wifi"]["enabled"]);
 
     /*
      * GSM modem configurations
      */
 
-    if ((pin = _gpio->getPin(doc["gsm"]["gpio"]["rx"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Gpio GSM rx not found"));
+    if ((pin = _ifaces->getInterface(doc["gsm"]["iface"])) == nullptr) {
+        _log->warning(LOG_MOD_CFG, F("Interface uart-gsm not found"));
     }
-    _modem->setGpio(GSM_GPIO_RX, pin);
-    if ((pin = _gpio->getPin(doc["gsm"]["gpio"]["tx"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Gpio GSM tx not found"));
-    }
-    _modem->setGpio(GSM_GPIO_TX, pin);
-    if ((pin = _gpio->getPin(doc["gsm"]["gpio"]["rst"])) == nullptr) {
-        _log->warning(LOG_MOD_CFG, F("Gpio GSM rst not found"));
-     }
-    _modem->setGpio(GSM_GPIO_RST, pin);
+    _modem->setUart(static_cast<UARTIface *>(pin));
     _modem->setEnabled(doc["gsm"]["enabled"]);
-    _modem->setRate(doc["gsm"]["rate"]);
     _modem->begin();
 
     doc.clear();
@@ -273,8 +256,8 @@ bool Configs::generateRunning(JsonDocument &doc)
      */
 
     doc["plc"]["name"] = _plc->getName();
-    doc["plc"]["gpio"]["alarm"] = (_plc->getPin(PLC_GPIO_ALARM_LED) == nullptr) ? "" : _plc->getPin(PLC_GPIO_ALARM_LED)->getName();
-    doc["plc"]["gpio"]["buzzer"] = (_plc->getPin(PLC_GPIO_BUZZER) == nullptr) ? "" : _plc->getPin(PLC_GPIO_BUZZER)->getName();
+    doc["plc"]["iface"]["alarm"] = (_plc->getPin(PLC_GPIO_ALARM_LED) == nullptr) ? "" : _plc->getPin(PLC_GPIO_ALARM_LED)->getName();
+    doc["plc"]["iface"]["buzzer"] = (_plc->getPin(PLC_GPIO_BUZZER) == nullptr) ? "" : _plc->getPin(PLC_GPIO_BUZZER)->getName();
 
     /*
      * Wi-Fi configurations
@@ -290,11 +273,8 @@ bool Configs::generateRunning(JsonDocument &doc)
      * GSM modem configurations
      */
 
-    doc["gsm"]["gpio"]["rx"] = (_modem->getGpio(GSM_GPIO_RX) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_RX)->getName();
-    doc["gsm"]["gpio"]["tx"] = (_modem->getGpio(GSM_GPIO_TX) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_TX)->getName();
-    doc["gsm"]["gpio"]["rst"] = (_modem->getGpio(GSM_GPIO_RST) == nullptr) ? "" : _modem->getGpio(GSM_GPIO_RST)->getName();
+    doc["gsm"]["iface"] = (_modem->getUart() == nullptr) ? "" : _modem->getUart()->getName();
     doc["gsm"]["enabled"] = _modem->getEnabled();
-    doc["gsm"]["rate"] = _modem->getRate();
 
     /*
      * Extenders configurations
@@ -310,36 +290,75 @@ bool Configs::generateRunning(JsonDocument &doc)
      * GPIO configurations
      */
 
-    for (uint8_t i = 0; i < _gpio->getPins().size(); i++) {
-        auto p = _gpio->getPins()[i];
-        doc["gpio"][i]["name"] = p->getName();
-        doc["gpio"][i]["pin"] = p->getPin();
+    for (uint8_t i = 0; i < _ifaces->getInterfaces().size(); i++) {
+        auto p = _ifaces->getInterfaces()[i];
+        doc["interfaces"][i]["name"] = p->getName();
 
         switch (p->getType()) {
-            case GPIO_TYPE_INPUT:
-                doc["gpio"][i]["type"] = "input";
+            case INT_TYPE_GPIO:
+                doc["interfaces"][i]["type"] = "gpio";
                 break;
 
-            case GPIO_TYPE_OUTPUT:
-                doc["gpio"][i]["type"] = "output";
-                break;
-        }
-
-        switch (p->getPull()) {
-            case GPIO_PULL_NONE:
-                doc["gpio"][i]["pull"] = "none";
+            case INT_TYPE_OW:
+                doc["interfaces"][i]["type"] = "ow";
                 break;
 
-            case GPIO_PULL_UP:
-                doc["gpio"][i]["pull"] = "up";
+            case INT_TYPE_I2C:
+                doc["interfaces"][i]["type"] = "i2c";
                 break;
 
-            case GPIO_PULL_DOWN:
-                doc["gpio"][i]["pull"] = "down";
+            case INT_TYPE_SPI:
+                doc["interfaces"][i]["type"] = "spi";
                 break;
         }
 
-        doc["gpio"][i]["ext"] = p->getExtId();
+        if (p->getType() == INT_TYPE_GPIO) {
+            auto gpio = static_cast<GPIOIface *>(p);
+            doc["interfaces"][i]["pin"] = gpio->getPin();
+            switch (gpio->getMode()) {
+                case GPIO_MOD_INPUT:
+                    doc["interfaces"][i]["mode"] = "input";
+                    break;
+
+                case GPIO_MOD_OUTPUT:
+                    doc["interfaces"][i]["mode"] = "output";
+                    break;
+            }
+            switch (gpio->getPull()) {
+                case GPIO_PULL_NONE:
+                    doc["interfaces"][i]["pull"] = "none";
+                    break;
+
+                case GPIO_PULL_UP:
+                    doc["interfaces"][i]["pull"] = "up";
+                    break;
+
+                case GPIO_PULL_DOWN:
+                    doc["interfaces"][i]["pull"] = "down";
+                    break;
+            }
+            doc["interfaces"][i]["ext"] = gpio->getExtId();
+        } else if (p->getType() == INT_TYPE_SPI) {
+            auto spi = static_cast<SPIface *>(p);
+            doc["interfaces"][i]["miso"] = spi->getPin(SPI_PIN_MISO);
+            doc["interfaces"][i]["mosi"] = spi->getPin(SPI_PIN_MOSI);
+            doc["interfaces"][i]["sck"] = spi->getPin(SPI_PIN_SCK);
+            doc["interfaces"][i]["ss"] = spi->getPin(SPI_PIN_SS);
+            doc["interfaces"][i]["freq"] = spi->getFrequency();
+        } else if (p->getType() == INT_TYPE_OW) {
+            auto ow = static_cast<OneWireIface *>(p);
+            doc["interfaces"][i]["pin"] = ow->getPin();
+        } else if (p->getType() == INT_TYPE_I2C) {
+            auto i2c = static_cast<I2CIface *>(p);
+            doc["interfaces"][i]["miso"] = i2c->getPin(I2C_PIN_SDA);
+            doc["interfaces"][i]["mosi"] = i2c->getPin(I2C_PIN_SCL);
+        } else if (p->getType() == INT_TYPE_UART) {
+            auto uart = static_cast<UARTIface *>(p);
+            doc["interfaces"][i]["rx"] = uart->getPin(UART_PIN_RX);
+            doc["interfaces"][i]["tx"] = uart->getPin(UART_PIN_TX);
+            doc["interfaces"][i]["ctrl"] = uart->getPin(UART_PIN_CTRL);
+            doc["interfaces"][i]["rate"] = uart->getRate();
+        }
     }
 
     return true;
@@ -351,12 +370,12 @@ bool Configs::generateRunning(JsonDocument &doc)
 /*                                                                   */
 /*********************************************************************/
 
-Configs::Configs(Logger *log, GsmModem *modem, Extenders *ext, Gpio *gpio, Wireless *wifi, Plc *plc)
+Configs::Configs(Logger *log, GsmModem *modem, Extenders *ext, Interfaces *ifaces, Wireless *wifi, Plc *plc)
 {
     _log = log;
     _modem = modem;
     _ext = ext;
-    _gpio = gpio;
+    _ifaces = ifaces;
     _wifi = wifi;
     _plc = plc;
 }
@@ -426,7 +445,11 @@ bool Configs::writeAll()
 
 bool Configs::eraseAll()
 {
-    return true;
+    if (_src == CFG_SRC_SD) {
+        return SD.remove(CONFIGS_STARTUP_FILE);
+    }
+
+    return LittleFS.remove(CONFIGS_STARTUP_FILE);;
 }
 
 bool Configs::showStartup()

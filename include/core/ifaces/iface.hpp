@@ -9,29 +9,25 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#ifndef __INTERFACE_HPP__
+#define __INTERFACE_HPP__
 
 #include <Arduino.h>
 
-#include "net/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
+typedef enum {
+    INT_TYPE_GPIO,
+    INT_TYPE_SPI,
+    INT_TYPE_I2C,
+    INT_TYPE_OW,
+    INT_TYPE_UART
+} IntType;
 
-class CLIInformer
+class Interface
 {
-private:
-    Wireless    *_wifi;
-    Interfaces  *_ifaces;
-    Extenders   *_ext;
 public:
-    CLIInformer(Wireless *wifi, Interfaces *ifaces, Extenders *ext);
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
+    virtual const String &getName() const = 0;
+    virtual void setName(const String &name) = 0;
+    virtual IntType getType() const = 0;
 };
 
-#endif /* __CLI_INFO_HPP__ */
+#endif /* __INTERFACE_HPP__ */

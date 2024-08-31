@@ -70,14 +70,9 @@ GsmModem::GsmModem(Logger *log, UART *gsmUart, TinyGsm *modem)
     _log = log;
 }
 
-void GsmModem::setGpio(GsmGpio gpio, GpioPin *pin)
+void GsmModem::setUart(UARTIface *uart)
 {
-    _pins[gpio] = pin;
-}
-
-void GsmModem::setRate(unsigned rate)
-{
-    _rate = rate;
+    _uart = uart;
 }
 
 void GsmModem::setEnabled(bool status)
@@ -90,14 +85,9 @@ bool GsmModem::getEnabled() const
     return _enabled;
 }
 
-unsigned GsmModem::getRate() const
+UARTIface *GsmModem::getUart() const
 {
-    return _rate;
-}
-
-GpioPin *GsmModem::getGpio(GsmGpio gpio) const
-{
-    return _pins[gpio];
+    return _uart;
 }
 
 void GsmModem::begin()
@@ -105,7 +95,7 @@ void GsmModem::begin()
     if (!_enabled) return;
 
     _log->info(LOG_MOD_GSM, F("Starting GSM modem"));
-    _gsmUart->begin(_rate, SWSERIAL_8N1, _pins[GSM_GPIO_RX]->getPin(), _pins[GSM_GPIO_TX]->getPin());
+    _gsmUart->begin(_uart->getRate(), SWSERIAL_8N1, _uart->getPin(UART_PIN_RX), _uart->getPin(UART_PIN_TX));
     _modem->restart();
 
     _log->info(LOG_MOD_GSM, String(F("Modem Info: ")) + _modem->getModemInfo());

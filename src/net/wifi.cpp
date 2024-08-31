@@ -18,7 +18,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void Wireless::timerHandler()
+void Wireless::statusTask()
 {
     if ((WiFi.status() != _status) && (!_ap)) {
         _status = WiFi.status();
@@ -38,18 +38,7 @@ void Wireless::timerHandler()
             _log->info(LOG_MOD_WIFI, String(F("PLC connection lost to SSID: ")) + _ssid);
             break;
 
-#ifndef ESP32
-        case WL_WRONG_PASSWORD:
-            if (_statusLed != nullptr) { _statusLed->write(false); }
-            _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("PLC wrong password to SSID: ")) + _ssid);
-            break;
-#endif
-
         case WL_IDLE_STATUS:
-            if (_statusLed != nullptr) { _statusLed->write(false); }
-            _plc->setAlarm(PLC_MOD_WIFI, true);
-            _log->info(LOG_MOD_WIFI, String(F("PLC idle connection to SSID: ")) + _ssid);
             break;
 
         case WL_NO_SSID_AVAIL:
@@ -107,12 +96,12 @@ const String &Wireless::getPasswd() const
     return _passwd;
 }
 
-GpioPin *Wireless::getStatusLed() const
+GPIOIface *Wireless::getStatusLed() const
 {
     return _statusLed;
 }
 
-void Wireless::setStatusLed(GpioPin *gpio)
+void Wireless::setStatusLed(GPIOIface *gpio)
 {
     _statusLed = gpio;
 }
@@ -169,6 +158,6 @@ void Wireless::loop()
 {
     if (millis() - _timer >= WIFI_DELAY_MS) {
         _timer = millis();
-        timerHandler();
+        statusTask();
     }
 }

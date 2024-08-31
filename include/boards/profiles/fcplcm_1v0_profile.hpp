@@ -14,8 +14,9 @@
 
 #include "profile.hpp"
 
-#define GSM_MODEM_RATE  115200
-#define LOG_SERIAL_RATE 115200
+#define GSM_MODEM_RATE      115200
+#define LOG_SERIAL_RATE     115200
+#define RS485_TRANSFER_RATE 9600
 
 #define I2C_SDA_PIN 4
 #define I2C_SCL_PIN 5

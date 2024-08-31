@@ -17,24 +17,16 @@
 #include <TinyGSM.h>
 #include <SoftwareSerial.h>
 
-#include "core/gpio.hpp"
+#include "core/ifaces/uart.hpp"
 #include "utils/log.hpp"
 
 using namespace EspSoftwareSerial;
 
-typedef enum {
-    GSM_GPIO_RX,
-    GSM_GPIO_TX,
-    GSM_GPIO_RST,
-    GSM_GPIO_MAX
-} GsmGpio;
-
 class GsmModem
 {
 private:
-    bool    _enabled = false;
-    GpioPin *_pins[GSM_GPIO_MAX];
-    unsigned _rate;
+    bool        _enabled = false;
+    UARTIface   *_uart;
 
     Logger  *_log;
     UART    *_gsmUart;
@@ -44,10 +36,8 @@ private:
     String getSigLevel(int level) const;
 public:
     GsmModem(Logger *log, UART *gsmUart, TinyGsm *modem);
-    void setGpio(GsmGpio gpio, GpioPin *pin);
-    GpioPin *getGpio(GsmGpio gpio) const;
-    void setRate(unsigned rate);
-    unsigned getRate() const;
+    void setUart(UARTIface *uart);
+    UARTIface *getUart() const;
     void setEnabled(bool status);
     bool getEnabled() const;
     void begin();
