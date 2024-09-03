@@ -27,6 +27,11 @@ public:
     void showInterfaces();
     void showInterfacesStatus();
     void showExtenders();
+    void showControllers();
+    void showMeteo();
+    void showMeteoStatus();
+    void showOneWire();
+    void showI2C();
 };
 
 extern CLIInformerClass CLIInformer;

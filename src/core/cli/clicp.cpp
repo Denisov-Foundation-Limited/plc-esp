@@ -10,6 +10,9 @@
 /**********************************************************************/
 
 #include "core/cli/clicp.hpp"
+#include "net/tgbot.hpp"
+#include "controllers/ctrls.hpp"
+#include "controllers/meteo/meteo.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -17,7 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void CLIProcessorClass::printCall()
+void CLIProcessorClass::_printCall()
 {
     switch (_level)
     {
@@ -56,6 +59,30 @@ void CLIProcessorClass::printCall()
     case CON_LEVEL_EXT:
         Serial.printf("%s", F("config(exts-ext)#"));
         break;
+
+    case CON_LEVEL_TG:
+        Serial.printf("%s", F("config(tgbot)#"));
+        break;
+
+    case CON_LEVEL_TG_USR:
+        Serial.printf("%s", F("config(tgbot-usr)#"));
+        break;
+
+    case CON_LEVEL_WEB:
+        Serial.printf("%s", F("config(web)#"));
+        break;
+
+    case CON_LEVEL_CTRLS:
+        Serial.printf("%s", F("config(ctrls)#"));
+        break;
+
+    case CON_LEVEL_METEO:
+        Serial.printf("%s", F("config(meteo)#"));
+        break;
+
+    case CON_LEVEL_METEO_SENS:
+        Serial.printf("%s", F("config(meteo-sens)#"));
+        break;
     }
 }
 
@@ -73,7 +100,7 @@ void CLIProcessorClass::begin()
 bool CLIProcessorClass::parse(const String &cmd)
 {
     if (cmd == "exit" || cmd == "ex") {
-        processExit();
+        _processExit();
     } else if (cmd == "") {
     } else {
         bool isOk = false;
@@ -125,9 +152,81 @@ bool CLIProcessorClass::parse(const String &cmd)
             isOk = CLIConfigurator.configInterface(_objName, cmd);
             break;
 
+        case CON_LEVEL_WEB:
+            isOk = CLIConfigurator.configWebSrv(cmd);
+            break;
+
+        case CON_LEVEL_TG:
+            isOk = CLIConfigurator.configTgBot(cmd);
+            if (!isOk && (cmd.indexOf(F("user ")) >= 0)) {
+                String value(cmd);
+
+                value.remove(0, 5);
+
+                if (TgBot.getUser(value) != nullptr) {
+                    _objName = value;
+                    _level = CON_LEVEL_TG_USR;
+                } else {
+                    Log.error(LOG_MOD_CLI, String(F("TgBot user ")) + value + String(F(" not found.")));
+                }
+                isOk = true;
+            }
+            break;
+
+        case CON_LEVEL_TG_USR:
+            isOk = CLIConfigurator.configTgBotUser(_objName, cmd);
+            break;
+
+        case CON_LEVEL_CTRLS:
+            isOk = CLIConfigurator.configControllers(cmd);
+            if (!isOk && (cmd.indexOf(F("ctrl ")) >= 0)) {
+                String value(cmd);
+
+                value.remove(0, 5);
+                auto ctrl = Controllers.getController(value);
+                if (ctrl != nullptr) {
+                    if (ctrl->getType() == CTRL_TYPE_METEO) {
+                        _objName = value;
+                        switch (ctrl->getType()) {
+                            case CTRL_TYPE_METEO:
+                                _level = CON_LEVEL_METEO;
+                                break;
+                        }
+                    } else {
+                        Log.error(LOG_MOD_CLI, String(F("Meteo controller ")) + value + String(F(" not found.")));
+                    }
+                } else {
+                    Log.error(LOG_MOD_CLI, String(F("Controller ")) + value + String(F(" not found.")));
+                }
+                isOk = true;
+            }
+            break;
+
+        case CON_LEVEL_METEO:
+            isOk = CLIConfigurator.configMeteoCtrl(_objName, cmd);
+            if (!isOk && (cmd.indexOf(F("sensor ")) >= 0)) {
+                String value(cmd);
+
+                value.remove(0, 7);
+                auto meteo = static_cast<Meteo *>(Controllers.getController(_objName));
+
+                if (meteo->getSensor(value) != nullptr) {
+                    _objName2 = value;
+                    _level = CON_LEVEL_METEO_SENS;
+                } else {
+                    Log.error(LOG_MOD_CLI, String(F("Sensor ")) + value + String(F(" not found.")));
+                }
+                isOk = true;
+            }
+            break;
+
+        case CON_LEVEL_METEO_SENS:
+            isOk = CLIConfigurator.configMeteoSensor(_objName, _objName2, cmd);
+            break;
+
         case CON_LEVEL_EXTS:
             isOk = CLIConfigurator.configExts(cmd);
-            if (!isOk && (cmd.indexOf("ext ") >= 0)) {
+            if (!isOk && (cmd.indexOf(F("ext ")) >= 0)) {
                 String value(cmd);
 
                 value.remove(0, 4);
@@ -147,16 +246,16 @@ bool CLIProcessorClass::parse(const String &cmd)
             break;
 
         case CON_LEVEL_ENABLE:
-            isOk = parseEnableCmd(cmd);
+            isOk = _parseEnableCmd(cmd);
             break;
 
         case CON_LEVEL_CONFIG:
-            isOk = parseConfigCmd(cmd);
+            isOk = _parseConfigCmd(cmd);
             break;
         };
 
         if (!isOk) {
-            if (cmd.indexOf("do show ") >= 0 ||
+            if (cmd.indexOf(F("do show ")) >= 0 ||
                 cmd == "do reload" ||
                 cmd == "do reset" ||
                 cmd == "do write" ||
@@ -164,7 +263,7 @@ bool CLIProcessorClass::parse(const String &cmd)
             {
                 String enCmd(cmd);
                 enCmd.remove(0, 3);
-                isOk = parseEnableCmd(enCmd);
+                isOk = _parseEnableCmd(enCmd);
             }
             if (!isOk) {
                 Serial.printf("\n\tUnrecognized command: \"%s\"\n\n", cmd.c_str());
@@ -172,11 +271,11 @@ bool CLIProcessorClass::parse(const String &cmd)
         }
     }
 
-    printCall();
+    _printCall();
     return true;
 }
 
-bool CLIProcessorClass::parseEnableCmd(const String &cmd)
+bool CLIProcessorClass::_parseEnableCmd(const String &cmd)
 {
     if (cmd == "reset" || cmd == "reload") {
         ESP.restart();
@@ -186,8 +285,18 @@ bool CLIProcessorClass::parseEnableCmd(const String &cmd)
         CLIInformer.showInterfacesStatus();
     } else if (cmd == "show ext") {
         CLIInformer.showExtenders();
+    } else if (cmd == "show ctrl") {
+        CLIInformer.showControllers();
     } else if (cmd == "show wifi") {
         CLIInformer.showWiFi();
+    } else if (cmd == "show meteo") {
+        CLIInformer.showMeteo();
+    } else if (cmd == "show ow") {
+        CLIInformer.showOneWire();
+    } else if (cmd == "show i2c") {
+        CLIInformer.showI2C();
+    } else if (cmd == "show meteo status") {
+        CLIInformer.showMeteoStatus();
     } else if ((cmd == "show start") || (cmd == "show startup")) {
         if (!Configs.showStartup()) {
             Log.error(LOG_MOD_CLI, F("Startup configs not found"));
@@ -216,9 +325,14 @@ bool CLIProcessorClass::parseEnableCmd(const String &cmd)
         Serial.println(F("\nDevice console commands:"));
         Serial.println(F("\tshow wifi               : WiFi configurations"));
         Serial.println(F("\tshow wifi status        : WiFi connection status"));
+        Serial.println(F("\tshow ctrl               : Controllers configurations"));
         Serial.println(F("\tshow interfaces         : Interfaces configurations"));
         Serial.println(F("\tshow interfaces status  : Interfaces statuses"));
+        Serial.println(F("\tshow meteo              : Meteo controller configurations"));
+        Serial.println(F("\tshow meteo status       : Meteo controller sensors status"));
         Serial.println(F("\tshow ext                : I2C extenders configurations"));
+        Serial.println(F("\tshow ow                 : Print OneWire devices on bus"));
+        Serial.println(F("\tshow i2c                : Print I2C devices on bus"));
         Serial.println(F("\tshow startup            : Print configs saved to flash"));
         Serial.println(F("\tshow running            : Print configs from RAM"));
         Serial.println(F("\treload                  : Reboot device"));
@@ -231,20 +345,29 @@ bool CLIProcessorClass::parseEnableCmd(const String &cmd)
     return true;
 }
 
-bool CLIProcessorClass::parseConfigCmd(const String &cmd)
+bool CLIProcessorClass::_parseConfigCmd(const String &cmd)
 {
     if (cmd == "wifi") {
         _level = CON_LEVEL_WIFI;
     } else if (cmd == "tanks") {
         _level = CON_LEVEL_TANKS;
+    } else if (cmd == "tgbot") {
+        _level = CON_LEVEL_TG;
+    } else if (cmd == "web") {
+        _level = CON_LEVEL_WEB;
     } else if (cmd == "ext") {
         _level = CON_LEVEL_EXTS;
+    } else if (cmd == "ctrl") {
+        _level = CON_LEVEL_CTRLS;
     } else if (cmd == "interfaces" || cmd == "int") {
         _level = CON_LEVEL_IFACES;
     } else if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nDevice configuration console commands:"));
         Serial.println(F("\twifi        : WiFi module configurations"));
         Serial.println(F("\tinterfaces  : Interfaces configurations"));
+        Serial.println(F("\ttgbot       : Telegram bot configurations"));
+        Serial.println(F("\tweb         : Web server configurations"));
+        Serial.println(F("\tctrl        : Controllers configurations"));
         Serial.println(F("\text         : Extenders configurations"));
         Serial.println(F("\texit        : Exit from configuration\n"));
     } else {
@@ -253,19 +376,26 @@ bool CLIProcessorClass::parseConfigCmd(const String &cmd)
     return true;
 }
 
-void CLIProcessorClass::processExit()
+void CLIProcessorClass::_processExit()
 {
     switch (_level)
     {
     case CON_LEVEL_WIFI:
     case CON_LEVEL_TANKS:
     case CON_LEVEL_IFACES:
+    case CON_LEVEL_TG:
+    case CON_LEVEL_WEB:
+    case CON_LEVEL_CTRLS:
     case CON_LEVEL_EXTS:
         _level = CON_LEVEL_CONFIG;
         break;
 
     case CON_LEVEL_TANK:
         _level = CON_LEVEL_TANKS;
+        break;
+
+    case CON_LEVEL_TG_USR:
+        _level = CON_LEVEL_TG;
         break;
 
     case CON_LEVEL_CONFIG:
@@ -278,6 +408,14 @@ void CLIProcessorClass::processExit()
 
     case CON_LEVEL_EXT:
         _level = CON_LEVEL_EXTS;
+        break;
+
+    case CON_LEVEL_METEO:
+        _level = CON_LEVEL_CTRLS;
+        break;
+
+    case CON_LEVEL_METEO_SENS:
+        _level = CON_LEVEL_METEO;
         break;
 
     case CON_LEVEL_ENABLE:

@@ -15,6 +15,10 @@
 #include "core/ifaces/ow.hpp"
 #include "core/ifaces/spi.hpp"
 #include "core/ifaces/i2c.hpp"
+#include "core/ifaces/uart.hpp"
+#include "controllers/ctrls.hpp"
+#include "controllers/meteo/meteo.hpp"
+#include "controllers/meteo/sensors/ds18b20.hpp"
 
 void CLIInformerClass::showWiFi()
 {
@@ -152,6 +156,21 @@ void CLIInformerClass::showInterfaces()
     }
 
     for (auto iface : Interfaces.getInterfaces()) {
+        if (iface->getType() != INT_TYPE_UART) {
+            continue;
+        }
+
+        auto uart = static_cast<UARTIface *>(iface);
+
+        String sPins = String(uart->getPin(UART_PIN_RX)) + "," +
+                        String(uart->getPin(UART_PIN_TX));
+
+        Serial.printf("\t%-10s   %-8s   %-11s   %-7s   %-5s   %-8s\n",
+            uart->getName().c_str(), F("UART"), sPins.c_str(), F("N/S"),
+            F("N/S"), F("CPU"));
+    }
+
+    for (auto iface : Interfaces.getInterfaces()) {
         if (iface->getType() != INT_TYPE_SPI) {
             continue;
         }
@@ -216,6 +235,162 @@ void CLIInformerClass::showTankStatus()
         id++;
     }
     Serial.println("");*/
+}
+
+void CLIInformerClass::showControllers()
+{
+    Serial.println("");
+    Serial.println(F("\tName           Type       Status "));
+    Serial.println(F("\t------------   --------   ---------"));
+
+    for (auto *ctrl : Controllers.getControllers()) {
+        String sType;
+
+        switch (ctrl->getType()) {
+            case CTRL_TYPE_METEO:
+                sType = F("Meteo");
+                break;
+
+            case CTRL_TYPE_SOCKET:
+                sType = F("Socket");
+                break;
+
+            case CTRL_TYPE_SECURITY:
+                sType = F("Security");
+                break;
+
+            case CTRL_TYPE_TANK:
+                sType = F("Tank");
+                break;
+        }
+
+        Serial.printf("\t%-12s   %-8s   %-9s\n",
+            ctrl->getName().c_str(),
+            sType, ctrl->getEnabled() ? F("Enabled") : F("Disabled"));
+    }
+
+    Serial.println("");
+}
+
+void CLIInformerClass::showMeteo()
+{
+    Serial.println("");
+    Serial.println(F("\tName           OneWire   Sensors   Status  "));
+    Serial.println(F("\t------------   -------   -------   --------"));
+
+    for (auto *ctrl : Controllers.getControllers()) {
+        if (ctrl->getType() != CTRL_TYPE_METEO)
+            continue;
+
+        auto *meteo = static_cast<Meteo *>(ctrl);
+
+        String sOw;
+        
+        if (meteo->getOneWire() != nullptr) {
+            sOw = meteo->getOneWire()->getName();
+        } else {
+            sOw = F("None");
+        }
+
+        Serial.printf("\t%-12s   %-7s   %-7d   %-8s\n",
+            meteo->getName().c_str(), sOw.c_str(), meteo->getSensors().size(),
+            meteo->getEnabled() ? F("Enabled") : F("Disabled"));
+    }
+
+    Serial.println("");
+}
+
+void CLIInformerClass::showMeteoStatus()
+{
+    for (auto *ctrl : Controllers.getControllers()) {
+        if (ctrl->getType() != CTRL_TYPE_METEO)
+            continue;
+
+        auto *meteo = static_cast<Meteo *>(ctrl);
+
+        Serial.println("\n" + ctrl->getName() + ":\n");
+        
+        Serial.println(F("\tName           Type       Temperature   Humidity   Pressure   Id"));
+        Serial.println(F("\t------------   --------   -----------   --------   --------   ------------------"));
+
+        for (auto *sensor : meteo->getSensors()) {
+            String  sType, sId;
+            switch (sensor->getType()) {
+                case METEO_SENSOR_DS18:
+                    sType = F("DS18B20");
+                    sId = static_cast<Ds18b20 *>(sensor)->getId();
+                    break;
+                case METEO_SENSOR_DHT22:
+                    sType = F("DHT22");
+                    sId = F("N/S");
+                    break;
+                case METEO_SENSOR_BME280:
+                    sType = F("BME280");
+                    sId = F("N/S");
+                    break;
+            }
+            Serial.printf("\t%-12s   %-8s   %-11.2f   %-8.2f   %-8.2f   %-18s\n", sensor->getName().c_str(),
+                sType, sensor->getTemperature(), sensor->getHumidity(), sensor->getPressure(), sId.c_str());
+        }
+    }
+
+    Serial.println("");
+}
+
+void CLIInformerClass::showOneWire()
+{
+    unsigned i = 0;
+
+    Serial.println("");
+
+    for (auto iface : Interfaces.getInterfaces()) {
+        if (iface->getType() != INT_TYPE_OW) {
+            continue;
+        }
+
+        Serial.println(iface->getName() + ":\n");
+        Serial.println(F("\tNum   Id"));
+        Serial.println(F("\t---   ------------------"));
+
+        auto ow = static_cast<OneWireIface *>(iface);
+        std::vector<String> addrs;
+        ow->findAddresses(addrs);
+
+        i = 0;
+        for (auto addr : addrs) {
+            i++;
+            Serial.printf("\t%-3d   %-18s\n", i, addr);
+        }
+        Serial.println("");
+    }
+}
+
+void CLIInformerClass::showI2C()
+{
+    unsigned i = 0;
+
+    Serial.println("");
+
+    for (auto iface : Interfaces.getInterfaces()) {
+        if (iface->getType() != INT_TYPE_I2C) {
+            continue;
+        }
+
+        Serial.println(iface->getName() + ":\n");
+        Serial.println(F("\tNum   Address   Hex"));
+        Serial.println(F("\t---   -------   -----"));
+
+        auto i2c = static_cast<I2CIface *>(iface);
+        std::vector<unsigned> devs;
+        i2c->findDevices(devs);
+
+        i = 0;
+        for (auto dev : devs) {
+            i++;
+            Serial.printf("\t%-3d   %-18s   %-5s\n", i, dev, String(dev, HEX));
+        }
+        Serial.println("");
+    }
 }
 
 CLIInformerClass CLIInformer;

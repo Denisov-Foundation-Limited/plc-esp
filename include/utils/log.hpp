@@ -23,6 +23,7 @@ typedef enum {
     LOG_MOD_CLI,
     LOG_MOD_WEB,
     LOG_MOD_TG,
+    LOG_MOD_METEO,
     LOG_MOD_IFACES
 } LogModule;
 
@@ -34,13 +35,14 @@ typedef enum {
 
 class LogClass
 {
-private:
-    void logging(LogType type, LogModule mod, const String &msg);
 public:
     void begin();
     void info(LogModule mod, const String &msg);
     void error(LogModule mod, const String &msg);
     void warning(LogModule mod, const String &msg);
+
+private:
+    void _logging(LogType type, LogModule mod, const String &msg);
 };
 
 extern LogClass Log;

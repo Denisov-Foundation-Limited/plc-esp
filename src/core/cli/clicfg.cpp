@@ -15,6 +15,10 @@
 #include "core/ifaces/spi.hpp"
 #include "core/ifaces/i2c.hpp"
 #include "core/ifaces/uart.hpp"
+#include "net/tgbot.hpp"
+#include "controllers/ctrls.hpp"
+#include "controllers/meteo/meteo.hpp"
+#include "controllers/meteo/sensors/ds18b20.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -26,13 +30,13 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nWiFi configurations commands:"));
-        Serial.println(F("\tssid <ssid>          : Setup WiFi SSID name"));
-        Serial.println(F("\tpasswd <passwd>      : Setup WiFi password"));
-        Serial.println(F("\tap <on/off>          : Setup Access Point status"));
-        Serial.println(F("\tstatus-led <iface>   : Setup Wi-Fi status LED"));
-        Serial.println(F("\tshutdown                 : Disable Wi-Fi"));
-        Serial.println(F("\tno shutdown              : Enable Wi-Fi"));
-        Serial.println(F("\texit                     : Exit from WiFi configuration\n"));
+        Serial.println(F("\tssid <ssid>         : Setup WiFi SSID name"));
+        Serial.println(F("\tpasswd <passwd>     : Setup WiFi password"));
+        Serial.println(F("\tap <on/off>         : Setup Access Point status"));
+        Serial.println(F("\tstatus-led <iface>  : Setup Wi-Fi status LED"));
+        Serial.println(F("\tshutdown            : Disable Wi-Fi"));
+        Serial.println(F("\tno shutdown         : Enable Wi-Fi"));
+        Serial.println(F("\texit                : Exit from WiFi configuration\n"));
         return true;
     }
 
@@ -110,7 +114,7 @@ bool CLIConfiguratorClass::configTanks(const String &cmd)
         std::vector<String> params;
 
         value.remove(0, 9);
-        if (!splitString(value, " ", params))
+        if (!Utils.splitString(value, " ", params))
             return false;
 
         for (auto p : params) {
@@ -133,9 +137,9 @@ bool CLIConfiguratorClass::configTank(const String &tankName, const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nTanks configurations commands:"));
-        Serial.println(F("\t<name>                             : Set new name for tank"));
-        Serial.println(F("\tpump <relay>                       : Set new pump relay for tank"));
-        Serial.println(F("\tvalve <relay>                      : Set new valve relay for tank"));
+        Serial.println(F("\t<name>                                   : new name for tank"));
+        Serial.println(F("\tpump <relay>                             : new pump relay for tank"));
+        Serial.println(F("\tvalve <relay>                           : new valve relay for tank"));
         Serial.println(F("\tadd level <percent(0-100)> <pin(gpio)> : Add new level ctrl with params"));
         Serial.println(F("\texit                                   : Exit from Tank configuration\n"));
         return true;
@@ -146,7 +150,7 @@ bool CLIConfiguratorClass::configTank(const String &tankName, const String &cmd)
         std::vector<String> params;
 
         value.remove(0, 9);
-        if (!splitString(value, " ", params))
+        if (!Utils.splitString(value, " ", params))
             return false;
         if (params.size() < 2)
             return false;
@@ -179,7 +183,7 @@ bool CLIConfiguratorClass::configInterfaces(const String &cmd)
 
         value.remove(0, 7);
 
-        if (!splitString(value, " ", params))
+        if (!Utils.splitString(value, " ", params))
             return false;
         if (params.size() < 2)
             return false;
@@ -193,7 +197,7 @@ bool CLIConfiguratorClass::configInterfaces(const String &cmd)
         } else if (params[0] == "spi") {
             Interfaces.addInterface(static_cast<Interface *>(new SPIface(params[1], 0, 0, 0, 0, 0)));
         } else if (params[0] == "uart") {
-            Interfaces.addInterface(static_cast<Interface *>(new UARTIface(params[1], 0, 0, 0, 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new UARTIface(params[1], 0, 0, 0)));
         } else {
             Log.error(LOG_MOD_CLI, "Unknown interface type");
             return true;
@@ -211,7 +215,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
 
     if (cmd == "?" || cmd == "help") {
         Serial.println(    F("\nInterface configurations commands:"));
-        Serial.println(    F("\tname <string>       : Set name for Interface"));
+        Serial.println(    F("\tname <string>       : name for Interface"));
         if (iface->getType() == INT_TYPE_GPIO || iface->getType() == INT_TYPE_OW) {
             Serial.println(F("\tpin <integer>       : Setup pin for GPIO/OneWire interface"));
         }
@@ -408,13 +412,6 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
                     uart->setPin(UART_PIN_TX, value.toInt());
 
                     return true;
-                } else if (cmd.indexOf("ctrl ") >= 0) {
-                    String  value(cmd);
-
-                    value.remove(0, 5);
-                    uart->setPin(UART_PIN_CTRL, value.toInt());
-
-                    return true;
                 } else if (cmd.indexOf("rate ") >= 0) {
                     String  value(cmd);
 
@@ -466,8 +463,8 @@ bool CLIConfiguratorClass::configExt(ExtenderId extId, const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nExtender configurations commands:"));
-        Serial.println(F("\tid <id(1-8)>    : Set new extender Id"));
-        Serial.println(F("\taddr <32-39>    : Set extender I2C address"));
+        Serial.println(F("\tid <id(1-8)>    : new extender Id"));
+        Serial.println(F("\taddr <32-39>    : extender I2C address"));
         Serial.println(F("\texit            : Exit from Extender configurations\n"));
         return true;
     }
@@ -497,6 +494,213 @@ bool CLIConfiguratorClass::configExt(ExtenderId extId, const String &cmd)
         }
 
         ext->setAddr(value.toInt());
+
+        return true;
+    }
+
+    return false;
+}
+
+bool CLIConfiguratorClass::configTgBot(const String &cmd)
+{
+    if (cmd == "?" || cmd == "help") {
+        Serial.println(F("\nTelegram configurations commands:"));
+        Serial.println(F("\ttoken <string>                          : Setup Telegram API token"));
+        Serial.println(F("\tmode <sync/async/long> <period(millis)> : Setup Poll mode"));
+        Serial.println(F("\tproxy-ip <string>                       : Setup Proxy IP address"));
+        Serial.println(F("\tproxy-port <integer>                    : Setup Proxy port"));
+        Serial.println(F("\tshutdown                                : Disable Telegram bot"));
+        Serial.println(F("\tno shutdown                             : Enable Telegram bot"));
+        Serial.println(F("\texit                                    : Exit from Telegram configuration\n"));
+        return true;
+    }
+
+    if (cmd == "shutdown" || cmd == "shut") {
+        TgBot.setEnabled(false);
+        return true;
+    } else if (cmd == "no shutdown" || cmd == "no shut") {
+        if (!TgBot.getEnabled()) {
+            TgBot.setEnabled(true);
+            TgBot.begin();
+        }
+        return true;
+    } else if (cmd.indexOf(F("token ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 6);
+        TgBot.setToken(value);
+
+        return true;
+    } else if (cmd.indexOf(F("mode ")) >= 0) {
+        String  value(cmd);
+
+        value.remove(0, 5);
+
+        if (value == "async") {
+            TgBot.setPollMode(fb::Poll::Async, TgBot.getPollPeriod());
+        } else if (value == "sync") {
+            TgBot.setPollMode(fb::Poll::Sync, TgBot.getPollPeriod());
+        } else if (value == "long") {
+            TgBot.setPollMode(fb::Poll::Long, TgBot.getPollPeriod());
+        } else {
+            return false;
+        }
+
+        return true;
+    } else if (cmd.indexOf(F("proxy-ip ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 9);
+        TgBot.setProxy(value.c_str(), TgBot.getProxyPort());
+
+        return true;
+    } else if (cmd.indexOf(F("proxy-port ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 11);
+        TgBot.setProxy(TgBot.getProxyIP(), value.toInt());
+
+        return true;
+    }
+
+    return false;
+}
+
+bool CLIConfiguratorClass::configTgBotUser(const String &userName, const String &cmd)
+{
+    if (cmd == "?" || cmd == "help") {
+        Serial.println(F("\nTelegram user configurations commands:"));
+        Serial.println(F("\tname <string>       : Setup Telegram API key"));
+        Serial.println(F("\tadmin <true/false>  : Setup Poll mode"));
+        Serial.println(F("\tid <integer>        : Setup Poll mode"));
+        Serial.println(F("\tnotify <on/off>     : Setup Poll mode"));
+        Serial.println(F("\texit                : Exit from Telegram configuration\n"));
+        return true;
+    }
+
+    return false;
+}
+
+bool CLIConfiguratorClass::configWebSrv(const String &cmd)
+{
+    return false;
+}
+
+bool CLIConfiguratorClass::configControllers(const String &cmd)
+{
+    if (cmd == "?" || cmd == "help") {
+        Serial.println(F("\nControllers configurations commands:"));
+        Serial.println(F("\tctrl <string>           : Select controller for configurations"));
+        Serial.println(F("\tadd meteo <string>      : Add Meteo controller with name"));
+        Serial.println(F("\tadd security <string>   : Add Security controller with name"));
+        Serial.println(F("\tadd socket <string>     : Add Socket controller with name"));
+        Serial.println(F("\tadd tank <string>       : Add Tank controller with name"));
+        Serial.println(F("\texit                    : Exit from Telegram configuration\n"));
+        return true;
+    }
+
+    if (cmd.indexOf(F("add meteo ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 10);
+        Controllers.addController(new Meteo(value));
+
+        return true;
+    }
+
+    return false;
+}
+
+bool CLIConfiguratorClass::configMeteoCtrl(const String &name, const String &cmd)
+{
+    if (cmd == "?" || cmd == "help") {
+        Serial.println(F("\nMeteo controllers configurations commands:"));
+        Serial.println(F("\tname <string>        : Set name for controller"));
+        Serial.println(F("\tow <iface>           : Set OneWire bus for controller"));
+        Serial.println(F("\tadd ds18b20 <string> : Add DS18B20 meteo sensor by name"));
+        Serial.println(F("\tsensor <string>      : Select meteo sensor for configurations"));
+        Serial.println(F("\tshutdown             : Disable Meteo controller"));
+        Serial.println(F("\tno shutdown          : Enable Meteo controller"));
+        Serial.println(F("\texit                 : Exit from Meteo controllers configuration\n"));
+        return true;
+    }
+
+    auto meteo = static_cast<Meteo *>(Controllers.getController(name));
+
+    if (cmd == "shutdown" || cmd == "shut") {
+        meteo->setEnabled(false);
+        return true;
+    } else if (cmd == "no shutdown" || cmd == "no shut") {
+        if (!meteo->getEnabled()) {
+            meteo->setEnabled(true);
+            meteo->begin();
+        }
+        return true;
+    } else if (cmd.indexOf(F("name ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 5);
+        meteo->setName(value);
+
+        return true;
+    } else if (cmd.indexOf(F("ow ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 3);
+        auto iface = Interfaces.getInterface(value);
+        if ((iface == nullptr) || (iface->getType() != INT_TYPE_OW)) {
+            return false;
+        }
+        meteo->setOneWire(static_cast<OneWireIface *>(iface));
+
+        return true;
+    } else if (cmd.indexOf(F("add ds18b20 ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 12);
+        meteo->addSensor(new Ds18b20(value));
+
+        return true;
+    }
+
+    return false;
+}
+
+bool CLIConfiguratorClass::configMeteoSensor(const String &ctrlName, const String &sensName, const String &cmd)
+{
+    auto meteo = static_cast<Meteo *>(Controllers.getController(ctrlName));
+    auto sensor = meteo->getSensor(sensName);
+
+    if (cmd == "?" || cmd == "help") {
+        Serial.println(F("\nMeteo sensor configurations commands:"));
+        Serial.println(F("\tname <string>   : Set name for sensor"));
+        if (sensor->getType() == METEO_SENSOR_DS18) {
+        Serial.println(F("\tid <string>     : Set ID for DS18B20 sensor"));
+        }
+        Serial.println(F("\tshutdown        : Disable Meteo sensor"));
+        Serial.println(F("\tno shutdown     : Enable Meteo sensor"));
+        Serial.println(F("\texit            : Exit from Meteo sensors configuration\n"));
+        return true;
+    }
+
+    if (cmd == "shutdown" || cmd == "shut") {
+        sensor->setEnabled(false);
+        return true;
+    } else if (cmd == "no shutdown" || cmd == "no shut") {
+        sensor->setEnabled(true);
+        return true;
+    } else if (cmd.indexOf(F("name ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 5);
+        sensor->setName(value);
+
+        return true;
+    } else if (cmd.indexOf(F("id ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 3);
+        static_cast<Ds18b20 *>(sensor)->setId(value);
 
         return true;
     }

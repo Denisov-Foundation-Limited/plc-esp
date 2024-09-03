@@ -11,12 +11,11 @@
 
 #include "core/ifaces/uart.hpp"
 
-UARTIface::UARTIface(const String &name, uint8_t rx, uint8_t tx, uint8_t ctrl, unsigned rate)
+UARTIface::UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate)
 {
     _name = name;
     _pins[UART_PIN_RX] = rx;
     _pins[UART_PIN_TX] = tx;
-    _pins[UART_PIN_CTRL] = ctrl;
     _rate = rate;
 }
 

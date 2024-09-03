@@ -20,15 +20,16 @@
 
 class CLIReaderClass
 {
-private:
-    String  _inStr;
-    bool    _complete;
 public:
     CLIReaderClass();
     bool isNewString() const;
     const String& getString() const;
     void read();
     void reset();
+
+private:
+    String  _inStr;
+    bool    _complete;
 };
 
 extern CLIReaderClass CLIReader;

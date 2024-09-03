@@ -11,7 +11,7 @@
 
 #include "utils/utils.hpp"
 
-bool splitString(String str, String delim, std::vector<String> &result)
+bool UtilsClass::splitString(String str, String delim, std::vector<String> &result)
 {
     if (str.indexOf(delim) == -1) {
         return false;
@@ -29,3 +29,5 @@ bool splitString(String str, String delim, std::vector<String> &result)
 
     return true;
 }
+
+UtilsClass Utils;

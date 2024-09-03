@@ -9,18 +9,28 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __UTILS_HPP__
-#define __UTILS_HPP__
+#ifndef __CONTROLLER_HPP__
+#define __CONTROLLER_HPP__
 
 #include <Arduino.h>
-#include <vector>
 
-class UtilsClass
+typedef enum {
+    CTRL_TYPE_METEO,
+    CTRL_TYPE_SECURITY,
+    CTRL_TYPE_TANK,
+    CTRL_TYPE_SOCKET
+} CtrlType;
+
+class Controller
 {
 public:
-    bool splitString(String str, String delim, std::vector<String> &result);
+    virtual const String &getName() = 0;
+    virtual void setName(const String &name) = 0;
+    virtual bool getEnabled() = 0;
+    virtual void setEnabled(bool status) = 0;
+    virtual CtrlType getType() = 0;
+    virtual void loop() = 0;
+    virtual void begin() = 0;
 };
 
-extern UtilsClass Utils;
-
-#endif /* __UTILS_HPP__ */
+#endif /* __CONTROLLER_HPP__ */

@@ -32,6 +32,12 @@ public:
     bool configInterface(const String &ifaceName, const String &cmd);
     bool configExts(const String &cmd);
     bool configExt(ExtenderId extId, const String &cmd);
+    bool configTgBot(const String &cmd);
+    bool configTgBotUser(const String &userName, const String &cmd);
+    bool configWebSrv(const String &cmd);
+    bool configControllers(const String &cmd);
+    bool configMeteoCtrl(const String &name, const String &cmd);
+    bool configMeteoSensor(const String &ctrlName, const String &sensName, const String &cmd);
 };
 
 extern CLIConfiguratorClass CLIConfigurator;

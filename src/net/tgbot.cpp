@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void TgBotClass::backMenu(TgUser *user)
+void TgBotClass::_backMenu(TgUser *user)
 {
     switch (user->level) {
         case TG_MENU_MAIN:
@@ -45,7 +45,7 @@ void TgBotClass::backMenu(TgUser *user)
     }
 }
 
-bool TgBotClass::processLevel(TgUser *user, const String &msg)
+bool TgBotClass::_processLevel(TgUser *user, const String &msg)
 {
     switch (user->level) {
         case TG_MENU_MAIN:
@@ -96,7 +96,7 @@ bool TgBotClass::processLevel(TgUser *user, const String &msg)
                 menu.addButton("Полив");
 
                 resp.setMenu(menu);
-                FastBot2::sendMessage(resp);
+                sendMessage(resp);
             }
             break;
 
@@ -112,14 +112,14 @@ bool TgBotClass::processLevel(TgUser *user, const String &msg)
                 menu.addButton("Назад");
 
                 resp.setMenu(menu);
-                FastBot2::sendMessage(resp);
+                sendMessage(resp);
             }
             break;
     }
     return false;
 }
 
-void TgBotClass::updateHandler(fb::Update& upd)
+void TgBotClass::_updateHandler(fb::Update& upd)
 {
     bool    changeLvl = false;
 
@@ -130,16 +130,16 @@ void TgBotClass::updateHandler(fb::Update& upd)
         fb::Message msg;
         msg.chatID = id;
         msg.text = F("Доступ запрещён");
-        FastBot2::sendMessage(msg);
+        sendMessage(msg);
         return;
     }
 
     if (upd.message().text() == "Назад") {
-        backMenu(user);
+        _backMenu(user);
     }
 
     do {
-        changeLvl = processLevel(user, upd.message().text());
+        changeLvl = _processLevel(user, upd.message().text());
     } while (changeLvl);
 }
 
@@ -195,15 +195,15 @@ void TgBotClass::begin()
 
     Log.info(LOG_MOD_TG, "Starting Telegram Bot");
 
-    FastBot2::attachUpdate([this](fb::Update& u){ updateHandler(u); });
-    FastBot2::skipUpdates();
-    FastBot2::begin();
+    attachUpdate([this](fb::Update& u){ _updateHandler(u); });
+    skipUpdates();
+    begin();
 }
 
 void TgBotClass::loop()
 {
     if (!_enabled) return;
-    FastBot2::tick();
+    tick();
 }
 
 TgBotClass TgBot;

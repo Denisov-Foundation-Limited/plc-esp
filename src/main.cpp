@@ -22,6 +22,7 @@
 #include "core/cli/clicp.hpp"
 #include "net/tgbot.hpp"
 #include "net/websrv.hpp"
+#include "controllers/ctrls.hpp"
 
 void setup()
 {
@@ -35,6 +36,7 @@ void setup()
     TgBot.begin();
     GsmModem.begin();
     WebServer.begin();
+    Controllers.begin();
     CLIProcessor.begin();
 }
 
@@ -48,4 +50,5 @@ void loop()
     Wireless.loop();
     Plc.loop();
     TgBot.loop();
+    Controllers.loop();
 }

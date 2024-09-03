@@ -31,19 +31,20 @@ typedef enum {
 
 class ConfigsClass
 {
-private:
-    ConfigsSource _src;
-
-    bool initDevice();
-    bool readAll(ConfigsSource src);
-    bool printFile(const String &name);
-    bool generateRunning(JsonDocument &doc);
 public:
     bool begin();
     bool writeAll();
     bool eraseAll();
     bool showStartup();
     bool showRunning();
+
+private:
+    ConfigsSource _src;
+
+    bool _initDevice();
+    bool _readAll(ConfigsSource src);
+    bool _printFile(const String &name);
+    bool _generateRunning(JsonDocument &doc);
 };
 
 extern ConfigsClass Configs;

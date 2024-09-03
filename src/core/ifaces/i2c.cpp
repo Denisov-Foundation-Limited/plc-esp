@@ -10,6 +10,7 @@
 /**********************************************************************/
 
 #include "core/ifaces/i2c.hpp"
+#include <Wire.h>
 
 I2CIface::I2CIface(const String &name, uint8_t sda, uint8_t scl)
 {
@@ -35,7 +36,14 @@ const String &I2CIface::getName() const
 
 void I2CIface::findDevices(std::vector<unsigned> &devices)
 {
-
+    Wire.begin(_pins[I2C_PIN_SDA], _pins[I2C_PIN_SCL]);
+    for (auto addr = I2C_MIN_ADDR; addr < I2C_MAX_ADDR; addr++) {
+        Wire.beginTransmission(addr);
+        auto error = Wire.endTransmission();
+        if (error == 0) {
+            devices.push_back(addr);
+        }
+    }
 }
 
 IntType I2CIface::getType() const

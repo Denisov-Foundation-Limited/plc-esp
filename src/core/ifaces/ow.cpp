@@ -20,6 +20,7 @@ OneWireIface::OneWireIface(const String &name, uint8_t pin)
 void OneWireIface::setPin(uint8_t gpio)
 {
     _pin = gpio;
+    _bus.begin(gpio);
 }
 
 uint8_t OneWireIface::getPin() const
@@ -39,7 +40,24 @@ void OneWireIface::setName(const String &name)
 
 void OneWireIface::findAddresses(std::vector<String> &addrs)
 {
+    uint8_t addr[8];
 
+    if (_bus.search(addr))
+    {
+        do
+        {
+            String sOut = "";
+            for (uint8_t i = 0; i < 8; i++)
+            {
+                if (addr[i] < 0x10) {
+                    sOut += "0";
+                }
+                sOut += String(addr[i], HEX);
+            }
+            sOut.toUpperCase();
+            addrs.push_back(sOut);
+        } while (_bus.search(addr));
+    }
 }
 
 IntType OneWireIface::getType() const
