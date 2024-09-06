@@ -9,18 +9,27 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __UTILS_HPP__
-#define __UTILS_HPP__
+#ifndef __METEO_SENSOR_HPP__
+#define __METEO_SENSOR_HPP__
 
-#include <Arduino.h>
-#include <vector>
+typedef enum {
+    METEO_SENSOR_DS18,
+    METEO_SENSOR_DHT22,
+    METEO_SENSOR_BME280
+} MeteoSensorType;
 
-class UtilsClass
+class MeteoSensor
 {
 public:
-    bool splitString(String str, String delim, std::vector<String> &result);
+    virtual void readData() = 0;
+    virtual float getTemperature() = 0;
+    virtual float getHumidity() = 0;
+    virtual float getPressure() = 0;
+    virtual const String &getName() = 0;
+    virtual void setName(const String &name) = 0;
+    virtual MeteoSensorType getType() = 0;
+    virtual bool setEnabled(bool status) = 0;
+    virtual bool getEnabled() = 0;
 };
 
-extern UtilsClass Utils;
-
-#endif /* __UTILS_HPP__ */
+#endif /* __METEO_SENSOR_HPP__ */

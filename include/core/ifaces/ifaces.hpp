@@ -20,13 +20,13 @@
 
 class InterfacesClass
 {
-private:
-    std::vector<Interface *>  _ifaces;
-
 public:
     void addInterface(Interface *iface);
     Interface *getInterface(const String &name);
     const std::vector<Interface *> &getInterfaces() const;
+
+private:
+    std::vector<Interface *>  _ifaces;
 };
 
 extern InterfacesClass Interfaces;

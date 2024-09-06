@@ -29,22 +29,30 @@ typedef enum {
     CON_LEVEL_IFACES,
     CON_LEVEL_IFACE,
     CON_LEVEL_EXTS,
-    CON_LEVEL_EXT
+    CON_LEVEL_EXT,
+    CON_LEVEL_TG,
+    CON_LEVEL_TG_USR,
+    CON_LEVEL_WEB,
+    CON_LEVEL_CTRLS,
+    CON_LEVEL_METEO,
+    CON_LEVEL_METEO_SENS
 } ConsoleLevel;
 
 class CLIProcessorClass
 {
-private:
-    ConsoleLevel    _level = CON_LEVEL_ENABLE;
-    String          _objName = "";
-
-    void printCall();
-    bool parseEnableCmd(const String &cmd);
-    bool parseConfigCmd(const String &cmd);
-    void processExit();
 public:
     void begin();
     bool parse(const String &cmd);
+
+private:
+    ConsoleLevel    _level = CON_LEVEL_ENABLE;
+    String          _objName = "";
+    String          _objName2 = "";
+
+    void _printCall();
+    bool _parseEnableCmd(const String &cmd);
+    bool _parseConfigCmd(const String &cmd);
+    void _processExit();
 };
 
 extern CLIProcessorClass CLIProcessor;

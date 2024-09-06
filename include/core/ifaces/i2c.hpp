@@ -17,6 +17,9 @@
 
 #include "core/ifaces/iface.hpp"
 
+#define I2C_MIN_ADDR    0x8
+#define I2C_MAX_ADDR    127
+
 typedef enum {
     I2C_PIN_SDA,
     I2C_PIN_SCL,
@@ -26,10 +29,6 @@ typedef enum {
 
 class I2CIface : public Interface
 {
-private:
-    uint8_t _pins[I2C_PIN_MAX] = { 0 };
-    String  _name;
-
 public:
     I2CIface(const String &name, uint8_t sda, uint8_t scl);
     void setPin(I2cPin pin, uint8_t gpio);
@@ -38,6 +37,10 @@ public:
     void findDevices(std::vector<unsigned> &devices);
     IntType getType() const;
     void setName(const String &name);
+
+private:
+    uint8_t _pins[I2C_PIN_MAX] = { 0 };
+    String  _name;
 };
 
 #endif /* __I2C_HPP__ */

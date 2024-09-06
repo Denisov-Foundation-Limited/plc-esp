@@ -15,15 +15,12 @@
 #include <Arduino.h>
 #include <vector>
 #include <GyverDS18.h>
+#include <OneWire.h>
 
 #include "core/ifaces/iface.hpp"
 
 class OneWireIface : public Interface
 {
-private:
-    uint8_t     _pin;
-    String      _name;
-
 public:
     OneWireIface(const String &name, uint8_t pin);
     void setPin(uint8_t gpio);
@@ -32,6 +29,11 @@ public:
     void setName(const String &name);
     void findAddresses(std::vector<String> &addrs);
     IntType getType() const;
+
+private:
+    uint8_t _pin;
+    String  _name;
+    OneWire _bus;
 };
 
 #endif /* __OW_HPP__ */

@@ -46,12 +46,8 @@ typedef enum {
     EXT_ADDR_8 = 0x27
 } ExtenderAddr;
 
-class Extender {
-private:
-    ExtenderId          _id;
-    uint8_t             _addr;
-
-    Adafruit_MCP23X17   _mcp;
+class Extender
+{
 public:
     Extender(ExtenderId id, uint8_t addr);
     uint8_t getAddr() const;
@@ -61,22 +57,27 @@ public:
     bool read(uint8_t pin);
     void setID(ExtenderId id);
     void setAddr(unsigned addr);
+
+private:
+    ExtenderId          _id;
+    uint8_t             _addr;
+    Adafruit_MCP23X17   _mcp;
 };
 
 class ExtendersClass
 {
-private:
-    std::vector<Extender*>   _exts;
-    unsigned                _addrs[EXT_ADDR_COUNT] = { EXT_ADDR_1, EXT_ADDR_2, EXT_ADDR_3,
-                                                        EXT_ADDR_4, EXT_ADDR_5, EXT_ADDR_6,
-                                                        EXT_ADDR_7, EXT_ADDR_8 };
-
 public:
     void addExtender(Extender *ext);
     Extender *getById(ExtenderId id) const;
     std::vector<Extender*> &getExtenders();
     bool isExists(ExtenderId id);
     unsigned getLastFreeAddr() const;
+
+private:
+    std::vector<Extender*>   _exts;
+    unsigned                _addrs[EXT_ADDR_COUNT] = { EXT_ADDR_1, EXT_ADDR_2, EXT_ADDR_3,
+                                                        EXT_ADDR_4, EXT_ADDR_5, EXT_ADDR_6,
+                                                        EXT_ADDR_7, EXT_ADDR_8 };
 };
 
 extern ExtendersClass Extenders;

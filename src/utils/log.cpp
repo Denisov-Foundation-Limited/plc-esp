@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void LogClass::logging(LogType type, LogModule mod, const String &msg)
+void LogClass::_logging(LogType type, LogModule mod, const String &msg)
 {
     String  sType;
     String  sMod;
@@ -74,6 +74,10 @@ void LogClass::logging(LogType type, LogModule mod, const String &msg)
     case LOG_MOD_WEB:
         sMod = "WEB";
         break;
+
+    case LOG_MOD_METEO:
+        sMod = "METEO";
+        break;
     }
 
     Serial.println("[" + sType + "][" + sMod + "] " + msg);
@@ -92,17 +96,17 @@ void LogClass::begin()
 
 void LogClass::info(LogModule mod, const String &msg)
 {
-    logging(LOG_TYPE_INFO, mod, msg);
+    _logging(LOG_TYPE_INFO, mod, msg);
 }
 
 void LogClass::error(LogModule mod, const String &msg)
 {
-    logging(LOG_TYPE_ERROR, mod, msg);
+    _logging(LOG_TYPE_ERROR, mod, msg);
 }
 
 void LogClass::warning(LogModule mod, const String &msg)
 {
-    logging(LOG_TYPE_WARNING, mod, msg);
+    _logging(LOG_TYPE_WARNING, mod, msg);
 }
 
 LogClass Log;

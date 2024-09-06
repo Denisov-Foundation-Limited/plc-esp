@@ -32,14 +32,6 @@ typedef enum {
 
 class GPIOIface : public Interface
 {
-private:
-    String          _name;
-    uint8_t         _pin;
-    GpioMode        _mode;
-    GpioPull        _pull;
-    ExtenderId      _extId;
-
-    bool        _state = false;
 public:
     GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId);
     void setPin(uint8_t pin);
@@ -56,6 +48,14 @@ public:
     const String &getName() const ;
     IntType getType() const;
     void setName(const String &name);
+
+private:
+    String      _name;
+    uint8_t     _pin;
+    GpioMode    _mode;
+    GpioPull    _pull;
+    ExtenderId  _extId;
+    bool        _state = false;
 };
 
 #endif /* __GPIO_HPP__ */

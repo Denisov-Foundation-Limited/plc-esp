@@ -48,13 +48,6 @@ typedef struct {
 
 class TgBotClass : public FastBot2
 {
-private:
-    std::vector<TgUser *>   _users;
-    bool                    _enabled = false;
-
-    void backMenu(TgUser *user);
-    bool processLevel(TgUser *user, const String &msg);
-    void updateHandler(fb::Update& upd);
 public:
     void setEnabled(bool status);
     bool getEnabled() const;
@@ -64,6 +57,14 @@ public:
     const std::vector<TgUser *> &getUsers();
     void begin();
     void loop();
+
+private:
+    std::vector<TgUser *>   _users;
+    bool                    _enabled = false;
+
+    void _backMenu(TgUser *user);
+    bool _processLevel(TgUser *user, const String &msg);
+    void _updateHandler(fb::Update& upd);
 };
 
 extern TgBotClass TgBot;

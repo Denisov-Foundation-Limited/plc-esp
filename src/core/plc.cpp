@@ -17,7 +17,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-void PlcClass::alarmBuzzerTask()
+void PlcClass::_alarmBuzzerTask()
 {
     if (_alarm > 0) {
         if (!_lastAlarm) {
@@ -78,6 +78,21 @@ void PlcClass::setBuzzer(PlcMod mod, bool status)
     }
 }
 
+void PlcClass::setStatus(PlcMod mod, bool status)
+{
+    if (status) {
+        _status |= (1 << mod);
+    } else {
+        _status &= ~(1 << mod);
+    }
+
+    if (_status == 0) {
+        if (_pins[PLC_GPIO_STATUS_LED] != nullptr) { _pins[PLC_GPIO_STATUS_LED]->write(false); }
+    } else {
+        if (_pins[PLC_GPIO_STATUS_LED] != nullptr) { _pins[PLC_GPIO_STATUS_LED]->write(true); }
+    }
+}
+
 GPIOIface *PlcClass::getPin(PlcGpioType type) const
 {
     return _pins[type];
@@ -108,7 +123,7 @@ void PlcClass::loop()
 {
     if (millis() - _timer >= PLC_TIMER_MS) {
         _timer = millis();
-        alarmBuzzerTask();
+        _alarmBuzzerTask();
     }
 }
 

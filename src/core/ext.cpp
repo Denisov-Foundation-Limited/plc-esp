@@ -65,7 +65,7 @@ void ExtendersClass::addExtender(Extender *ext)
             " addr: " + String(ext->getAddr()));
     } else {
         Log.warning(LOG_MOD_GPIO, "Extender " + String(ext->getID()) +
-            " addr: " + String(ext->getAddr()) + " is not online");
+            " addr: " + String(ext->getAddr()) + " is not connected");
     }
     _exts.push_back(ext);
 }

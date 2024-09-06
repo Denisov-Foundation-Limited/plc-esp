@@ -9,18 +9,27 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __UTILS_HPP__
-#define __UTILS_HPP__
+#ifndef __CONTROLLERS_HPP__
+#define __CONTROLLERS_HPP__
 
 #include <Arduino.h>
 #include <vector>
 
-class UtilsClass
+#include "ctrl.hpp"
+
+class ControllersClass
 {
 public:
-    bool splitString(String str, String delim, std::vector<String> &result);
+    void addController(Controller *ctrl);
+    const std::vector<Controller *> &getControllers();
+    Controller *getController(const String &name);
+    void begin();
+    void loop();
+
+private:
+    std::vector<Controller *> _ctrls;
 };
 
-extern UtilsClass Utils;
+extern ControllersClass Controllers;
 
-#endif /* __UTILS_HPP__ */
+#endif /* __CONTROLLERS_HPP__ */
