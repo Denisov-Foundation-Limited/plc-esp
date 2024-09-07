@@ -14,56 +14,6 @@
 
 /*********************************************************************/
 /*                                                                   */
-/*                          PRIVATE FUNCTIONS                        */
-/*                                                                   */
-/*********************************************************************/
-
-void WirelessClass::statusTask()
-{
-    if ((WiFi.status() != _status) && (!_ap)) {
-        _status = WiFi.status();
-
-        switch (_status)
-        {
-        case WL_CONNECTED:
-            if (_statusLed != nullptr) { _statusLed->write(true); }
-            Plc.setAlarm(PLC_MOD_WIFI, false);
-            Log.info(LOG_MOD_WIFI, String(F("PLC was connected to SSID: ")) + _ssid);
-            Log.info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
-            break;
-
-        case WL_CONNECTION_LOST:
-            if (_statusLed != nullptr) { _statusLed->write(false); }
-            Plc.setAlarm(PLC_MOD_WIFI, true);
-            Log.info(LOG_MOD_WIFI, String(F("PLC connection lost to SSID: ")) + _ssid);
-            break;
-
-        case WL_IDLE_STATUS:
-            break;
-
-        case WL_NO_SSID_AVAIL:
-            if (_statusLed != nullptr) { _statusLed->write(false); }
-            Plc.setAlarm(PLC_MOD_WIFI, true);
-            Log.info(LOG_MOD_WIFI, String(F("PLC no available SSID: ")) + _ssid);
-            break;
-
-        case WL_SCAN_COMPLETED:
-            if (_statusLed != nullptr) { _statusLed->write(false); }
-            Plc.setAlarm(PLC_MOD_WIFI, true);
-            Log.info(LOG_MOD_WIFI, String(F("PLC scan completed for SSID: ")) + _ssid);
-            break;
-        
-        default:
-            if (_statusLed != nullptr) { _statusLed->write(false); }
-            Plc.setAlarm(PLC_MOD_WIFI, true);
-            Log.info(LOG_MOD_WIFI, String(F("PLC has been disconnected from SSID: ")) + _ssid);
-            break;
-        }
-    }
-}
-
-/*********************************************************************/
-/*                                                                   */
 /*                          PUBLIC FUNCTIONS                         */
 /*                                                                   */
 /*********************************************************************/
@@ -157,6 +107,56 @@ void WirelessClass::loop()
     if (millis() - _timer >= WIFI_DELAY_MS) {
         _timer = millis();
         statusTask();
+    }
+}
+
+/*********************************************************************/
+/*                                                                   */
+/*                          PRIVATE FUNCTIONS                        */
+/*                                                                   */
+/*********************************************************************/
+
+void WirelessClass::statusTask()
+{
+    if ((WiFi.status() != _status) && (!_ap)) {
+        _status = WiFi.status();
+
+        switch (_status)
+        {
+        case WL_CONNECTED:
+            if (_statusLed != nullptr) { _statusLed->write(true); }
+            Plc.setAlarm(PLC_MOD_WIFI, false);
+            Log.info(LOG_MOD_WIFI, String(F("PLC was connected to SSID: ")) + _ssid);
+            Log.info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
+            break;
+
+        case WL_CONNECTION_LOST:
+            if (_statusLed != nullptr) { _statusLed->write(false); }
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC connection lost to SSID: ")) + _ssid);
+            break;
+
+        case WL_IDLE_STATUS:
+            break;
+
+        case WL_NO_SSID_AVAIL:
+            if (_statusLed != nullptr) { _statusLed->write(false); }
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC no available SSID: ")) + _ssid);
+            break;
+
+        case WL_SCAN_COMPLETED:
+            if (_statusLed != nullptr) { _statusLed->write(false); }
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC scan completed for SSID: ")) + _ssid);
+            break;
+        
+        default:
+            if (_statusLed != nullptr) { _statusLed->write(false); }
+            Plc.setAlarm(PLC_MOD_WIFI, true);
+            Log.info(LOG_MOD_WIFI, String(F("PLC has been disconnected from SSID: ")) + _ssid);
+            break;
+        }
     }
 }
 

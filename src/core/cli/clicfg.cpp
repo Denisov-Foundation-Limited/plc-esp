@@ -505,13 +505,16 @@ bool CLIConfiguratorClass::configTgBot(const String &cmd)
 {
     if (cmd == "?" || cmd == "help") {
         Serial.println(F("\nTelegram configurations commands:"));
-        Serial.println(F("\ttoken <string>                          : Setup Telegram API token"));
-        Serial.println(F("\tmode <sync/async/long> <period(millis)> : Setup Poll mode"));
-        Serial.println(F("\tproxy-ip <string>                       : Setup Proxy IP address"));
-        Serial.println(F("\tproxy-port <integer>                    : Setup Proxy port"));
-        Serial.println(F("\tshutdown                                : Disable Telegram bot"));
-        Serial.println(F("\tno shutdown                             : Enable Telegram bot"));
-        Serial.println(F("\texit                                    : Exit from Telegram configuration\n"));
+        Serial.println(F("\ttoken <string>          : Setup Telegram API token"));
+        Serial.println(F("\tmode <sync/async/long>  : Setup Poll mode"));
+        Serial.println(F("\tperiod <millis>         : Setup bot poll period"));
+        Serial.println(F("\tproxy-ip <string>       : Setup Proxy IP address"));
+        Serial.println(F("\tproxy-port <integer>    : Setup Proxy port"));
+        Serial.println(F("\tadd user <string>       : Add telegram bot user"));
+        Serial.println(F("\tuser <string>           : Select Telegram bot user for configurations"));
+        Serial.println(F("\tshutdown                : Disable Telegram bot"));
+        Serial.println(F("\tno shutdown             : Enable Telegram bot"));
+        Serial.println(F("\texit                    : Exit from Telegram configuration\n"));
         return true;
     }
 
@@ -529,6 +532,13 @@ bool CLIConfiguratorClass::configTgBot(const String &cmd)
 
         value.remove(0, 6);
         TgBot.setToken(value);
+
+        return true;
+    } else if (cmd.indexOf(F("period ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 7);
+        TgBot.setPollMode(TgBot.getPollMode(), value.toInt());
 
         return true;
     } else if (cmd.indexOf(F("mode ")) >= 0) {
@@ -561,6 +571,15 @@ bool CLIConfiguratorClass::configTgBot(const String &cmd)
         TgBot.setProxy(TgBot.getProxyIP(), value.toInt());
 
         return true;
+    } else if (cmd.indexOf(F("add user ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 9);
+        auto user = new TgUser();
+        user->name = value;
+        TgBot.addUser(user);
+
+        return true;
     }
 
     return false;
@@ -575,6 +594,53 @@ bool CLIConfiguratorClass::configTgBotUser(const String &userName, const String 
         Serial.println(F("\tid <integer>        : Setup Poll mode"));
         Serial.println(F("\tnotify <on/off>     : Setup Poll mode"));
         Serial.println(F("\texit                : Exit from Telegram configuration\n"));
+        return true;
+    }
+
+    auto *user = TgBot.getUser(userName);
+    if (user == nullptr) {
+        return false;
+    }
+
+    if (cmd.indexOf(F("name ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 5);
+        user->name = value;
+
+        return true;
+    } else if (cmd.indexOf(F("admin ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 6);
+        if (value == "true") {
+            user->admin = true;
+        } else if (value == "false") {
+            user->admin = false;
+        } else {
+            return false;
+        }
+
+        return true;
+    } else if (cmd.indexOf(F("id ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 3);
+        user->chatId = value.toInt();
+
+        return true;
+    } else if (cmd.indexOf(F("notify ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 7);
+        if (value == "on") {
+            user->notify = true;
+        } else if (value == "off") {
+            user->notify = false;
+        } else {
+            return false;
+        }
+
         return true;
     }
 

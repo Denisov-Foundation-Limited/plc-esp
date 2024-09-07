@@ -13,34 +13,6 @@
 
 /*********************************************************************/
 /*                                                                   */
-/*                          PRIVATE FUNCTIONS                        */
-/*                                                                   */
-/*********************************************************************/
-
-void PlcClass::_alarmBuzzerTask()
-{
-    if (_alarm > 0) {
-        if (!_lastAlarm) {
-            _lastAlarm = true;
-            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(true); }
-        } else {
-            _lastAlarm = false;
-            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(false); }
-        }
-    }
-    if (_buzzer > 0) {
-        if (!_lastBuzzer) {
-            _lastBuzzer = true;
-            if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(true); }
-        } else {
-            _lastBuzzer = false;
-            if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(false); }
-        }
-    }
-}
-
-/*********************************************************************/
-/*                                                                   */
 /*                          PUBLIC FUNCTIONS                         */
 /*                                                                   */
 /*********************************************************************/
@@ -124,6 +96,34 @@ void PlcClass::loop()
     if (millis() - _timer >= PLC_TIMER_MS) {
         _timer = millis();
         _alarmBuzzerTask();
+    }
+}
+
+/*********************************************************************/
+/*                                                                   */
+/*                          PRIVATE FUNCTIONS                        */
+/*                                                                   */
+/*********************************************************************/
+
+void PlcClass::_alarmBuzzerTask()
+{
+    if (_alarm > 0) {
+        if (!_lastAlarm) {
+            _lastAlarm = true;
+            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(true); }
+        } else {
+            _lastAlarm = false;
+            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(false); }
+        }
+    }
+    if (_buzzer > 0) {
+        if (!_lastBuzzer) {
+            _lastBuzzer = true;
+            if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(true); }
+        } else {
+            _lastBuzzer = false;
+            if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(false); }
+        }
     }
 }
 

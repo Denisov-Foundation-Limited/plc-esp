@@ -13,6 +13,32 @@
 
 /*********************************************************************/
 /*                                                                   */
+/*                          PUBLIC FUNCTIONS                         */
+/*                                                                   */
+/*********************************************************************/
+
+void LogClass::begin()
+{
+    Serial.begin(115200);
+}
+
+void LogClass::info(LogModule mod, const String &msg)
+{
+    _logging(LOG_TYPE_INFO, mod, msg);
+}
+
+void LogClass::error(LogModule mod, const String &msg)
+{
+    _logging(LOG_TYPE_ERROR, mod, msg);
+}
+
+void LogClass::warning(LogModule mod, const String &msg)
+{
+    _logging(LOG_TYPE_WARNING, mod, msg);
+}
+
+/*********************************************************************/
+/*                                                                   */
 /*                          PRIVATE FUNCTIONS                        */
 /*                                                                   */
 /*********************************************************************/
@@ -81,32 +107,6 @@ void LogClass::_logging(LogType type, LogModule mod, const String &msg)
     }
 
     Serial.println("[" + sType + "][" + sMod + "] " + msg);
-}
-
-/*********************************************************************/
-/*                                                                   */
-/*                          PUBLIC FUNCTIONS                         */
-/*                                                                   */
-/*********************************************************************/
-
-void LogClass::begin()
-{
-    Serial.begin(115200);
-}
-
-void LogClass::info(LogModule mod, const String &msg)
-{
-    _logging(LOG_TYPE_INFO, mod, msg);
-}
-
-void LogClass::error(LogModule mod, const String &msg)
-{
-    _logging(LOG_TYPE_ERROR, mod, msg);
-}
-
-void LogClass::warning(LogModule mod, const String &msg)
-{
-    _logging(LOG_TYPE_WARNING, mod, msg);
 }
 
 LogClass Log;

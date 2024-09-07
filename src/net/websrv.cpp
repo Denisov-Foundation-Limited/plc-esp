@@ -13,17 +13,6 @@
 
 /*********************************************************************/
 /*                                                                   */
-/*                          PRIVATE FUNCTIONS                         */
-/*                                                                   */
-/*********************************************************************/
-
-void WebServerClass::indexReq(AsyncWebServerRequest *req)
-{
-    req->send(200, "text/html", "<h1>FCPLC</h1>");
-}
-
-/*********************************************************************/
-/*                                                                   */
 /*                          PUBLIC FUNCTIONS                         */
 /*                                                                   */
 /*********************************************************************/
@@ -46,6 +35,17 @@ void WebServerClass::begin()
 
     AsyncWebServer::on("/", HTTP_GET, std::bind(&WebServerClass::indexReq, this, std::placeholders::_1));
     AsyncWebServer::begin();
+}
+
+/*********************************************************************/
+/*                                                                   */
+/*                          PRIVATE FUNCTIONS                         */
+/*                                                                   */
+/*********************************************************************/
+
+void WebServerClass::indexReq(AsyncWebServerRequest *req)
+{
+    req->send(200, "text/html", "<h1>FCPLC</h1>");
 }
 
 WebServerClass WebServer(WEB_SERVER_DEFAULT_PORT);

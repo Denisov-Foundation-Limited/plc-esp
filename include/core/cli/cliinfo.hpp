@@ -32,6 +32,7 @@ public:
     void showMeteoStatus();
     void showOneWire();
     void showI2C();
+    void showTgBot();
 };
 
 extern CLIInformerClass CLIInformer;

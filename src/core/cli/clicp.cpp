@@ -16,78 +16,6 @@
 
 /*********************************************************************/
 /*                                                                   */
-/*                          PRIVATE FUNCTIONS                        */
-/*                                                                   */
-/*********************************************************************/
-
-void CLIProcessorClass::_printCall()
-{
-    switch (_level)
-    {
-    case CON_LEVEL_ENABLE:
-        Serial.printf("%s", F("console#"));
-        break;
-
-    case CON_LEVEL_CONFIG:
-        Serial.printf("%s", F("(config)#"));
-        break;
-
-    case CON_LEVEL_WIFI:
-        Serial.printf("%s", F("config(wifi)#"));
-        break;
-
-    case CON_LEVEL_TANKS:
-        Serial.printf("%s", F("config(tanks)#"));
-        break;
-
-    case CON_LEVEL_TANK:
-        Serial.printf("%s", F("config(tanks-tnk)#"));
-        break;
-
-    case CON_LEVEL_IFACES:
-        Serial.printf("%s", F("config(ifaces)#"));
-        break;
-
-    case CON_LEVEL_IFACE:
-        Serial.printf("%s", F("config(ifaces-if)#"));
-        break;
-
-    case CON_LEVEL_EXTS:
-        Serial.printf("%s", F("config(exts)#"));
-        break;
-
-    case CON_LEVEL_EXT:
-        Serial.printf("%s", F("config(exts-ext)#"));
-        break;
-
-    case CON_LEVEL_TG:
-        Serial.printf("%s", F("config(tgbot)#"));
-        break;
-
-    case CON_LEVEL_TG_USR:
-        Serial.printf("%s", F("config(tgbot-usr)#"));
-        break;
-
-    case CON_LEVEL_WEB:
-        Serial.printf("%s", F("config(web)#"));
-        break;
-
-    case CON_LEVEL_CTRLS:
-        Serial.printf("%s", F("config(ctrls)#"));
-        break;
-
-    case CON_LEVEL_METEO:
-        Serial.printf("%s", F("config(meteo)#"));
-        break;
-
-    case CON_LEVEL_METEO_SENS:
-        Serial.printf("%s", F("config(meteo-sens)#"));
-        break;
-    }
-}
-
-/*********************************************************************/
-/*                                                                   */
 /*                          PUBLIC FUNCTIONS                         */
 /*                                                                   */
 /*********************************************************************/
@@ -293,6 +221,8 @@ bool CLIProcessorClass::_parseEnableCmd(const String &cmd)
         CLIInformer.showMeteo();
     } else if (cmd == "show ow") {
         CLIInformer.showOneWire();
+    } else if (cmd == "show tgbot") {
+        CLIInformer.showTgBot();
     } else if (cmd == "show i2c") {
         CLIInformer.showI2C();
     } else if (cmd == "show meteo status") {
@@ -328,6 +258,7 @@ bool CLIProcessorClass::_parseEnableCmd(const String &cmd)
         Serial.println(F("\tshow ctrl               : Controllers configurations"));
         Serial.println(F("\tshow interfaces         : Interfaces configurations"));
         Serial.println(F("\tshow interfaces status  : Interfaces statuses"));
+        Serial.println(F("\tshow tgbot              : Telegram bot configurations"));
         Serial.println(F("\tshow meteo              : Meteo controller configurations"));
         Serial.println(F("\tshow meteo status       : Meteo controller sensors status"));
         Serial.println(F("\tshow ext                : I2C extenders configurations"));
@@ -419,6 +350,78 @@ void CLIProcessorClass::_processExit()
         break;
 
     case CON_LEVEL_ENABLE:
+        break;
+    }
+}
+
+/*********************************************************************/
+/*                                                                   */
+/*                          PRIVATE FUNCTIONS                        */
+/*                                                                   */
+/*********************************************************************/
+
+void CLIProcessorClass::_printCall()
+{
+    switch (_level)
+    {
+    case CON_LEVEL_ENABLE:
+        Serial.printf("%s", F("console#"));
+        break;
+
+    case CON_LEVEL_CONFIG:
+        Serial.printf("%s", F("(config)#"));
+        break;
+
+    case CON_LEVEL_WIFI:
+        Serial.printf("%s", F("config(wifi)#"));
+        break;
+
+    case CON_LEVEL_TANKS:
+        Serial.printf("%s", F("config(tanks)#"));
+        break;
+
+    case CON_LEVEL_TANK:
+        Serial.printf("%s", F("config(tanks-tnk)#"));
+        break;
+
+    case CON_LEVEL_IFACES:
+        Serial.printf("%s", F("config(ifaces)#"));
+        break;
+
+    case CON_LEVEL_IFACE:
+        Serial.printf("%s", F("config(ifaces-if)#"));
+        break;
+
+    case CON_LEVEL_EXTS:
+        Serial.printf("%s", F("config(exts)#"));
+        break;
+
+    case CON_LEVEL_EXT:
+        Serial.printf("%s", F("config(exts-ext)#"));
+        break;
+
+    case CON_LEVEL_TG:
+        Serial.printf("%s", F("config(tgbot)#"));
+        break;
+
+    case CON_LEVEL_TG_USR:
+        Serial.printf("%s", F("config(tgbot-usr)#"));
+        break;
+
+    case CON_LEVEL_WEB:
+        Serial.printf("%s", F("config(web)#"));
+        break;
+
+    case CON_LEVEL_CTRLS:
+        Serial.printf("%s", F("config(ctrls)#"));
+        break;
+
+    case CON_LEVEL_METEO:
+        Serial.printf("%s", F("config(meteo)#"));
+        break;
+
+    case CON_LEVEL_METEO_SENS:
+        Serial.printf("%s", F("config(meteo-sens)#"));
         break;
     }
 }

@@ -28,6 +28,104 @@
 
 /*********************************************************************/
 /*                                                                   */
+/*                          PUBLIC FUNCTIONS                         */
+/*                                                                   */
+/*********************************************************************/
+
+bool ConfigsClass::begin()
+{
+    bool isOk = false;
+
+    if (SD.begin(SPI_SS_PIN)) {
+        Log.info(LOG_MOD_CFG, F("SD card found. Reading files"));
+        if (!SD.exists(CONFIGS_STARTUP_FILE))
+        {
+            _src = CFG_SRC_SD;
+            return _initDevice();
+        } else {
+            return _readAll(CFG_SRC_SD);
+        }
+    }
+
+    Log.warning(LOG_MOD_CFG, F("SD card not found. Trying to read from flash memory"));
+
+#ifdef ESP32
+    isOk = LittleFS.begin(true);
+#else
+    isOk = LittleFS.begin();
+#endif
+
+    if (isOk) {
+        Log.info(LOG_MOD_CFG, F("Flash memory initialized"));
+    } else {
+        Log.error(LOG_MOD_CFG, F("Failed to flash memory"));
+    }
+
+    if (!LittleFS.exists(CONFIGS_STARTUP_FILE))
+    {
+        _src = CFG_SRC_FLASH;
+        return _initDevice();
+    }
+
+    return _readAll(CFG_SRC_FLASH);
+}
+
+bool ConfigsClass::writeAll()
+{
+    JsonDocument    doc;
+    File            file;
+
+    if (!_generateRunning(doc)) {
+        return false;
+    }
+
+    /*
+     * Save configs to file
+     */
+
+    if (_src == CFG_SRC_SD) {
+        file = SD.open(CONFIGS_STARTUP_FILE, "w");
+    } else {
+        file = LittleFS.open(CONFIGS_STARTUP_FILE, "w");
+    }
+    serializeJsonPretty(doc, file);
+    file.close();
+    doc.clear();
+
+    return true;
+}
+
+bool ConfigsClass::eraseAll()
+{
+    if (_src == CFG_SRC_SD) {
+        return SD.remove(CONFIGS_STARTUP_FILE);
+    }
+
+    return LittleFS.remove(CONFIGS_STARTUP_FILE);;
+}
+
+bool ConfigsClass::showStartup()
+{
+    return _printFile(CONFIGS_STARTUP_FILE);
+}
+
+bool ConfigsClass::showRunning()
+{
+    JsonDocument    doc;
+
+    if (!_generateRunning(doc)) {
+        return false;
+    }
+
+    serializeJsonPretty(doc, Serial);
+    Serial.println("");
+    doc.clear();
+
+    return true;
+}
+
+/*********************************************************************/
+/*                                                                   */
 /*                          PRIVATE FUNCTIONS                        */
 /*                                                                   */
 /*********************************************************************/
@@ -279,13 +377,40 @@ bool ConfigsClass::_readAll(ConfigsSource src)
      */
 
     pin = Interfaces.getInterface(doc[F("gsm")][F("iface")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_OW) {
+    if (pin != nullptr && pin->getType() == INT_TYPE_UART) {
         GsmModem.setUart(static_cast<UARTIface *>(pin));
     } else {
         Log.warning(LOG_MOD_CFG, F("GsmModem UART interface not found"));
     }
     GsmModem.setEnabled(doc[F("gsm")][F("enabled")]);
     GsmModem.begin();
+
+    /*
+     * Telegram configurations
+     */
+
+    auto jtgbot = doc[F("tgbot")];
+    TgBot.setToken(jtgbot[F("token")]);
+    fb::Poll poll;
+    if (jtgbot[F("mode")] == "sync") {
+        poll = fb::Poll::Sync;
+    } else if (jtgbot[F("mode")] == "async") {
+        poll = fb::Poll::Async;
+    } else if (jtgbot[F("mode")] == "long") {
+        poll = fb::Poll::Long;
+    }
+    TgBot.setPollMode(poll, jtgbot[F("period")]);
+    JsonArray jusers = jtgbot[F("users")];
+    unsigned k = 0;
+    for (auto usr : jusers) {
+        auto user = new TgUser();
+        user->name = usr[F("name")].as<String>();
+        user->chatId = usr[F("id")];
+        user->notify = usr[F("notify")];
+        user->admin = usr[F("admin")];
+        TgBot.addUser(user);
+    }
+    TgBot.setEnabled(jtgbot[F("enabled")]);
 
     /*
      * Controllers configurations
@@ -302,7 +427,6 @@ bool ConfigsClass::_readAll(ConfigsSource src)
                 Log.warning(LOG_MOD_CFG, String(F("Meteo controller ")) +
                         meteo->getName() + String(F(" OneWire interface not found")));
             }
-            meteo->setEnabled(jctrl[F("enabled")]);
             JsonArray jsens = jctrl[F("sensors")];
             for (auto js : jsens) {
                 if (js[F("type")] == "ds18b20") {
@@ -312,6 +436,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
                     meteo->addSensor(ds);
                 }
             }
+            meteo->setEnabled(jctrl[F("enabled")]);
             Controllers.addController(meteo);
         } else if (jctrl[F("type")] == "socket") {
             
@@ -448,6 +573,35 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     }
 
     /*
+     * Telegram Bot
+     */
+
+    auto jtgbot = doc[F("tgbot")];
+    jtgbot[F("token")] = TgBot.getToken();
+    jtgbot[F("enabled")] = TgBot.getEnabled();
+    jtgbot[F("period")] = TgBot.getPollPeriod();
+    switch (TgBot.getPollMode()) {
+        case fb::Poll::Async:
+            jtgbot[F("mode")] = F("async");
+            break;
+        case fb::Poll::Sync:
+            jtgbot[F("mode")] = F("sync");
+            break;
+        case fb::Poll::Long:
+            jtgbot[F("mode")] = F("long");
+            break;
+    }
+    auto jusers = jtgbot[F("users")];
+    unsigned k = 0;
+    for (auto *usr : TgBot.getUsers()) {
+        jusers[k][F("name")] = usr->name;
+        jusers[k][F("id")] = usr->chatId;
+        jusers[k][F("notify")] = usr->notify;
+        jusers[k][F("admin")] = usr->admin;
+        k++;
+    }
+
+    /*
      * Controllers
      */
 
@@ -501,104 +655,6 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         }
         i++;
     }
-
-    return true;
-}
-
-/*********************************************************************/
-/*                                                                   */
-/*                          PUBLIC FUNCTIONS                         */
-/*                                                                   */
-/*********************************************************************/
-
-bool ConfigsClass::begin()
-{
-    bool isOk = false;
-
-    if (SD.begin(SPI_SS_PIN)) {
-        Log.info(LOG_MOD_CFG, F("SD card found. Reading files"));
-        if (!SD.exists(CONFIGS_STARTUP_FILE))
-        {
-            _src = CFG_SRC_SD;
-            return _initDevice();
-        } else {
-            return _readAll(CFG_SRC_SD);
-        }
-    }
-
-    Log.warning(LOG_MOD_CFG, F("SD card not found. Trying to read from flash memory"));
-
-#ifdef ESP32
-    isOk = LittleFS.begin(true);
-#else
-    isOk = LittleFS.begin();
-#endif
-
-    if (isOk) {
-        Log.info(LOG_MOD_CFG, F("Flash memory initialized"));
-    } else {
-        Log.error(LOG_MOD_CFG, F("Failed to flash memory"));
-    }
-
-    if (!LittleFS.exists(CONFIGS_STARTUP_FILE))
-    {
-        _src = CFG_SRC_FLASH;
-        return _initDevice();
-    }
-
-    return _readAll(CFG_SRC_FLASH);
-}
-
-bool ConfigsClass::writeAll()
-{
-    JsonDocument    doc;
-    File            file;
-
-    if (!_generateRunning(doc)) {
-        return false;
-    }
-
-    /*
-     * Save configs to file
-     */
-
-    if (_src == CFG_SRC_SD) {
-        file = SD.open(CONFIGS_STARTUP_FILE, "w");
-    } else {
-        file = LittleFS.open(CONFIGS_STARTUP_FILE, "w");
-    }
-    serializeJsonPretty(doc, file);
-    file.close();
-    doc.clear();
-
-    return true;
-}
-
-bool ConfigsClass::eraseAll()
-{
-    if (_src == CFG_SRC_SD) {
-        return SD.remove(CONFIGS_STARTUP_FILE);
-    }
-
-    return LittleFS.remove(CONFIGS_STARTUP_FILE);;
-}
-
-bool ConfigsClass::showStartup()
-{
-    return _printFile(CONFIGS_STARTUP_FILE);
-}
-
-bool ConfigsClass::showRunning()
-{
-    JsonDocument    doc;
-
-    if (!_generateRunning(doc)) {
-        return false;
-    }
-
-    serializeJsonPretty(doc, Serial);
-    Serial.println("");
-    doc.clear();
 
     return true;
 }

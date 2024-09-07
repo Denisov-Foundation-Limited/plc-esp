@@ -13,52 +13,6 @@
 
 /*********************************************************************/
 /*                                                                   */
-/*                          PRIVATE FUNCTIONS                        */
-/*                                                                   */
-/*********************************************************************/
-
-String GsmModemClass::getRegStatus(const SIM800RegStatus state) const
-{
-    switch (state)
-    {
-        case REG_UNREGISTERED:
-            return F("Not registered, MT is not currently searching");
-        case REG_SEARCHING:
-            return F("Not registered, MT is not currently searching");
-        case REG_DENIED:
-            return F("Registration denied");
-        case REG_OK_HOME:
-            return F("Registered, home network");
-        case REG_OK_ROAMING:
-            return F("Registered, roaming");
-        case REG_UNKNOWN:
-        case REG_NO_RESULT:
-            return F("Unknown");
-    }
-    return F("Unknown");
-}
-
-String GsmModemClass::getSigLevel(int level) const
-{
-    switch (level)
-    {
-        case 0:
-            return F("-115 dBm or less");
-        case 1:
-            return F("-111 dBm");
-        case 31:
-            return F("-52 dBm or greater");
-        case 99:
-            return F("not known or not detectable");
-        default:   
-            if (level > 1 && level < 31)
-            return F("-110... -54 dBm");
-    }
-    return F("Unknown");
-}
-
-/*********************************************************************/
-/*                                                                   */
 /*                          PUBLIC FUNCTIONS                         */
 /*                                                                   */
 /*********************************************************************/
@@ -119,6 +73,52 @@ void GsmModemClass::begin()
         Log.info(LOG_MOD_GSM, String(F("Operator     : ")) + _modem->getOperator());
         Log.info(LOG_MOD_GSM, String(F("Signal       : ")) + getSigLevel(_modem->getSignalQuality()));
     }
+}
+
+/*********************************************************************/
+/*                                                                   */
+/*                          PRIVATE FUNCTIONS                        */
+/*                                                                   */
+/*********************************************************************/
+
+String GsmModemClass::getRegStatus(const SIM800RegStatus state) const
+{
+    switch (state)
+    {
+        case REG_UNREGISTERED:
+            return F("Not registered, MT is not currently searching");
+        case REG_SEARCHING:
+            return F("Not registered, MT is not currently searching");
+        case REG_DENIED:
+            return F("Registration denied");
+        case REG_OK_HOME:
+            return F("Registered, home network");
+        case REG_OK_ROAMING:
+            return F("Registered, roaming");
+        case REG_UNKNOWN:
+        case REG_NO_RESULT:
+            return F("Unknown");
+    }
+    return F("Unknown");
+}
+
+String GsmModemClass::getSigLevel(int level) const
+{
+    switch (level)
+    {
+        case 0:
+            return F("-115 dBm or less");
+        case 1:
+            return F("-111 dBm");
+        case 31:
+            return F("-52 dBm or greater");
+        case 99:
+            return F("not known or not detectable");
+        default:   
+            if (level > 1 && level < 31)
+            return F("-110... -54 dBm");
+    }
+    return F("Unknown");
 }
 
 GsmModemClass GsmModem;

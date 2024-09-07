@@ -65,6 +65,16 @@ private:
     void _backMenu(TgUser *user);
     bool _processLevel(TgUser *user, const String &msg);
     void _updateHandler(fb::Update& upd);
+
+    bool _mainHandler(TgUser *user, const String &msg);
+    bool _meteoHandler(TgUser *user, const String &msg);
+    bool _securityHandler(TgUser *user, const String &msg);
+    bool _camsHandler(TgUser *user, const String &msg);
+    bool _tanksHandler(TgUser *user, const String &msg);
+    bool _socketsHandler(TgUser *user, const String &msg);
+    bool _lightsHandler(TgUser *user, const String &msg);
+    bool _wateringHandler(TgUser *user, const String &msg);
+    bool _thermsHandler(TgUser *user, const String &msg);
 };
 
 extern TgBotClass TgBot;

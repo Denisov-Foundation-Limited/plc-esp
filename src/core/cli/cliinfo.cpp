@@ -19,11 +19,12 @@
 #include "controllers/ctrls.hpp"
 #include "controllers/meteo/meteo.hpp"
 #include "controllers/meteo/sensors/ds18b20.hpp"
+#include "net/tgbot.hpp"
 
 void CLIInformerClass::showWiFi()
 {
     Serial.println(F("\nWiFi configuration:"));
-    Serial.printf("\tEnabled    : %s\n", (Wireless.getEnabled() == true) ? "true" : "false");
+    Serial.printf("\tStatus     : %s\n", (Wireless.getEnabled() == true) ? F("Enabled") : F("Disabled"));
     Serial.printf("\tSSID       : %s\n", Wireless.getSSID().c_str());
     Serial.printf("\tPassword   : %s\n", Wireless.getPasswd().c_str());
     Serial.printf("\tAP         : %s\n\n", (Wireless.getAP() == true) ? "on" : "off");
@@ -370,7 +371,6 @@ void CLIInformerClass::showI2C()
     unsigned i = 0;
 
     Serial.println("");
-
     for (auto iface : Interfaces.getInterfaces()) {
         if (iface->getType() != INT_TYPE_I2C) {
             continue;
@@ -391,6 +391,39 @@ void CLIInformerClass::showI2C()
         }
         Serial.println("");
     }
+}
+
+void CLIInformerClass::showTgBot()
+{
+    Serial.println("");
+    Serial.println("Telegram bot configurations:");
+    Serial.printf("\tStatus : %s\n", TgBot.getEnabled() ? F("Enabled") : F("Disabled"));
+    Serial.printf("\tToken  : %s\n", TgBot.getToken().c_str());
+    Serial.printf("\tPeriod : %d\n", TgBot.getPollPeriod());
+    String sMode = "";
+    switch (TgBot.getPollMode()) {
+        case fb::Poll::Async:
+            sMode = F("Async");
+            break;
+        case fb::Poll::Sync:
+            sMode = F("Sync");
+            break;
+        case fb::Poll::Long:
+            sMode = F("Long");
+            break;
+    }
+    Serial.printf("\tMode   : %s\n", sMode.c_str());
+
+    Serial.println(F("\nUsers:\n"));
+    Serial.println(F("\tId    Name           ChatId      Notify   Admin"));
+    Serial.println(F("\t---   ------------   ---------   ------   -----"));
+    unsigned i = 1;
+    for (auto *user : TgBot.getUsers()) {
+        Serial.printf("\t%-3d   %-12s   %-9d   %-6s   %-5s\n", i, user->name.c_str(), user->chatId,
+                    user->notify ? F("On") : F("Off"), user->admin ? F("True") : F("False"));
+        i++;
+    }
+    Serial.println("");
 }
 
 CLIInformerClass CLIInformer;

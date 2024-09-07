@@ -10,138 +10,7 @@
 /**********************************************************************/
 
 #include "net/tgbot.hpp"
-
-/*********************************************************************/
-/*                                                                   */
-/*                          PRIVATE FUNCTIONS                         */
-/*                                                                   */
-/*********************************************************************/
-
-void TgBotClass::_backMenu(TgUser *user)
-{
-    switch (user->level) {
-        case TG_MENU_MAIN:
-        case TG_MENU_METEO:
-        case TG_MENU_SECURITY:
-        case TG_MENU_TANKS:
-        case TG_MENU_SOCKETS:
-        case TG_MENU_LIGHTS:
-        case TG_MENU_WATERING:
-        case TG_MENU_THERMS:
-            user->level = TG_MENU_MAIN;
-            break;
-
-        case TG_MENU_TANK:
-            user->level = TG_MENU_TANKS;
-            break;
-
-        case TG_MENU_WATERER:
-            user->level = TG_MENU_WATERING;
-            break;
-
-        case TG_MENU_THERM:
-            user->level = TG_MENU_THERMS;
-            break;
-    }
-}
-
-bool TgBotClass::_processLevel(TgUser *user, const String &msg)
-{
-    switch (user->level) {
-        case TG_MENU_MAIN:
-            {
-                fb::Message resp;
-                fb::Menu menu;
-
-                if (msg == "Метео") {
-                    user->level = TG_MENU_METEO;
-                    return true;
-                } else if (msg == "Камеры") {
-                    user->level = TG_MENU_CAMS;
-                    return true;
-                } else if (msg == "Термо") {
-                    user->level = TG_MENU_THERMS;
-                    return true;
-                } else if (msg == "Охрана") {
-                    user->level = TG_MENU_SECURITY;
-                    return true;
-                } else if (msg == "Свет") {
-                    user->level = TG_MENU_LIGHTS;
-                    return true;
-                } else if (msg == "Розетки") {
-                    user->level = TG_MENU_SOCKETS;
-                    return true;
-                } else if (msg == "Бак") {
-                    user->level = TG_MENU_TANKS;
-                    return true;
-                } else if (msg == "Полив") {
-                    user->level = TG_MENU_WATERING;
-                    return true;
-                }
-
-                resp.chatID = user->chatId;
-                resp.text = F("Добро пожаловать в Умный Дом");
-
-                menu.addButton("Я дома");
-                menu.addButton("Ушёл");
-                menu.newRow();
-                menu.addButton("Камеры");
-                menu.addButton("Метео");
-                menu.addButton("Охрана");
-                menu.addButton("Свет");
-                menu.newRow();
-                menu.addButton("Розетки");
-                menu.addButton("Термо");
-                menu.addButton("Бак");
-                menu.addButton("Полив");
-
-                resp.setMenu(menu);
-                sendMessage(resp);
-            }
-            break;
-
-        case TG_MENU_METEO:
-            {
-                fb::Message resp;
-                fb::Menu menu;
-
-                resp.chatID = user->chatId;
-                resp.text = F("Метео");
-
-                menu.addButton("Обновить");
-                menu.addButton("Назад");
-
-                resp.setMenu(menu);
-                sendMessage(resp);
-            }
-            break;
-    }
-    return false;
-}
-
-void TgBotClass::_updateHandler(fb::Update& upd)
-{
-    bool    changeLvl = false;
-
-    auto id = upd.message().from().id().toInt32();
-    auto user = getUser(id);
-
-    if (user == nullptr) {
-        fb::Message msg;
-        msg.chatID = id;
-        msg.text = F("Доступ запрещён");
-        sendMessage(msg);
-        return;
-    }
-
-    if (upd.message().text() == "Назад") {
-        _backMenu(user);
-    }
-
-    do {
-        changeLvl = _processLevel(user, upd.message().text());
-    } while (changeLvl);
-}
+#include "net/wifi.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -191,19 +60,302 @@ const std::vector<TgUser *> &TgBotClass::getUsers()
 
 void TgBotClass::begin()
 {
-    if (!_enabled) return;
+    if (!_enabled || getToken() == "") return;
 
     Log.info(LOG_MOD_TG, "Starting Telegram Bot");
 
     attachUpdate([this](fb::Update& u){ _updateHandler(u); });
     skipUpdates();
-    begin();
+    FastBot2::begin();
 }
 
 void TgBotClass::loop()
 {
-    if (!_enabled) return;
+    if (!_enabled || Wireless.getStatus() != WL_CONNECTED) return;
     tick();
+}
+
+/*********************************************************************/
+/*                                                                   */
+/*                          PRIVATE FUNCTIONS                         */
+/*                                                                   */
+/*********************************************************************/
+
+void TgBotClass::_backMenu(TgUser *user)
+{
+    switch (user->level) {
+        case TG_MENU_MAIN:
+        case TG_MENU_METEO:
+        case TG_MENU_SECURITY:
+        case TG_MENU_TANKS:
+        case TG_MENU_SOCKETS:
+        case TG_MENU_LIGHTS:
+        case TG_MENU_WATERING:
+        case TG_MENU_THERMS:
+        case TG_MENU_CAMS:
+            user->level = TG_MENU_MAIN;
+            break;
+
+        case TG_MENU_TANK:
+            user->level = TG_MENU_TANKS;
+            break;
+
+        case TG_MENU_WATERER:
+            user->level = TG_MENU_WATERING;
+            break;
+
+        case TG_MENU_THERM:
+            user->level = TG_MENU_THERMS;
+            break;
+    }
+}
+
+bool TgBotClass::_processLevel(TgUser *user, const String &msg)
+{
+    switch (user->level) {
+        case TG_MENU_MAIN:
+            return _mainHandler(user, msg);
+
+        case TG_MENU_METEO:
+            return _meteoHandler(user, msg);
+
+        case TG_MENU_SECURITY:
+            return _securityHandler(user, msg);
+
+        case TG_MENU_CAMS:
+            return _camsHandler(user, msg);
+
+        case TG_MENU_TANKS:
+            return _tanksHandler(user, msg);
+
+        case TG_MENU_THERMS:
+            return _thermsHandler(user, msg);
+
+        case TG_MENU_LIGHTS:
+            return _lightsHandler(user, msg);
+
+        case TG_MENU_SOCKETS:
+            return _socketsHandler(user, msg);
+
+        case TG_MENU_WATERING:
+            return _wateringHandler(user, msg);
+    }
+    return false;
+}
+
+void TgBotClass::_updateHandler(fb::Update& upd)
+{
+    bool    changeLvl = false;
+
+    auto id = upd.message().from().id().toInt32();
+    auto user = getUser(id);
+    auto msg = upd.message().text().decodeUnicode();
+
+    if (user == nullptr) {
+        fb::Message msg;
+        msg.chatID = id;
+        msg.text = F("Доступ запрещён");
+        sendMessage(msg);
+        return;
+    }
+
+    if (msg == "Назад") {
+        _backMenu(user);
+    }
+
+    do {
+        changeLvl = _processLevel(user, msg);
+    } while (changeLvl);
+}
+
+bool TgBotClass::_mainHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu menu;
+
+    if (msg == "Метео") {
+        user->level = TG_MENU_METEO;
+        return true;
+    } else if (msg == "Камеры") {
+        user->level = TG_MENU_CAMS;
+        return true;
+    } else if (msg == "Термо") {
+        user->level = TG_MENU_THERMS;
+        return true;
+    } else if (msg == "Охрана") {
+        user->level = TG_MENU_SECURITY;
+        return true;
+    } else if (msg == "Свет") {
+        user->level = TG_MENU_LIGHTS;
+        return true;
+    } else if (msg == "Розетки") {
+        user->level = TG_MENU_SOCKETS;
+        return true;
+    } else if (msg == "Бак") {
+        user->level = TG_MENU_TANKS;
+        return true;
+    } else if (msg == "Полив") {
+        user->level = TG_MENU_WATERING;
+        return true;
+    }
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Добро пожаловать в Умный Дом</b>");
+
+    menu.addButton("Я дома");
+    menu.addButton("Ушёл");
+    menu.newRow();
+    menu.addButton("Камеры");
+    menu.addButton("Метео");
+    menu.addButton("Охрана");
+    menu.addButton("Свет");
+    menu.newRow();
+    menu.addButton("Розетки");
+    menu.addButton("Термо");
+    menu.addButton("Бак");
+    menu.addButton("Полив");
+
+    resp.setMenu(menu);
+    sendMessage(resp);
+
+    return false;
+}
+
+bool TgBotClass::_meteoHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Метео</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    sendMessage(resp);
+    return false;
+}
+
+bool TgBotClass::_securityHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Охрана</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    sendMessage(resp);
+    return false;
+}
+
+bool TgBotClass::_camsHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Камеры</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    sendMessage(resp);
+    return false;
+}
+
+bool TgBotClass::_tanksHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Баки</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    sendMessage(resp);
+    return false;
+}
+
+bool TgBotClass::_socketsHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Розетка</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    sendMessage(resp);
+    return false;
+}
+
+bool TgBotClass::_lightsHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Полив</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    auto res = sendMessage(resp);
+    return false;
+}
+
+bool TgBotClass::_wateringHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Полив</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    auto res = sendMessage(resp);
+    return false;
+}
+
+bool TgBotClass::_thermsHandler(TgUser *user, const String &msg)
+{
+    fb::Message resp;
+    fb::Menu    menu;
+
+    resp.chatID = user->chatId;
+    resp.mode = fb::Message::Mode::HTML;
+    resp.text = F("<b>Термоконтроль</b>");
+
+    menu.addButton(F("Обновить"));
+    menu.addButton(F("Назад"));
+
+    resp.setMenu(menu);
+    sendMessage(resp);
+    return false;
 }
 
 TgBotClass TgBot;
