@@ -17,7 +17,7 @@
 #include "core/ifaces/ow.hpp"
 #include "core/ifaces/uart.hpp"
 #include "net/tgbot.hpp"
-#include "net/websrv.hpp"
+#include "net/apiserver.hpp"
 #include "controllers/meteo/meteo.hpp"
 #include "controllers/meteo/sensors/msensor.hpp"
 #include "controllers/meteo/sensors/ds18b20.hpp"
@@ -249,7 +249,7 @@ bool ConfigsClass::_initDevice()
 
     /* TgBot setup */
 
-    TgBot.setPollMode(fb::Poll::Async, 1000);
+    TgBot.setPollMode(fb::Poll::Long, 20000);
 
     return true;
 }

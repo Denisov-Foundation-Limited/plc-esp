@@ -39,6 +39,12 @@ typedef enum {
 } TgMenuLevel;
 
 typedef struct {
+    TgMenuLevel level;
+    bool        read;
+    bool        write;
+} TgUserRight;
+
+typedef struct {
     String      name;
     unsigned    chatId;
     bool        notify;
@@ -54,6 +60,7 @@ public:
     void addUser(TgUser *user);
     TgUser *getUser(const String &name);
     TgUser *getUser(unsigned chatId);
+    bool removeUser(const String &name);
     const std::vector<TgUser *> &getUsers();
     void begin();
     void loop();

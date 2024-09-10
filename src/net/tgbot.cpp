@@ -75,6 +75,16 @@ void TgBotClass::loop()
     tick();
 }
 
+bool TgBotClass::removeUser(const String &name)
+{
+    for (size_t i = 0; i < _users.size(); i++) {
+        if (_users[i]->name == name) {
+            //_users.erase(std::next(_users.begin(), i));
+            break;
+        }
+    }
+}
+
 /*********************************************************************/
 /*                                                                   */
 /*                          PRIVATE FUNCTIONS                         */
@@ -213,7 +223,7 @@ bool TgBotClass::_mainHandler(TgUser *user, const String &msg)
     menu.newRow();
     menu.addButton("Розетки");
     menu.addButton("Термо");
-    menu.addButton("Бак");
+    menu.addButton("Баки");
     menu.addButton("Полив");
 
     resp.setMenu(menu);
@@ -297,7 +307,7 @@ bool TgBotClass::_socketsHandler(TgUser *user, const String &msg)
 
     resp.chatID = user->chatId;
     resp.mode = fb::Message::Mode::HTML;
-    resp.text = F("<b>Розетка</b>");
+    resp.text = F("<b>Розетки</b>");
 
     menu.addButton(F("Обновить"));
     menu.addButton(F("Назад"));

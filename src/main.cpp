@@ -21,8 +21,9 @@
 #include "core/cli/cliinfo.hpp"
 #include "core/cli/clicp.hpp"
 #include "net/tgbot.hpp"
-#include "net/websrv.hpp"
+#include "net/apiserver.hpp"
 #include "controllers/ctrls.hpp"
+#include "net/webgui.hpp"
 
 void setup()
 {
@@ -35,9 +36,10 @@ void setup()
     Wireless.begin();
     TgBot.begin();
     GsmModem.begin();
-    WebServer.begin();
+    APIServer.begin();
     Controllers.begin();
     CLIProcessor.begin();
+    WebGUI.begin();
 }
 
 void loop()
@@ -51,4 +53,5 @@ void loop()
     Plc.loop();
     TgBot.loop();
     Controllers.loop();
+    WebGUI.loop();
 }

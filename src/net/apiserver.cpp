@@ -9,7 +9,7 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/websrv.hpp"
+#include "net/apiserver.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -17,23 +17,23 @@
 /*                                                                   */
 /*********************************************************************/
 
-void WebServerClass::setEnabled(bool status)
+void APIServerClass::setEnabled(bool status)
 {
     _enabled = status;
 }
 
-bool WebServerClass::getEnabled() const
+bool APIServerClass::getEnabled() const
 {
     return _enabled;
 }
 
-void WebServerClass::begin()
+void APIServerClass::begin()
 {
     if (!_enabled) return;
 
     Log.info(LOG_MOD_WEB, "Starting web server");
 
-    AsyncWebServer::on("/", HTTP_GET, std::bind(&WebServerClass::indexReq, this, std::placeholders::_1));
+    AsyncWebServer::on("/", HTTP_GET, std::bind(&APIServerClass::indexReq, this, std::placeholders::_1));
     AsyncWebServer::begin();
 }
 
@@ -43,9 +43,9 @@ void WebServerClass::begin()
 /*                                                                   */
 /*********************************************************************/
 
-void WebServerClass::indexReq(AsyncWebServerRequest *req)
+void APIServerClass::indexReq(AsyncWebServerRequest *req)
 {
     req->send(200, "text/html", "<h1>FCPLC</h1>");
 }
 
-WebServerClass WebServer(WEB_SERVER_DEFAULT_PORT);
+APIServerClass APIServer(API_SERVER_DEFAULT_PORT);

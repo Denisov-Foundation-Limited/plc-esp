@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __WEB_SERVER_H__
-#define __WEB_SERVER_H__
+#ifndef __API_SERVER_HPP__
+#define __API_SERVER_HPP__
 
 #include <utils/log.hpp>
 #include <Arduino.h>
@@ -18,21 +18,21 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 
-#define WEB_SERVER_DEFAULT_PORT 80
+#define API_SERVER_DEFAULT_PORT 8080
 
-class WebServerClass : private AsyncWebServer
+class APIServerClass : private AsyncWebServer
 {
 private:
     bool    _enabled = true;
 
     void indexReq(AsyncWebServerRequest *req);
 public:
-    WebServerClass(uint16_t port) : AsyncWebServer(port) {}
+    APIServerClass(uint16_t port) : AsyncWebServer(port) {}
     void setEnabled(bool status);
     bool getEnabled() const;
     void begin();
 };
 
-extern WebServerClass WebServer;
+extern APIServerClass APIServer;
 
-#endif /* __WEB_SERVER_H__ */
+#endif /* __API_SERVER_HPP__ */
