@@ -10,7 +10,8 @@
 /**********************************************************************/
 
 #include "net/tgbot.hpp"
-#include "net/wifi.hpp"
+#include "net/core/wifi.hpp"
+#include "net/core/eth.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -71,7 +72,9 @@ void TgBotClass::begin()
 
 void TgBotClass::loop()
 {
-    if (!_enabled || Wireless.getStatus() != WL_CONNECTED) return;
+    if (!_enabled) return;
+    if (Wireless.getEnabled() && Wireless.getStatus() != WL_CONNECTED) return;
+    if (Ethernet.getEnabled() && !Ethernet.getStatus()) return;
     tick();
 }
 

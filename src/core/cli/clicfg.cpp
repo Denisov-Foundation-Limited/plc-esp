@@ -19,6 +19,7 @@
 #include "controllers/ctrls.hpp"
 #include "controllers/meteo/meteo.hpp"
 #include "controllers/meteo/sensors/ds18b20.hpp"
+#include "net/core/eth.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -45,6 +46,8 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
         return true;
     } else if (cmd == "no shut" || cmd == "no shutdown") {
         Wireless.setEnabled(true);
+        Ethernet.setEnabled(false);
+        Log.info(LOG_MOD_WIFI, "Ethernet was disabled");
         Wireless.begin();
         return true;
     } else if (cmd.indexOf(F("ssid ")) >= 0) {

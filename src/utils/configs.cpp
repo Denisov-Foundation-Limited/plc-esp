@@ -22,6 +22,7 @@
 #include "controllers/meteo/sensors/msensor.hpp"
 #include "controllers/meteo/sensors/ds18b20.hpp"
 #include "controllers/ctrls.hpp"
+#include "net/core/eth.hpp"
 
 #include <LittleFS.h>
 #include <SD.h>
@@ -216,7 +217,7 @@ bool ConfigsClass::_initDevice()
 
     /* SPI Interface */
 
-    Interfaces.addInterface(new SPIface(F("spi-1"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_SS_PIN, 0));
+    Interfaces.addInterface(new SPIface(F("spi-1"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_SS_PIN, SPI_FREQ_MHZ));
 
     /* GSM Modem setup */
 
@@ -246,6 +247,20 @@ bool ConfigsClass::_initDevice()
         Log.warning(LOG_MOD_CFG, F("Interface led-wifi not found"));
     }
     Wireless.setStatusLed(static_cast<GPIOIface *>(iface));
+
+    /* Ethernet setup */
+
+    Interfaces.addInterface(new GPIOIface(F("eth-irq"), ETH_IRQ_PIN, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+
+    Ethernet.setHostname(F("FCPLC"));
+    if ((iface = Interfaces.getInterface("spi-1")) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface Ethernet SPI not found"));
+    }
+    Ethernet.setInterface(ETH_IF_SPI, iface);
+    if ((iface = Interfaces.getInterface("eth-irq")) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface Ethernet IRQ not found"));
+    }
+    Ethernet.setInterface(ETH_IF_IRQ, iface);
 
     /* TgBot setup */
 

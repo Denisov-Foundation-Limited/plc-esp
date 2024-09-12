@@ -18,8 +18,8 @@
 #include "utils/log.hpp"
 #include "core/ext.hpp"
 #include "core/ifaces/ifaces.hpp"
-#include "net/gsm.hpp"
-#include "net/wifi.hpp"
+#include "net/core/gsm.hpp"
+#include "net/core/wifi.hpp"
 #include "core/plc.hpp"
 
 #define CONFIGS_STARTUP_FILE  F("/startup-config.json")

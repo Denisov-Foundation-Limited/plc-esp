@@ -14,6 +14,8 @@
 
 #include "profile.hpp"
 
+unsigned mac_address[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xFF };
+
 #define GSM_MODEM_RATE      115200
 #define LOG_SERIAL_RATE     115200
 #define RS485_TRANSFER_RATE 9600
@@ -30,6 +32,9 @@
 #define SPI_MOSI_PIN    11
 #define SPI_SCK_PIN     13
 #define SPI_SS_PIN      10
+#define SPI_FREQ_MHZ    25
+
+#define ETH_IRQ_PIN 1
 
 #define OW_SECURITY_PIN     19
 #define OW_TEMPERATURE_PIN  20
@@ -61,7 +66,7 @@
 
 #define RELAYS_COUNT    6
 #define INPUTS_COUNT    8
-#define SENSORS_COUNT   1
+#define SENSORS_COUNT   0
 
 unsigned inputs[INPUTS_COUNT] = { 
     INPUT_1_PIN,
@@ -83,7 +88,7 @@ unsigned relays[RELAYS_COUNT] = {
 };
 
 unsigned sensors[SENSORS_COUNT] =  {
-    SENSOR_1_PIN
+    //SENSOR_1_PIN
 };
 
 #endif /* __FCPLCM_1V0_HPP__ */

@@ -9,32 +9,6 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLI_INFO_HPP__
-#define __CLI_INFO_HPP__
+#include "net/core/eth.hpp"
 
-#include <Arduino.h>
-
-#include "net/core/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "core/ext.hpp"
-
-class CLIInformerClass
-{
-public:
-    void showWiFi();
-    void showWiFiStatus();
-    void showTankStatus();
-    void showInterfaces();
-    void showInterfacesStatus();
-    void showExtenders();
-    void showControllers();
-    void showMeteo();
-    void showMeteoStatus();
-    void showOneWire();
-    void showI2C();
-    void showTgBot();
-};
-
-extern CLIInformerClass CLIInformer;
-
-#endif /* __CLI_INFO_HPP__ */
+EthernetClass Ethernet;

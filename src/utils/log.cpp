@@ -104,6 +104,10 @@ void LogClass::_logging(LogType type, LogModule mod, const String &msg)
     case LOG_MOD_METEO:
         sMod = "METEO";
         break;
+
+    case LOG_MOD_ETH:
+        sMod = F("ETHERNET");
+        break;
     }
 
     Serial.println("[" + sType + "][" + sMod + "] " + msg);

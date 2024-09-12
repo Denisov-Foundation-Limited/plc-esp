@@ -11,6 +11,8 @@
 
 #include "net/webgui.hpp"
 #include "utils/configs.hpp"
+#include "net/core/eth.hpp"
+#include "net/core/wifi.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -42,6 +44,7 @@ void WebGUIClass::begin()
     onUpdate([this](sets::Updater& upd) {
         switch (_curPage) {
             case WEB_PAGE_MAIN:
+                _updateMainPage(upd);
                 break;
             case WEB_PAGE_TELEGRAM:
                 _updateTgBotPage(upd);
@@ -106,23 +109,12 @@ void WebGUIClass::_buildMenu(sets::Builder& b)
 
 void WebGUIClass::_buildMainPage(sets::Builder& b)
 {
-    if (b.beginGroup(F("Ethernet"))) {
-        if (b.Switch("main_eth_en"_h, F("Enabled"), String(true))) {
-
-        }
-        b.LED(F("Connection"), String(true));
-        if (b.Input("main_eth_ip"_h, F("IP"), "192.168.0.12")) {
-
-        }
-        if (b.Input("main_eth_gw"_h, F("Gateway"), "192.168.0.1")) {
-            
-        }
-        b.endGroup();
-    }
-
     if (b.beginGroup(F("Wi-Fi"))) {
         if (b.Switch("main_wf_en"_h, F("Enabled"), String(Wireless.getEnabled()))) {
             Wireless.setEnabled(b.build().value().toBool());
+            if (Wireless.getEnabled()) {
+                Ethernet.setEnabled(false);
+            }
             b.reload();
         }
         if (Wireless.getEnabled()) {
@@ -135,13 +127,50 @@ void WebGUIClass::_buildMainPage(sets::Builder& b)
             if (b.Switch("main_wf_ap"_h, F("AP"), String(Wireless.getAP()))) {
                 Wireless.setAP(b.build().value().toBool());
             }
-            b.LED(F("Connection"), String(Wireless.getStatus() == WL_CONNECTED));
             b.Label(F("IP"), Wireless.getIP());
+            b.LED(F("Connection"), String(Wireless.getStatus() == WL_CONNECTED));
         }
         b.endGroup();
     }
 
+    if (b.beginGroup(F("Ethernet"))) {
+        if (b.Switch("main_eth_en"_h, F("Enabled"), String(Ethernet.getEnabled()))) {
+            Ethernet.setEnabled(b.build().value().toBool());
+            if (Ethernet.getEnabled()) {
+                Wireless.setEnabled(false);
+            }
+        }
+        if (b.Input("main_eth_host"_h, F("Hostname"), Ethernet.getHostName())) {
+            Ethernet.setHostname(b.build().value().toString());
+        }
+        if (b.Switch("main_eth_dhcp"_h, F("DHCP"), String(Ethernet.getDHCP()))) {
+            Ethernet.setDHCP(b.build().value().toBool());
+        }
+        if (b.Input("main_eth_ip"_h, F("IP"), Ethernet.getAddress(ETH_ADDR_IP).toString())) {
+            Ethernet.setAddress(ETH_ADDR_IP, b.build().value().toString());
+        }
+        if (b.Input("main_eth_sn"_h, F("Subnet"), Ethernet.getAddress(ETH_ADDR_SUBNET).toString())) {
+            Ethernet.setAddress(ETH_ADDR_SUBNET, b.build().value().toString());
+        }
+        if (b.Input("main_eth_gw"_h, F("Gateway"), Ethernet.getAddress(ETH_ADDR_GATEWAY).toString())) {
+            Ethernet.setAddress(ETH_ADDR_GATEWAY, b.build().value().toString());
+        }
+        if (b.Input("main_eth_dns"_h, F("DNS"), Ethernet.getAddress(ETH_ADDR_DNS).toString())) {
+            Ethernet.setAddress(ETH_ADDR_DNS, b.build().value().toString());
+        }
+        b.LED(F("Connection"), String(Ethernet.getStatus()));
+        b.endGroup();
+    }
+
     b.Label(F("Copyright"), F("Denisov Foundation Limited 2024"));
+}
+
+void WebGUIClass::_updateMainPage(sets::Updater& upd)
+{
+    upd.update("main_eth_ip"_h, Ethernet.getAddress(ETH_ADDR_IP).toString());
+    upd.update("main_eth_sn"_h, Ethernet.getAddress(ETH_ADDR_SUBNET).toString());
+    upd.update("main_eth_gw"_h, Ethernet.getAddress(ETH_ADDR_GATEWAY).toString());
+    upd.update("main_eth_dns"_h, Ethernet.getAddress(ETH_ADDR_DNS).toString());
 }
 
 void WebGUIClass::_buildTgBotPage(sets::Builder& b)

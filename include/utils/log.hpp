@@ -24,7 +24,8 @@ typedef enum {
     LOG_MOD_WEB,
     LOG_MOD_TG,
     LOG_MOD_METEO,
-    LOG_MOD_IFACES
+    LOG_MOD_IFACES,
+    LOG_MOD_ETH
 } LogModule;
 
 typedef enum {

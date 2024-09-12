@@ -14,10 +14,10 @@
 
 #include <Arduino.h>
 
-#include "net/wifi.hpp"
+#include "net/core/wifi.hpp"
 #include "core/cli/cliinfo.hpp"
 #include "utils/utils.hpp"
-#include "net/wifi.hpp"
+#include "net/core/wifi.hpp"
 #include "core/ifaces/ifaces.hpp"
 
 #include <vector>

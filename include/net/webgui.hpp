@@ -14,7 +14,6 @@
 
 #include <Arduino.h>
 #include <SettingsAsync.h>
-#include "net/wifi.hpp"
 #include "net/tgbot.hpp"
 
 typedef enum {
@@ -24,7 +23,7 @@ typedef enum {
     WEB_PAGE_SETTINGS
 } WebGuiPage;
 
-class WebGUIClass final : private SettingsAsync
+class WebGUIClass : public SettingsAsync
 {
 public:
     void begin();
@@ -38,6 +37,7 @@ private:
     TgUser      _newTgUser;
 
     void _buildMenu(sets::Builder& b);
+    void _updateMainPage(sets::Updater& upd);
     void _buildMainPage(sets::Builder& b);
     void _buildTgBotPage(sets::Builder& b);
     void _updateTgBotPage(sets::Updater& upd);
