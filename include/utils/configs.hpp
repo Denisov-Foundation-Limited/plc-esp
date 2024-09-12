@@ -45,6 +45,7 @@ private:
     bool _readAll(ConfigsSource src);
     bool _printFile(const String &name);
     bool _generateRunning(JsonDocument &doc);
+    void _initInterfaces();
 };
 
 extern ConfigsClass Configs;

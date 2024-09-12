@@ -31,8 +31,9 @@ unsigned mac_address[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xFF };
 #define SPI_MISO_PIN    12
 #define SPI_MOSI_PIN    11
 #define SPI_SCK_PIN     13
-#define SPI_SS_PIN      10
 #define SPI_FREQ_MHZ    25
+#define SPI_CS_SD_PIN   0
+#define SPI_CS_ETH_PIN  10
 
 #define ETH_IRQ_PIN 1
 

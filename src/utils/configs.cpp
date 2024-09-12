@@ -37,7 +37,11 @@ bool ConfigsClass::begin()
 {
     bool isOk = false;
 
-    if (SD.begin(SPI_SS_PIN)) {
+    SPI.begin(SPI_SCK_PIN, SPI_MISO_PIN, SPI_MOSI_PIN);
+
+    _initInterfaces();
+
+    if (SD.begin(SPI_CS_SD_PIN)) {
         Log.info(LOG_MOD_CFG, F("SD card found. Reading files"));
         if (!SD.exists(CONFIGS_STARTUP_FILE))
         {
@@ -131,6 +135,67 @@ bool ConfigsClass::showRunning()
 /*                                                                   */
 /*********************************************************************/
 
+void ConfigsClass::_initInterfaces()
+{
+    /* GPIO Interfaces */
+
+    int i = 1;
+    for (auto& p : inputs) {
+        Interfaces.addInterface(new GPIOIface("in-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_DOWN, EXT_NOT_USED));
+        i++;
+    }
+
+    i = 1;
+    for (auto& p : relays) {
+        auto pin = new GPIOIface("rly-0/" + String(i), p, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+        pin->write(false);
+        Interfaces.addInterface(pin);
+        i++;
+    }
+
+    i = 1;
+    for (auto& p : sensors) {
+        Interfaces.addInterface(new GPIOIface("sens-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+        i++;
+    }
+
+    auto pin = new GPIOIface("led-alrm", ALARM_LED_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+    pin->write(false);
+    Interfaces.addInterface(pin);
+    pin = new GPIOIface("led-sts", STATUS_LED_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+    pin->write(false);
+    Interfaces.addInterface(pin);
+    pin = new GPIOIface("buzzer", BUZZER_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+    pin->write(false);
+    Interfaces.addInterface(pin);
+    pin = new GPIOIface("led-wifi", WIFI_LED_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+    pin->write(false);
+    Interfaces.addInterface(pin);
+    pin = new GPIOIface("rs485-io", RS485_IO_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
+    pin->write(false);
+    Interfaces.addInterface(pin);
+    Interfaces.addInterface(new GPIOIface(F("eth-irq"), ETH_IRQ_PIN, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
+
+    /* OneWire Interface */
+
+    Interfaces.addInterface(new OneWireIface("ow-sec", OW_SECURITY_PIN));
+    Interfaces.addInterface(new OneWireIface("ow-temp", OW_TEMPERATURE_PIN));
+
+    /* I2C Interface */
+
+    Interfaces.addInterface(new I2CIface(F("i2c-1"), I2C_SDA_PIN, I2C_SCL_PIN));
+
+    /* UART Interface */
+
+    Interfaces.addInterface(new UARTIface(F("uart-gsm"), GSM_RX_PIN, GSM_TX_PIN, GSM_MODEM_RATE));
+    Interfaces.addInterface(new UARTIface(F("uart-rs485"), RS485_RX_PIN, RS485_TX_PIN, RS485_TRANSFER_RATE));
+
+    /* SPI Interface */
+
+    Interfaces.addInterface(new SPIface(F("spi-sd"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_CS_SD_PIN, SPI_FREQ_MHZ));
+    Interfaces.addInterface(new SPIface(F("spi-eth"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_CS_ETH_PIN, SPI_FREQ_MHZ));
+}
+
 bool ConfigsClass::_printFile(const String &name)
 {
     File    file;
@@ -157,67 +222,6 @@ bool ConfigsClass::_initDevice()
     Interface *iface = nullptr;
 
     Log.info(LOG_MOD_CFG, F("Configs not found. Init new device"));
-
-    /* GPIO Interface */
-
-    int i = 1;
-    for (auto& p : inputs) {
-        Interfaces.addInterface(new GPIOIface("in-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-        i++;
-    }
-
-    i = 1;
-    for (auto& p : relays) {
-        auto pin = new GPIOIface("rly-0/" + String(i), p, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
-        pin->write(false);
-        Interfaces.addInterface(pin);
-        i++;
-    }
-
-    /* Sensors Interface */
-
-    i = 1;
-    for (auto& p : sensors) {
-        Interfaces.addInterface(new GPIOIface("sens-0/" + String(i), p, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
-        i++;
-    }
-
-    /* Rear pannel Interfaces */
-
-    auto pin = new GPIOIface("led-alrm", ALARM_LED_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
-    pin->write(false);
-    Interfaces.addInterface(pin);
-    pin = new GPIOIface("led-sts", STATUS_LED_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
-    pin->write(false);
-    Interfaces.addInterface(pin);
-    pin = new GPIOIface("buzzer", BUZZER_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
-    pin->write(false);
-    Interfaces.addInterface(pin);
-    pin = new GPIOIface("led-wifi", WIFI_LED_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
-    pin->write(false);
-    Interfaces.addInterface(pin);
-
-    pin = new GPIOIface("rs485-io", RS485_IO_PIN, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED);
-    pin->write(false);
-    Interfaces.addInterface(pin);
-
-    /* OneWire Interface */
-
-    Interfaces.addInterface(new OneWireIface("ow-sec", OW_SECURITY_PIN));
-    Interfaces.addInterface(new OneWireIface("ow-temp", OW_TEMPERATURE_PIN));
-
-    /* I2C Interface */
-
-    Interfaces.addInterface(new I2CIface(F("i2c-1"), I2C_SDA_PIN, I2C_SCL_PIN));
-
-    /* UART Interface */
-
-    Interfaces.addInterface(new UARTIface(F("uart-gsm"), GSM_RX_PIN, GSM_TX_PIN, GSM_MODEM_RATE));
-    Interfaces.addInterface(new UARTIface(F("uart-485"), RS485_RX_PIN, RS485_TX_PIN, RS485_TRANSFER_RATE));
-
-    /* SPI Interface */
-
-    Interfaces.addInterface(new SPIface(F("spi-1"), SPI_MOSI_PIN, SPI_MISO_PIN, SPI_SCK_PIN, SPI_SS_PIN, SPI_FREQ_MHZ));
 
     /* GSM Modem setup */
 
@@ -249,8 +253,6 @@ bool ConfigsClass::_initDevice()
     Wireless.setStatusLed(static_cast<GPIOIface *>(iface));
 
     /* Ethernet setup */
-
-    Interfaces.addInterface(new GPIOIface(F("eth-irq"), ETH_IRQ_PIN, GPIO_MOD_INPUT, GPIO_PULL_NONE, EXT_NOT_USED));
 
     Ethernet.setHostname(F("FCPLC"));
     if ((iface = Interfaces.getInterface("spi-1")) == nullptr) {

@@ -57,6 +57,7 @@ public:
     bool read(uint8_t pin);
     void setID(ExtenderId id);
     void setAddr(unsigned addr);
+    void setPinMode(uint8_t pin, uint8_t mode);
 
 private:
     ExtenderId          _id;

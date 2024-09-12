@@ -38,6 +38,11 @@ bool Extender::begin()
     return _mcp.begin_I2C(_addr);
 }
 
+void Extender::setPinMode(uint8_t pin, uint8_t mode)
+{
+    _mcp.pinMode(pin, mode);
+}
+
 void Extender::write(uint8_t pin, bool state)
 {
     _mcp.digitalWrite(pin, (state == true) ? HIGH : LOW);

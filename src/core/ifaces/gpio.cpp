@@ -23,9 +23,10 @@ GPIOIface::GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pu
 {
     _name = name;
     _pin = pin;
-    _mode = mode;
-    _pull = pull;
     _extId = extId;
+
+    setPull(pull);
+    setMode(mode);
 }
 
 const String &GPIOIface::getName() const
@@ -65,7 +66,36 @@ void GPIOIface::setPull(GpioPull pull)
 
 void GPIOIface::setMode(GpioMode mode)
 {
+    uint8_t val = INPUT;
+
     _mode = mode;
+    switch (mode) {
+        case GPIO_MOD_INPUT:
+            if (_pull = GPIO_PULL_DOWN) {
+                val = INPUT_PULLDOWN;
+            } else if (_pull = GPIO_PULL_UP) {
+                val = INPUT_PULLUP;
+            } else {
+                val = INPUT;
+            }
+            break;
+        case GPIO_MOD_OUTPUT:
+            val = OUTPUT;
+            break;
+    }
+
+    if (_extId == EXT_NOT_USED) {
+        pinMode(_pin, val);
+    } else {
+        Extender *e = nullptr;
+
+        if ((e = Extenders.getById(_extId)) == nullptr) {
+            Log.error(LOG_MOD_GPIO, String(F("Extender ")) + String(_extId) + String(F(" not found")));
+            return;
+        }
+
+        e->setPinMode(_pin, val);
+    }
 }
 
 void GPIOIface::setExtId(ExtenderId id)
