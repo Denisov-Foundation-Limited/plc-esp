@@ -30,17 +30,20 @@ typedef enum {
 class I2CIface : public Interface
 {
 public:
-    I2CIface(const String &name, uint8_t sda, uint8_t scl);
+    I2CIface(const String &name, uint8_t sda, uint8_t scl, bool extended=false);
     void setPin(I2cPin pin, uint8_t gpio);
     uint8_t getPin(I2cPin pin) const;
     const String &getName() const;
     void findDevices(std::vector<unsigned> &devices);
     IntType getType() const;
     void setName(const String &name);
+    bool getExtended() const;
+    void setExtended(bool state);
 
 private:
     uint8_t _pins[I2C_PIN_MAX] = { 0 };
     String  _name;
+    bool    _extended = false;
 };
 
 #endif /* __I2C_HPP__ */

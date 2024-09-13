@@ -28,7 +28,7 @@ typedef enum {
 class SPIface : public Interface
 {
 public:
-    SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq);
+    SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq, bool extended=false);
     void setPin(SpiPin pin, uint8_t gpio);
     uint8_t getPin(SpiPin pin) const;
     void setFrequency(unsigned freq);
@@ -36,11 +36,14 @@ public:
     const String &getName() const;
     void setName(const String &name);
     IntType getType() const;
+    bool getExtended() const;
+    void setExtended(bool state);
 
 private:
     uint8_t     _pins[SPI_PIN_MAX] = { 0 };
     String      _name;
     unsigned    _freq;
+    bool        _extended = false;
 };
 
 #endif /* __SPI_HPP__ */

@@ -28,6 +28,8 @@ public:
     virtual const String &getName() const = 0;
     virtual void setName(const String &name) = 0;
     virtual IntType getType() const = 0;
+    virtual bool getExtended() const = 0;
+    virtual void setExtended(bool state) = 0;
 };
 
 #endif /* __INTERFACE_HPP__ */

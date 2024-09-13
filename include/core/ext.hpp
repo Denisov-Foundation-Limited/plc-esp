@@ -49,7 +49,7 @@ typedef enum {
 class Extender
 {
 public:
-    Extender(ExtenderId id, uint8_t addr);
+    Extender(ExtenderId id, uint8_t addr, bool extended=false);
     uint8_t getAddr() const;
     ExtenderId getID() const;
     bool begin();
@@ -58,11 +58,14 @@ public:
     void setID(ExtenderId id);
     void setAddr(unsigned addr);
     void setPinMode(uint8_t pin, uint8_t mode);
+    void setExtended(bool state);
+    bool getExtended() const;
 
 private:
     ExtenderId          _id;
     uint8_t             _addr;
     Adafruit_MCP23X17   _mcp;
+    bool                _extended = false;
 };
 
 class ExtendersClass

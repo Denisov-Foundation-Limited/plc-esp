@@ -12,9 +12,10 @@
 #include "core/ifaces/i2c.hpp"
 #include <Wire.h>
 
-I2CIface::I2CIface(const String &name, uint8_t sda, uint8_t scl)
+I2CIface::I2CIface(const String &name, uint8_t sda, uint8_t scl, bool extended)
 {
     _name = name;
+    _extended = extended;
     _pins[I2C_PIN_SDA] = sda;
     _pins[I2C_PIN_SCL] = scl;
 }
@@ -44,6 +45,16 @@ void I2CIface::findDevices(std::vector<unsigned> &devices)
             devices.push_back(addr);
         }
     }
+}
+
+bool I2CIface::getExtended() const
+{
+    return _extended;
+}
+
+void I2CIface::setExtended(bool state)
+{
+    _extended = state;
 }
 
 IntType I2CIface::getType() const

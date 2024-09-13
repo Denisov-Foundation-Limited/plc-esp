@@ -19,14 +19,25 @@
 /*                                                                   */
 /*********************************************************************/
 
-GPIOIface::GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId)
+GPIOIface::GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended)
 {
     _name = name;
     _pin = pin;
     _extId = extId;
+    _extended = extended;
 
     setPull(pull);
     setMode(mode);
+}
+
+bool GPIOIface::getExtended() const
+{
+    return _extended;
+}
+
+void GPIOIface::setExtended(bool state)
+{
+    _extended = state;
 }
 
 const String &GPIOIface::getName() const

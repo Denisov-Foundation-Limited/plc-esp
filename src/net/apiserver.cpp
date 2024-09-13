@@ -31,7 +31,7 @@ void APIServerClass::begin()
 {
     if (!_enabled) return;
 
-    Log.info(LOG_MOD_WEB, "Starting web server");
+    Log.info(LOG_MOD_WEB, F("Starting API server at :8080"));
 
     AsyncWebServer::on("/", HTTP_GET, std::bind(&APIServerClass::indexReq, this, std::placeholders::_1));
     AsyncWebServer::begin();

@@ -33,7 +33,7 @@ typedef enum {
 class GPIOIface : public Interface
 {
 public:
-    GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId);
+    GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended=false);
     void setPin(uint8_t pin);
     void setPull(GpioPull pull);
     void setMode(GpioMode mode);
@@ -48,6 +48,8 @@ public:
     const String &getName() const ;
     IntType getType() const;
     void setName(const String &name);
+    bool getExtended() const;
+    void setExtended(bool state);
 
 private:
     String      _name;
@@ -56,6 +58,7 @@ private:
     GpioPull    _pull;
     ExtenderId  _extId;
     bool        _state = false;
+    bool        _extended = false;
 };
 
 #endif /* __GPIO_HPP__ */

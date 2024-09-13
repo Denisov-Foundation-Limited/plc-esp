@@ -17,10 +17,11 @@
 /*                                                                   */
 /*********************************************************************/
 
-Extender::Extender(ExtenderId id, uint8_t addr)
+Extender::Extender(ExtenderId id, uint8_t addr, bool extended)
 {
     _id = id;
     _addr = addr;
+    _extended = extended;
 }
 
 uint8_t Extender::getAddr() const
@@ -36,6 +37,16 @@ ExtenderId Extender::getID() const
 bool Extender::begin()
 {
     return _mcp.begin_I2C(_addr);
+}
+
+void Extender::setExtended(bool state)
+{
+    _extended = state;
+}
+
+bool Extender::getExtended() const
+{
+    return _extended;
 }
 
 void Extender::setPinMode(uint8_t pin, uint8_t mode)

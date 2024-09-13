@@ -11,7 +11,7 @@
 
 #include "core/ifaces/spi.hpp"
 
-SPIface::SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq)
+SPIface::SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq, bool extended)
 {
     _name = name;
     _pins[SPI_PIN_MISO] = miso;
@@ -19,11 +19,22 @@ SPIface::SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, ui
     _pins[SPI_PIN_SCK] = sck;
     _pins[SPI_PIN_SS] = ss;
     _freq = freq;
+    _extended = extended;
 }
 
 void SPIface::setPin(SpiPin pin, uint8_t gpio)
 {
     _pins[pin] = gpio;
+}
+
+bool SPIface::getExtended() const
+{
+    return _extended;
+}
+
+void SPIface::setExtended(bool state)
+{
+    _extended = state;
 }
 
 uint8_t SPIface::getPin(SpiPin pin) const

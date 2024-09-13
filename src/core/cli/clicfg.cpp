@@ -192,15 +192,15 @@ bool CLIConfiguratorClass::configInterfaces(const String &cmd)
             return false;
 
         if (params[0] == "gpio") {
-            Interfaces.addInterface(static_cast<Interface *>(new GPIOIface(params[1], 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED)));
+            Interfaces.addInterface(static_cast<Interface *>(new GPIOIface(params[1], 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED, true)));
         } else if (params[0] == "ow") {
-            Interfaces.addInterface(static_cast<Interface *>(new OneWireIface(params[1], 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new OneWireIface(params[1], 0, true)));
         } else if (params[0] == "i2c") {
-            Interfaces.addInterface(static_cast<Interface *>(new I2CIface(params[1], 0, 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new I2CIface(params[1], 0, 0, true)));
         } else if (params[0] == "spi") {
-            Interfaces.addInterface(static_cast<Interface *>(new SPIface(params[1], 0, 0, 0, 0, 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new SPIface(params[1], 0, 0, 0, 0, 0, true)));
         } else if (params[0] == "uart") {
-            Interfaces.addInterface(static_cast<Interface *>(new UARTIface(params[1], 0, 0, 0)));
+            Interfaces.addInterface(static_cast<Interface *>(new UARTIface(params[1], 0, 0, 0, true)));
         } else {
             Log.error(LOG_MOD_CLI, "Unknown interface type");
             return true;
@@ -454,7 +454,7 @@ bool CLIConfiguratorClass::configExts(const String &cmd)
             return false;
         }
 
-        Extenders.addExtender(new Extender(static_cast<ExtenderId>(value.toInt()), addr));
+        Extenders.addExtender(new Extender(static_cast<ExtenderId>(value.toInt()), addr, true));
 
         return true;
     }

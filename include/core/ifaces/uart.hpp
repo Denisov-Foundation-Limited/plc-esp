@@ -26,7 +26,7 @@ typedef enum {
 class UARTIface : public Interface
 {
 public:
-    UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate);
+    UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate, bool extended=false);
     void setPin(UARTPin pin, uint8_t gpio);
     uint8_t getPin(UARTPin pin) const;
     const String &getName() const;
@@ -34,11 +34,14 @@ public:
     void setRate(unsigned rate);
     IntType getType() const;
     void setName(const String &name);
+    bool getExtended() const;
+    void setExtended(bool state);
 
 private:
     uint8_t     _pins[UART_PIN_MAX] = { 0 };
     String      _name;
     unsigned    _rate;
+    bool        _extended = false;
 };
 
 #endif /* __UART_HPP__ */

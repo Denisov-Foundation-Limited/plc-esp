@@ -82,22 +82,27 @@ String WirelessClass::getIP() const
         return WiFi.localIP().toString();
 }
 
+void WirelessClass::setHostname(const String &name)
+{
+    WiFi.setHostname(name.c_str());
+}
+
+String WirelessClass::getHostname()
+{
+    return WiFi.getHostname();
+}
+
 void WirelessClass::begin()
 {
     if (!_enabled) return;
 
-    if (_statusLed != nullptr) { _statusLed->write(false); }
-
     if (!_ap) {
-        Log.info(LOG_MOD_WIFI, String(F("Connecting to SSID: ")) + _ssid);
         WiFi.mode(WIFI_STA);
         WiFi.begin(_ssid, _passwd);
     } else {
-        Log.info(LOG_MOD_WIFI, String(F("Starting AP: ")) + _ssid);
+        Log.info(LOG_MOD_WIFI, F("Starting Wi-Fi AP"));
         WiFi.mode(WIFI_AP);
         WiFi.softAP(_ssid, _passwd);
-        Log.info(LOG_MOD_WIFI, String(F("PLC IP address: ")) + getIP());
-        if (_statusLed != nullptr) { _statusLed->write(true); }
         Plc.setAlarm(PLC_MOD_WIFI, false);
     }
 }

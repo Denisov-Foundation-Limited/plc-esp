@@ -83,9 +83,10 @@ bool TgBotClass::removeUser(const String &name)
     for (size_t i = 0; i < _users.size(); i++) {
         if (_users[i]->name == name) {
             //_users.erase(std::next(_users.begin(), i));
-            break;
+            return true;
         }
     }
+    return false;
 }
 
 /*********************************************************************/

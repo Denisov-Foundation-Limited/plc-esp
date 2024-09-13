@@ -38,7 +38,13 @@ void InterfacesClass::addInterface(Interface *iface)
     }
 
     _ifaces.push_back(iface);
-    Log.info(LOG_MOD_IFACES, String(F("Add interface: ")) + iface->getName() + String(F(" type: ")) + sType);
+    String startLog;
+    if (!iface->getExtended()) {
+        startLog = String(F("Add internal interface: "));
+    } else {
+        startLog = String(F("Add external interface: "));
+    }
+    Log.info(LOG_MOD_IFACES, startLog + iface->getName() + String(F(" type: ")) + sType);
 }
 
 Interface *InterfacesClass::getInterface(const String &name)

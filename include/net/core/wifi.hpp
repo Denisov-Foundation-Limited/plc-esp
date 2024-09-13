@@ -28,16 +28,6 @@
 
 class WirelessClass
 {
-private:
-    String      _ssid;
-    String      _passwd;
-    GPIOIface  *_statusLed = nullptr;
-    bool        _enabled = true;
-    bool        _ap = true;
-    wl_status_t _status = WL_DISCONNECTED;
-    unsigned    _timer = 0;
-
-    void statusTask();
 public:
     WirelessClass();
     void setCreds(const String &ssid, const String &passwd);
@@ -53,6 +43,19 @@ public:
     String getIP() const;
     void begin();
     void loop();
+    void setHostname(const String &name);
+    String getHostname();
+
+private:
+    String      _ssid;
+    String      _passwd;
+    GPIOIface  *_statusLed = nullptr;
+    bool        _enabled = false;
+    bool        _ap = true;
+    wl_status_t _status = WL_DISCONNECTED;
+    unsigned    _timer = 0;
+
+    void statusTask();
 };
 
 extern WirelessClass Wireless;

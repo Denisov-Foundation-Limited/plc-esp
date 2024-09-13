@@ -11,10 +11,11 @@
 
 #include "core/ifaces/ow.hpp"
 
-OneWireIface::OneWireIface(const String &name, uint8_t pin)
+OneWireIface::OneWireIface(const String &name, uint8_t pin, bool extended)
 {
     _name = name;
     _pin = pin;
+    _extended = extended;
 }
 
 void OneWireIface::setPin(uint8_t gpio)
@@ -36,6 +37,16 @@ const String &OneWireIface::getName() const
 void OneWireIface::setName(const String &name)
 {
     _name = name;
+}
+
+bool OneWireIface::getExtended() const
+{
+    return _extended;
+}
+
+void OneWireIface::setExtended(bool state)
+{
+    _extended = state;
 }
 
 void OneWireIface::findAddresses(std::vector<String> &addrs)

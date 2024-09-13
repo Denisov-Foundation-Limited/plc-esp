@@ -22,18 +22,21 @@
 class OneWireIface : public Interface
 {
 public:
-    OneWireIface(const String &name, uint8_t pin);
+    OneWireIface(const String &name, uint8_t pin, bool extended=false);
     void setPin(uint8_t gpio);
     uint8_t getPin() const;
     const String &getName() const;
     void setName(const String &name);
     void findAddresses(std::vector<String> &addrs);
     IntType getType() const;
+    bool getExtended() const;
+    void setExtended(bool state);
 
 private:
     uint8_t _pin;
     String  _name;
     OneWire _bus;
+    bool    _extended = false;
 };
 
 #endif /* __OW_HPP__ */

@@ -11,12 +11,13 @@
 
 #include "core/ifaces/uart.hpp"
 
-UARTIface::UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate)
+UARTIface::UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate, bool extended)
 {
     _name = name;
     _pins[UART_PIN_RX] = rx;
     _pins[UART_PIN_TX] = tx;
     _rate = rate;
+    _extended = extended;
 }
 
 void UARTIface::setPin(UARTPin pin, uint8_t gpio)
@@ -27,6 +28,16 @@ void UARTIface::setPin(UARTPin pin, uint8_t gpio)
 uint8_t UARTIface::getPin(UARTPin pin) const
 {
     return _pins[pin];
+}
+
+bool UARTIface::getExtended() const
+{
+    return _extended;
+}
+
+void UARTIface::setExtended(bool state)
+{
+    _extended = state;
 }
 
 const String &UARTIface::getName() const
