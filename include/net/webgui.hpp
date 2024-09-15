@@ -42,6 +42,7 @@ private:
     void _buildTgBotPage(sets::Builder& b);
     void _updateTgBotPage(sets::Updater& upd);
     void _buildCtrlsPage(sets::Builder& b);
+    void _updateCtrlsPage(sets::Updater& upd);
     void _buildSettingsPage(sets::Builder& b);
 };
 

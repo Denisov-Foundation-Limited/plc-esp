@@ -14,6 +14,8 @@
 #include "net/core/eth.hpp"
 #include "net/core/wifi.hpp"
 
+#include <StringUtils.h>
+
 /*********************************************************************/
 /*                                                                   */
 /*                          PUBLIC FUNCTIONS                         */
@@ -50,6 +52,7 @@ void WebGUIClass::begin()
                 _updateTgBotPage(upd);
                 break;
             case WEB_PAGE_CONTROLLERS:
+                _updateCtrlsPage(upd);
                 break;
             case WEB_PAGE_SETTINGS:
                 break;
@@ -58,6 +61,7 @@ void WebGUIClass::begin()
 
     setTitle(F("Future City PLC"));
     setPass(_password);
+    setUpdatePeriod(500);
     SettingsAsync::begin();
 }
 
@@ -86,30 +90,37 @@ void WebGUIClass::_buildMenu(sets::Builder& b)
 {
     if (b.beginGroup(F("Меню"))) {
         b.beginButtons();
-            if (b.Button("menu_btn_net"_h, F("Сеть"))) {
+            if (b.Button("menu_btn_net"_h, F("Сеть"), sets::Colors::Aqua)) {
             _curPage = WEB_PAGE_MAIN;
             b.reload();
         }
-        if (b.Button("menu_btn_tg"_h, F("Telegram"))) {
+        if (b.Button("menu_btn_tg"_h, F("Telegram"), sets::Colors::Aqua)) {
             _curPage = WEB_PAGE_TELEGRAM;
             b.reload();
         }
-        if (b.Button("menu_btn_ctrl"_h, F("Контроллеры"))) {
+        if (b.Button("menu_btn_ctrl"_h, F("Контроллеры"), sets::Colors::Aqua)) {
             _curPage = WEB_PAGE_CONTROLLERS;
             b.reload();
         }
-        if (b.Button("menu_btn_set"_h, F("Настройки"))) {
+        b.endButtons();
+        b.beginButtons();
+        if (b.Button("menu_btn_set"_h, F("Система"), sets::Colors::Aqua)) {
+            _curPage = WEB_PAGE_SETTINGS;
+            b.reload();
+        }
+        if (b.Button("menu_btn_set"_h, F("Настройки"), sets::Colors::Aqua)) {
             _curPage = WEB_PAGE_SETTINGS;
             b.reload();
         }
         b.endButtons();
+        
         b.endGroup();
     }
 }
 
 void WebGUIClass::_buildMainPage(sets::Builder& b)
 {
-    if (b.beginGroup(F("Ethernet"))) {
+    if (b.beginGroup(F("Проводная сеть"))) {
         if (b.Switch("main_eth_en"_h, F("Enabled"), String(Ethernet.getEnabled()))) {
             Ethernet.setEnabled(b.build().value().toBool());
             if (Ethernet.getEnabled()) {
@@ -143,7 +154,7 @@ void WebGUIClass::_buildMainPage(sets::Builder& b)
         b.endGroup();
     }
 
-    if (b.beginGroup(F("Wi-Fi"))) {
+    if (b.beginGroup(F("Беспроводная сеть"))) {
         if (b.Switch("main_wf_en"_h, F("Enabled"), String(Wireless.getEnabled()))) {
             Wireless.setEnabled(b.build().value().toBool());
             if (Wireless.getEnabled()) {
@@ -314,9 +325,14 @@ void WebGUIClass::_updateTgBotPage(sets::Updater& upd)
     upd.update("tg_nusr_adm"_h, String(_newTgUser.admin));
 }
 
+
 void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 {
     
+}
+
+void WebGUIClass::_updateCtrlsPage(sets::Updater& upd)
+{
 }
 
 void WebGUIClass::_buildSettingsPage(sets::Builder& b)
