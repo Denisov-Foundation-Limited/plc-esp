@@ -24,11 +24,11 @@ typedef enum {
 class Controller
 {
 public:
-    virtual const String &getName() = 0;
+    virtual const String &getName() const = 0;
     virtual void setName(const String &name) = 0;
-    virtual bool getEnabled() = 0;
+    virtual bool getEnabled() const = 0;
     virtual void setEnabled(bool status) = 0;
-    virtual CtrlType getType() = 0;
+    virtual CtrlType getType() const = 0;
     virtual void loop() = 0;
     virtual void begin() = 0;
 };

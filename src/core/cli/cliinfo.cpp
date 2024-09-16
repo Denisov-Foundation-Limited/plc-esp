@@ -283,7 +283,7 @@ void CLIInformerClass::showMeteo()
         if (ctrl->getType() != CTRL_TYPE_METEO)
             continue;
 
-        auto *meteo = static_cast<Meteo *>(ctrl);
+        auto *meteo = static_cast<MeteoCtrl *>(ctrl);
 
         String sOw;
         
@@ -307,7 +307,7 @@ void CLIInformerClass::showMeteoStatus()
         if (ctrl->getType() != CTRL_TYPE_METEO)
             continue;
 
-        auto *meteo = static_cast<Meteo *>(ctrl);
+        auto *meteo = static_cast<MeteoCtrl *>(ctrl);
 
         Serial.println("\n" + ctrl->getName() + ":\n");
         

@@ -136,7 +136,7 @@ bool CLIProcessorClass::parse(const String &cmd)
                 String value(cmd);
 
                 value.remove(0, 7);
-                auto meteo = static_cast<Meteo *>(Controllers.getController(_objName));
+                auto meteo = static_cast<MeteoCtrl *>(Controllers.getController(_objName));
 
                 if (meteo->getSensor(value) != nullptr) {
                     _objName2 = value;

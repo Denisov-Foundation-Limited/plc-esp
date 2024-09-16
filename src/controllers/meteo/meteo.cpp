@@ -18,33 +18,33 @@
 /*                                                                   */
 /*********************************************************************/
 
-Meteo::Meteo(const String &name)
+MeteoCtrl::MeteoCtrl(const String &name)
 {
     _name = name;
 }
 
-void Meteo::setEnabled(bool status)
+void MeteoCtrl::setEnabled(bool status)
 {
     _enabled = status;
 }
 
-bool Meteo::getEnabled()
+bool MeteoCtrl::getEnabled() const
 {
     return _enabled;
 }
 
-void Meteo::setOneWire(OneWireIface *ow)
+void MeteoCtrl::setOneWire(OneWireIface *ow)
 {
     _ow = ow;
     _ds.setPin(ow->getPin());
 }
 
-OneWireIface *Meteo::getOneWire()
+OneWireIface *MeteoCtrl::getOneWire()
 {
     return _ow;
 }
 
-void Meteo::addSensor(MeteoSensor *sensor)
+void MeteoCtrl::addSensor(MeteoSensor *sensor)
 {
     if (sensor->getType() == METEO_SENSOR_DS18) {
         auto *s = static_cast<Ds18b20 *>(sensor);
@@ -57,12 +57,12 @@ void Meteo::addSensor(MeteoSensor *sensor)
     }
 }
 
-const std::vector<MeteoSensor *> &Meteo::getSensors()
+const std::vector<MeteoSensor *> &MeteoCtrl::getSensors()
 {
     return _sensors;
 }
 
-MeteoSensor *Meteo::getSensor(const String &name)
+MeteoSensor *MeteoCtrl::getSensor(const String &name)
 {
     for (auto s : _sensors) {
         if (s->getName() == name) {
@@ -72,7 +72,7 @@ MeteoSensor *Meteo::getSensor(const String &name)
     return nullptr;
 }
 
-void Meteo::begin()
+void MeteoCtrl::begin()
 {
     if (!_enabled || !_sensors.size()) return;
     Log.info(LOG_MOD_METEO, String(F("Starting Meteo controller ")) + _name +
@@ -81,7 +81,7 @@ void Meteo::begin()
                             String(F(" sensors")));
 }
 
-void Meteo::loop()
+void MeteoCtrl::loop()
 {
     if (!_enabled || !_sensors.size()) return;
 
@@ -108,17 +108,17 @@ void Meteo::loop()
     }
 }
 
-CtrlType Meteo::getType()
+CtrlType MeteoCtrl::getType() const
 {
     return CTRL_TYPE_METEO;
 }
 
-const String &Meteo::getName()
+const String &MeteoCtrl::getName() const
 {
     return _name;
 }
 
-void Meteo::setName(const String &name)
+void MeteoCtrl::setName(const String &name)
 {
     _name = name;
 }
@@ -129,11 +129,11 @@ void Meteo::setName(const String &name)
 /*                                                                   */
 /*********************************************************************/
 
-void Meteo::_sensorsTask()
+void MeteoCtrl::_sensorsTask()
 {
     _ready = true;
 }
-void Meteo::_ds18Task()
+void MeteoCtrl::_ds18Task()
 {
     if (_ow == nullptr) {
         return;

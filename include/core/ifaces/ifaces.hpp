@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "core/ifaces/iface.hpp"
+#include "core/ifaces/gpio.hpp"
 #include "utils/log.hpp"
 
 class InterfacesClass
@@ -24,6 +25,8 @@ public:
     void addInterface(Interface *iface);
     Interface *getInterface(const String &name);
     const std::vector<Interface *> &getInterfaces() const;
+    void getInputs(std::vector<GPIOIface *> &inputs);
+    void getOutputs(std::vector<GPIOIface *> &outs);
 
 private:
     std::vector<Interface *>  _ifaces;

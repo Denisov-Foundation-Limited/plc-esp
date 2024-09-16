@@ -13,6 +13,8 @@
 #include "utils/configs.hpp"
 #include "net/core/eth.hpp"
 #include "net/core/wifi.hpp"
+#include "controllers/meteo/meteo.hpp"
+#include "controllers/socket/socket.hpp"
 
 #include <StringUtils.h>
 
@@ -40,6 +42,9 @@ void WebGUIClass::begin()
             case WEB_PAGE_SETTINGS:
                 _buildSettingsPage(b);
                 break;
+            case WEB_PAGE_SOCKETS:
+                _buildSocketsPage(b);
+                break;
         }
     });
 
@@ -52,9 +57,11 @@ void WebGUIClass::begin()
                 _updateTgBotPage(upd);
                 break;
             case WEB_PAGE_CONTROLLERS:
-                _updateCtrlsPage(upd);
                 break;
             case WEB_PAGE_SETTINGS:
+                break;
+            case WEB_PAGE_SOCKETS:
+                _updateSocketsPage(upd);
                 break;
         }
     });
@@ -100,6 +107,7 @@ void WebGUIClass::_buildMenu(sets::Builder& b)
         }
         if (b.Button("menu_btn_ctrl"_h, F("Контроллеры"), sets::Colors::Aqua)) {
             _curPage = WEB_PAGE_CONTROLLERS;
+            _ctrl.Error = "";
             b.reload();
         }
         b.endButtons();
@@ -325,14 +333,219 @@ void WebGUIClass::_updateTgBotPage(sets::Updater& upd)
     upd.update("tg_nusr_adm"_h, String(_newTgUser.admin));
 }
 
-
 void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 {
-    
+    if (b.beginMenu(F("Настройки"))) {
+        if (b.beginGroup(F("Настройки"))) {
+            if (b.Input("ctrl_name"_h, "Имя", _ctrl.Name)) {
+                _ctrl.Name = b.build().value();            
+            }
+            if (b.Select("ctrl_select"_h, "Тип", "Метео;Охрана;Бак;Розетки", String(_ctrl.Type))) {
+                _ctrl.Type = static_cast<CtrlType>(b.build().value().toInt32());
+            }
+            if (b.Button("ctrl_add"_h, F("Добавить"))) {
+                if (_ctrl.Name == "") {
+                    _ctrl.Error = F("Пустое имя");
+                } else if (Controllers.isExists(_ctrl.Name)) {
+                    _ctrl.Error = F("Имя занято");
+                } else {
+                    switch (_ctrl.Type) {
+                        case CTRL_TYPE_METEO:
+                            Controllers.addController(new MeteoCtrl(_ctrl.Name));
+                            break;
+                        case CTRL_TYPE_SOCKET:
+                            Controllers.addController(new SocketCtrl(_ctrl.Name));
+                            break;
+                    }
+                    _ctrl.Name = "";
+                    _ctrl.Error = "";
+                }
+                b.reload();
+            }
+            b.endGroup();
+        }
+        b.endMenu();
+    }
+
+    if (_ctrl.Error != "") {
+        b.Label(F("Ошибка"), _ctrl.Error, sets::Colors::Red);
+    }
+
+    if (b.beginGroup(F("Контроллеры"))) {
+        for (auto *ctrl : Controllers.getControllers()) {
+            b.beginButtons();
+            if (b.Button(su::SH(("ctrl_" + ctrl->getName()).c_str()), ctrl->getName())) {
+                switch (ctrl->getType()) {
+                    case CTRL_TYPE_SOCKET:
+                        _curPage = WEB_PAGE_SOCKETS;
+                        _ctrl.Name = ctrl->getName();
+                        break;
+                }
+                b.reload();
+            }
+            b.endButtons();
+        }
+        b.endGroup();
+    }
 }
 
-void WebGUIClass::_updateCtrlsPage(sets::Updater& upd)
+void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
 {
+}
+
+void WebGUIClass::_buildSocketsPage(sets::Builder& b)
+{
+    b.Label(F("Контроллер"), _ctrl.Name);
+
+    if (b.beginMenu(F("Настройки"))) {
+        if (b.beginGroup(F("Добавить Розетку"))) {
+            if (b.Input("ctrl_sock_name"_h, "Имя", _socket.NewName)) {
+                _socket.NewName = b.build().value();
+            }
+            if (b.Button("ctrl_sock_add"_h, F("Добавить"))) {
+                auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+                if (_socket.NewName == "") {
+                    _socket.Error = F("Пустое имя");
+                } else if (sock->isExists(_socket.NewName)) {
+                    _socket.Error = F("Имя занято");
+                } else {
+                    sock->addSocket(new Socket(_socket.NewName));
+                    _socket.NewName = "";
+                    _socket.Error = "";
+                }
+                b.reload();
+            }
+            b.endGroup();
+        }
+
+        if (b.beginGroup(F("Редактировать"))) {
+            String                      sSockets = "";
+            String                      sIn = "", sOut = "";
+            size_t                      curBtn = 0;
+            size_t                      curRly = 0;
+            size_t                      curSock = 0;
+            std::vector<GPIOIface *>    inputs;
+            std::vector<GPIOIface *>    outputs;
+
+            auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+
+            Interfaces.getOutputs(outputs);
+            Interfaces.getInputs(inputs);
+
+            if (_socket.Relay == "") {
+                curRly = outputs.size();
+            }
+            if (_socket.Button == "") {
+                curBtn = inputs.size();
+            }
+
+            for (size_t i = 0; i < sock->getSockets().size(); i++) {
+                if (sock->getSockets()[i]->getName() == _socket.Name) {
+                    curSock = i;
+                }
+                sSockets += sock->getSockets()[i]->getName();
+                if (i != (sock->getSockets().size() - 1)) {
+                    sSockets += ";";
+                }
+            }
+
+            for (size_t i = 0; i < outputs.size(); i++) {
+                if (_socket.Relay == outputs[i]->getName()) {
+                    curRly = i;
+                }
+                sOut += outputs[i]->getName() + ";";
+            }
+
+            for (size_t i = 0; i < inputs.size(); i++) {
+                if (_socket.Button == inputs[i]->getName()) {
+                    curBtn = i;
+                }
+                sIn += inputs[i]->getName() + ";";
+            }
+
+            if (b.Select("ctrl_sock_sel"_h, F("Розетка"), sSockets, String(curSock))) {
+                auto s = sock->getSockets()[b.build().value().toInt32()];
+                if (s != nullptr) {
+                    _socket.Name = s->getName();
+                    if (s->getGpio(SOCK_IF_BUTTON) != nullptr) {
+                       // _socket.Button = s->getGpio(SOCK_IF_BUTTON)->getName();
+                    } else {
+                        _socket.Button = "";
+                        curBtn = 0;
+                    }
+                    if (s->getGpio(SOCK_IF_RELAY) != nullptr) {
+                        //_socket.Relay = s->getGpio(SOCK_IF_RELAY)->getName();
+                    } else {
+                        _socket.Relay = "";
+                        curRly = 0;
+                    }
+                }
+            }
+            if (b.Input("ctrl_sock_ename"_h, F("Имя"), _socket.Name)) {
+                _socket.NewName = b.build().value();
+            }
+            if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(curRly))) {
+                auto iface = outputs[b.build().value().toInt32()];
+                _socket.Relay = iface != nullptr ? iface->getName() : "";
+            }
+            if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(curBtn))) {
+                auto iface = inputs[b.build().value().toInt32()];
+                _socket.Button = iface != nullptr ? iface->getName() : "";
+            }
+            if (b.Button("ctrl_sock_e"_h, F("Изменить"))) {
+                auto s = sock->getSocket(_socket.Name);
+                if (s != nullptr) {
+                    s->setGpio(SOCK_IF_RELAY, Interfaces.getInterface(_socket.Relay));
+                    s->setGpio(SOCK_IF_BUTTON, Interfaces.getInterface(_socket.Button));
+                    if (_socket.NewName != "") {
+                        s->setName(_socket.NewName);
+                        _socket.NewName = "";
+                    }
+                    b.reload();
+                }
+            }
+            b.endGroup();
+        }
+        b.endMenu();
+    }
+
+    if (_socket.Error != "") {
+        b.Label(F("Ошибка"), _socket.Error, sets::Colors::Red);
+    }
+
+    if (b.beginGroup(F("Общее"))) {
+        b.beginButtons();           
+        if (b.Button(su::SH(String("ctrl_sock_onall").c_str()), F("Включить все"))) {
+            auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+            for (auto s : sock->getSockets()) {
+                s->setStatus(true, true);
+            }
+            b.reload();
+        }
+        if (b.Button(su::SH(String("ctrl_sock_offall").c_str()), F("Отключить все"), sets::Colors::Red)) {
+            auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+            for (auto s : sock->getSockets()) {
+                s->setStatus(false, true);
+            }
+            b.reload();
+        }
+        b.endButtons();
+
+        b.endGroup();
+    }
+
+    if (b.beginGroup(F("Розетки"))) {
+        auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+        for (auto s : sock->getSockets()) {
+            b.beginButtons();
+            if (b.Button(su::SH(String("ctrl_sock_" + s->getName()).c_str()), s->getName(), (s->getStatus() ? sets::Colors::Default : sets::Colors::Red))) {
+                s->setStatus(!s->getStatus(), true);
+                b.reload();
+            }
+            b.endButtons();
+        }
+        b.endGroup();
+    }
 }
 
 void WebGUIClass::_buildSettingsPage(sets::Builder& b)

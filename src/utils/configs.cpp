@@ -467,7 +467,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     JsonArray jctrls = doc[F("controllers")];
     for (auto jctrl : jctrls) {
         if (jctrl[F("type")] == "meteo") {
-            auto *meteo = new Meteo(jctrl[F("name")].as<String>());
+            auto *meteo = new MeteoCtrl(jctrl[F("name")].as<String>());
             auto *iface = Interfaces.getInterface(jctrl[F("ow")]);
             if (iface != nullptr && iface->getType() == INT_TYPE_OW) {
                 meteo->setOneWire(static_cast<OneWireIface *>(iface));
@@ -681,7 +681,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         if (c->getType() != CTRL_TYPE_METEO) {
             continue;
         }
-        auto *meteo = static_cast<Meteo *>(c);
+        auto *meteo = static_cast<MeteoCtrl *>(c);
         jctrls[i][F("name")] = meteo->getName();
         jctrls[i][F("type")] = F("meteo");
         jctrls[i][F("enabled")] = meteo->getEnabled();

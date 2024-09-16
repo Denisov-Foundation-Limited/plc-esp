@@ -62,4 +62,26 @@ const std::vector<Interface *> &InterfacesClass::getInterfaces() const
     return _ifaces;
 }
 
+void InterfacesClass::getInputs(std::vector<GPIOIface *> &inputs)
+{
+    for (auto *iface : _ifaces) {
+        if (iface->getType() == INT_TYPE_GPIO) {
+            if (static_cast<GPIOIface *>(iface)->getMode() == GPIO_MOD_INPUT) {
+                inputs.push_back(static_cast<GPIOIface *>(iface));
+            }
+        }
+    }
+}
+
+void InterfacesClass::getOutputs(std::vector<GPIOIface *> &outs)
+{
+    for (auto *iface : _ifaces) {
+        if (iface->getType() == INT_TYPE_GPIO) {
+            if (static_cast<GPIOIface *>(iface)->getMode() == GPIO_MOD_OUTPUT) {
+                outs.push_back(static_cast<GPIOIface *>(iface));
+            }
+        }
+    }
+}
+
 InterfacesClass Interfaces;

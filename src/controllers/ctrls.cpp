@@ -22,6 +22,16 @@ void ControllersClass::addController(Controller *ctrl)
     _ctrls.push_back(ctrl);
 }
 
+bool ControllersClass::isExists(const String &name) const
+{
+    for (auto c : _ctrls) {
+        if (c->getName() == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const std::vector<Controller *> &ControllersClass::getControllers()
 {
     return _ctrls;

@@ -23,14 +23,14 @@
 #define METEO_SENS_TIMER_MS 5000
 #define METEO_DS_TIMER_MS   3000
 
-class Meteo : public Controller
+class MeteoCtrl : public Controller
 {
 public:
-    Meteo(const String &name);
-    CtrlType getType();
+    MeteoCtrl(const String &name);
+    CtrlType getType() const;
     void setEnabled(bool status);
-    bool getEnabled();
-    const String &getName();
+    bool getEnabled() const;
+    const String &getName() const;
     void setName(const String &name);
     void setOneWire(OneWireIface *ow);
     OneWireIface *getOneWire();

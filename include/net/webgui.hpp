@@ -14,12 +14,16 @@
 
 #include <Arduino.h>
 #include <SettingsAsync.h>
+
 #include "net/tgbot.hpp"
+#include "controllers/ctrls.hpp"
+#include "controllers/ctrl.hpp"
 
 typedef enum {
     WEB_PAGE_MAIN,
     WEB_PAGE_TELEGRAM,
     WEB_PAGE_CONTROLLERS,
+    WEB_PAGE_SOCKETS,
     WEB_PAGE_SETTINGS
 } WebGuiPage;
 
@@ -34,7 +38,23 @@ public:
 private:
     String      _password = "";
     WebGuiPage  _curPage = WEB_PAGE_MAIN;
+
     TgUser      _newTgUser;
+
+    struct {
+        String      Name;
+        CtrlType    Type = CTRL_TYPE_SOCKET;
+        String      Error;
+    } _ctrl;
+
+    struct {
+        String  NewName;
+        String  Name;
+        String  EdName;
+        String  Button;
+        String  Relay;
+        String  Error;
+    } _socket;
 
     void _buildMenu(sets::Builder& b);
     void _updateMainPage(sets::Updater& upd);
@@ -42,8 +62,9 @@ private:
     void _buildTgBotPage(sets::Builder& b);
     void _updateTgBotPage(sets::Updater& upd);
     void _buildCtrlsPage(sets::Builder& b);
-    void _updateCtrlsPage(sets::Updater& upd);
     void _buildSettingsPage(sets::Builder& b);
+    void _buildSocketsPage(sets::Builder& b);
+    void _updateSocketsPage(sets::Updater& upd);
 };
 
 extern WebGUIClass WebGUI;

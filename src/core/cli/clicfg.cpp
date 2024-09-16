@@ -672,7 +672,7 @@ bool CLIConfiguratorClass::configControllers(const String &cmd)
         String value(cmd);
 
         value.remove(0, 10);
-        Controllers.addController(new Meteo(value));
+        Controllers.addController(new MeteoCtrl(value));
 
         return true;
     }
@@ -694,7 +694,7 @@ bool CLIConfiguratorClass::configMeteoCtrl(const String &name, const String &cmd
         return true;
     }
 
-    auto meteo = static_cast<Meteo *>(Controllers.getController(name));
+    auto meteo = static_cast<MeteoCtrl *>(Controllers.getController(name));
 
     if (cmd == "shutdown" || cmd == "shut") {
         meteo->setEnabled(false);
@@ -737,7 +737,7 @@ bool CLIConfiguratorClass::configMeteoCtrl(const String &name, const String &cmd
 
 bool CLIConfiguratorClass::configMeteoSensor(const String &ctrlName, const String &sensName, const String &cmd)
 {
-    auto meteo = static_cast<Meteo *>(Controllers.getController(ctrlName));
+    auto meteo = static_cast<MeteoCtrl *>(Controllers.getController(ctrlName));
     auto sensor = meteo->getSensor(sensName);
 
     if (cmd == "?" || cmd == "help") {
