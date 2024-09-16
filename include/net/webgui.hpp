@@ -48,12 +48,16 @@ private:
     } _ctrl;
 
     struct {
+        String  AddName;
         String  NewName;
-        String  Name;
         String  EdName;
         String  Button;
         String  Relay;
-        String  Error;
+        String  EdError;
+        String  AddError;
+        size_t  curRly;
+        size_t  curBtn;
+        size_t  curSock;
     } _socket;
 
     void _buildMenu(sets::Builder& b);
@@ -63,8 +67,10 @@ private:
     void _updateTgBotPage(sets::Updater& upd);
     void _buildCtrlsPage(sets::Builder& b);
     void _buildSettingsPage(sets::Builder& b);
+
     void _buildSocketsPage(sets::Builder& b);
     void _updateSocketsPage(sets::Updater& upd);
+    void _helperSocketsPage();
 };
 
 extern WebGUIClass WebGUI;

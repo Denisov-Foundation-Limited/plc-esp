@@ -389,29 +389,68 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
     }
 }
 
+void WebGUIClass::_helperSocketsPage()
+{
+    std::vector<GPIOIface *>    inputs;
+    std::vector<GPIOIface *>    outputs;
+
+    auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+    _socket.curSock = sock->getSockets().size();
+
+    Interfaces.getOutputs(outputs);
+    Interfaces.getInputs(inputs);
+
+    _socket.curRly = outputs.size();
+    _socket.curBtn = inputs.size();
+
+    for (size_t i = 0; i < sock->getSockets().size(); i++) {
+        if (sock->getSockets()[i]->getName() == _socket.EdName) {
+            _socket.curSock = i;
+        }
+    }
+
+    for (size_t i = 0; i < outputs.size(); i++) {
+        if (_socket.Relay == outputs[i]->getName()) {
+            _socket.curRly = i;
+        }
+    }
+
+    for (size_t i = 0; i < inputs.size(); i++) {
+        if (_socket.Button == inputs[i]->getName()) {
+            _socket.curBtn = i;
+        }
+    }
+}
 void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
 {
+    _helperSocketsPage();
+    upd.update("ctrl_sock_sel"_h, String(_socket.curSock));
+    upd.update("ctrl_sock_erly"_h, String(_socket.curRly));
+    upd.update("ctrl_sock_ebtn"_h, String(_socket.curBtn));
+    upd.update("ctrl_sock_ename"_h, (_socket.NewName != "") ? _socket.NewName : _socket.EdName);
 }
 
 void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 {
+    _helperSocketsPage();
+
     b.Label(F("Контроллер"), _ctrl.Name);
 
     if (b.beginMenu(F("Настройки"))) {
         if (b.beginGroup(F("Добавить Розетку"))) {
-            if (b.Input("ctrl_sock_name"_h, "Имя", _socket.NewName)) {
-                _socket.NewName = b.build().value();
+            if (b.Input("ctrl_sock_name"_h, "Имя", _socket.AddName)) {
+                _socket.AddName = b.build().value();
             }
             if (b.Button("ctrl_sock_add"_h, F("Добавить"))) {
                 auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
-                if (_socket.NewName == "") {
-                    _socket.Error = F("Пустое имя");
-                } else if (sock->isExists(_socket.NewName)) {
-                    _socket.Error = F("Имя занято");
+                if (_socket.AddName == "") {
+                    _socket.AddError = F("Пустое имя");
+                } else if (sock->isExists(_socket.AddName)) {
+                    _socket.AddError = F("Имя занято");
                 } else {
-                    sock->addSocket(new Socket(_socket.NewName));
-                    _socket.NewName = "";
-                    _socket.Error = "";
+                    sock->addSocket(new Socket(_socket.AddName));
+                    _socket.AddName = "";
+                    _socket.AddError = "";
                 }
                 b.reload();
             }
@@ -421,9 +460,6 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
         if (b.beginGroup(F("Редактировать"))) {
             String                      sSockets = "";
             String                      sIn = "", sOut = "";
-            size_t                      curBtn = 0;
-            size_t                      curRly = 0;
-            size_t                      curSock = 0;
             std::vector<GPIOIface *>    inputs;
             std::vector<GPIOIface *>    outputs;
 
@@ -432,85 +468,79 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
             Interfaces.getOutputs(outputs);
             Interfaces.getInputs(inputs);
 
-            if (_socket.Relay == "") {
-                curRly = outputs.size();
-            }
-            if (_socket.Button == "") {
-                curBtn = inputs.size();
-            }
-
             for (size_t i = 0; i < sock->getSockets().size(); i++) {
-                if (sock->getSockets()[i]->getName() == _socket.Name) {
-                    curSock = i;
-                }
-                sSockets += sock->getSockets()[i]->getName();
-                if (i != (sock->getSockets().size() - 1)) {
-                    sSockets += ";";
-                }
+                sSockets += sock->getSockets()[i]->getName() + ";";
             }
 
             for (size_t i = 0; i < outputs.size(); i++) {
-                if (_socket.Relay == outputs[i]->getName()) {
-                    curRly = i;
-                }
                 sOut += outputs[i]->getName() + ";";
             }
 
             for (size_t i = 0; i < inputs.size(); i++) {
-                if (_socket.Button == inputs[i]->getName()) {
-                    curBtn = i;
-                }
                 sIn += inputs[i]->getName() + ";";
             }
 
-            if (b.Select("ctrl_sock_sel"_h, F("Розетка"), sSockets, String(curSock))) {
-                auto s = sock->getSockets()[b.build().value().toInt32()];
-                if (s != nullptr) {
-                    _socket.Name = s->getName();
-                    if (s->getGpio(SOCK_IF_BUTTON) != nullptr) {
-                       // _socket.Button = s->getGpio(SOCK_IF_BUTTON)->getName();
-                    } else {
-                        _socket.Button = "";
-                        curBtn = 0;
-                    }
-                    if (s->getGpio(SOCK_IF_RELAY) != nullptr) {
-                        //_socket.Relay = s->getGpio(SOCK_IF_RELAY)->getName();
-                    } else {
-                        _socket.Relay = "";
-                        curRly = 0;
+            if (b.Select("ctrl_sock_sel"_h, F("Розетка"), sSockets, String(_socket.curSock))) {
+                auto value = b.build().value().toInt32();
+                if (sock->getSockets().size() > 0 && value < sock->getSockets().size()) {
+                    auto s = sock->getSockets()[value];
+                    if (s != nullptr) {
+                        _socket.EdName = s->getName();
+                        if (s->getGpio(SOCK_IF_BUTTON) != nullptr) {
+                            _socket.Button = s->getGpio(SOCK_IF_BUTTON)->getName();
+                        } else {
+                            _socket.Button = "";
+                        }
+                        if (s->getGpio(SOCK_IF_RELAY) != nullptr) {
+                            _socket.Relay = s->getGpio(SOCK_IF_RELAY)->getName();
+                        } else {
+                            _socket.Relay = "";
+                        }
                     }
                 }
             }
-            if (b.Input("ctrl_sock_ename"_h, F("Имя"), _socket.Name)) {
+
+            if (b.Input("ctrl_sock_ename"_h, F("Имя"), _socket.EdName)) {
                 _socket.NewName = b.build().value();
             }
-            if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(curRly))) {
-                auto iface = outputs[b.build().value().toInt32()];
-                _socket.Relay = iface != nullptr ? iface->getName() : "";
+            if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(_socket.curRly))) {
+                auto value = b.build().value().toInt32();
+                if (value == outputs.size()) {
+                    _socket.Relay = "";
+                } else {
+                    auto iface = outputs[value];
+                    _socket.Relay = iface != nullptr ? iface->getName() : "";
+                }
             }
-            if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(curBtn))) {
-                auto iface = inputs[b.build().value().toInt32()];
-                _socket.Button = iface != nullptr ? iface->getName() : "";
+            if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(_socket.curBtn))) {
+                auto value = b.build().value().toInt32();
+                if (value == inputs.size()) {
+                    _socket.Button = "";
+                } else {
+                    auto iface = inputs[value];
+                    _socket.Button = iface != nullptr ? iface->getName() : "";
+                }
             }
             if (b.Button("ctrl_sock_e"_h, F("Изменить"))) {
-                auto s = sock->getSocket(_socket.Name);
+                auto s = sock->getSocket(_socket.EdName);
                 if (s != nullptr) {
-                    s->setGpio(SOCK_IF_RELAY, Interfaces.getInterface(_socket.Relay));
-                    s->setGpio(SOCK_IF_BUTTON, Interfaces.getInterface(_socket.Button));
+                    s->setGpio(SOCK_IF_RELAY, (_socket.Relay == "") ? nullptr : Interfaces.getInterface(_socket.Relay));
+                    s->setGpio(SOCK_IF_BUTTON, (_socket.Button == "") ? nullptr : Interfaces.getInterface(_socket.Button));
                     if (_socket.NewName != "") {
                         s->setName(_socket.NewName);
+                        _socket.EdName = _socket.NewName;
                         _socket.NewName = "";
                     }
                     b.reload();
                 }
             }
             b.endGroup();
+
+            if (_socket.EdError != "") {
+                b.Label(F("Ошибка"), _socket.EdError, sets::Colors::Red);
+            }
         }
         b.endMenu();
-    }
-
-    if (_socket.Error != "") {
-        b.Label(F("Ошибка"), _socket.Error, sets::Colors::Red);
     }
 
     if (b.beginGroup(F("Общее"))) {
@@ -534,18 +564,23 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
         b.endGroup();
     }
 
-    if (b.beginGroup(F("Розетки"))) {
-        auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
-        for (auto s : sock->getSockets()) {
+    auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+    for (auto s : sock->getSockets()) {
+        if (b.beginGroup(F("Розетки"))) {
+            b.LED(F("Статус"), s->getStatus());
             b.beginButtons();
-            if (b.Button(su::SH(String("ctrl_sock_" + s->getName()).c_str()), s->getName(), (s->getStatus() ? sets::Colors::Default : sets::Colors::Red))) {
-                s->setStatus(!s->getStatus(), true);
+            if (b.Button(su::SH(String("ctrl_sock_on_" + s->getName()).c_str()), F("Включить"))) {
+                s->setStatus(true, true);
+                b.reload();
+            }
+            if (b.Button(su::SH(String("ctrl_sock_off_" + s->getName()).c_str()), F("Отключить"), sets::Colors::Red)) {
+                s->setStatus(false, true);
                 b.reload();
             }
             b.endButtons();
+            b.endGroup();
         }
-        b.endGroup();
-    }
+    }       
 }
 
 void WebGUIClass::_buildSettingsPage(sets::Builder& b)
