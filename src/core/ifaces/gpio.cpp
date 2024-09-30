@@ -19,7 +19,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-GPIOIface::GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended)
+IfGPIO::IfGPIO(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended)
 {
     _name = name;
     _pin = pin;
@@ -30,52 +30,52 @@ GPIOIface::GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pu
     setMode(mode);
 }
 
-bool GPIOIface::getExtended() const
+bool IfGPIO::getExtended() const
 {
     return _extended;
 }
 
-void GPIOIface::setExtended(bool state)
+void IfGPIO::setExtended(bool state)
 {
     _extended = state;
 }
 
-const String &GPIOIface::getName() const
+const String &IfGPIO::getName() const
 {
     return _name;
 }
 
-uint8_t GPIOIface::getPin() const
+uint8_t IfGPIO::getPin() const
 {
     return _pin;
 }
 
-GpioMode GPIOIface::getMode() const
+GpioMode IfGPIO::getMode() const
 {
     return _mode;
 }
 
-GpioPull GPIOIface::getPull() const
+GpioPull IfGPIO::getPull() const
 {
     return _pull;
 }
 
-void GPIOIface::setName(const String &name)
+void IfGPIO::setName(const String &name)
 {
     _name = name;
 }
 
-void GPIOIface::setPin(uint8_t pin)
+void IfGPIO::setPin(uint8_t pin)
 {
     _pin = pin;
 }
 
-void GPIOIface::setPull(GpioPull pull)
+void IfGPIO::setPull(GpioPull pull)
 {
     _pull = pull;
 }
 
-void GPIOIface::setMode(GpioMode mode)
+void IfGPIO::setMode(GpioMode mode)
 {
     uint8_t val = INPUT;
 
@@ -109,12 +109,12 @@ void GPIOIface::setMode(GpioMode mode)
     }
 }
 
-void GPIOIface::setExtId(ExtenderId id)
+void IfGPIO::setExtId(ExtenderId id)
 {
     _extId = id;
 }
 
-void GPIOIface::write(bool val)
+void IfGPIO::write(bool val)
 {
     if (_extId == EXT_NOT_USED) {
         digitalWrite(_pin, val);
@@ -131,7 +131,7 @@ void GPIOIface::write(bool val)
     _state = val;
 }
 
-bool GPIOIface::read()
+bool IfGPIO::read()
 {
     if (_extId == EXT_NOT_USED) {
         return (digitalRead(_pin) == HIGH) ? true : false;
@@ -147,7 +147,7 @@ bool GPIOIface::read()
     }
 }
 
-bool GPIOIface::getState()
+bool IfGPIO::getState()
 {
     if (_mode == GPIO_MOD_INPUT) {
         return read();
@@ -156,12 +156,12 @@ bool GPIOIface::getState()
     }
 }
 
-ExtenderId GPIOIface::getExtId() const
+ExtenderId IfGPIO::getExtId() const
 {
     return _extId;
 }
 
-IntType GPIOIface::getType() const
+IfType IfGPIO::getType() const
 {
     return INT_TYPE_GPIO;
 }

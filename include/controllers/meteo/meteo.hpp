@@ -32,8 +32,8 @@ public:
     bool getEnabled() const;
     const String &getName() const;
     void setName(const String &name);
-    void setOneWire(OneWireIface *ow);
-    OneWireIface *getOneWire();
+    void setOneWire(IfOneWire *ow);
+    IfOneWire *getOneWire();
     void addSensor(MeteoSensor *sensor);
     const std::vector<MeteoSensor *> &getSensors();
     MeteoSensor *getSensor(const String &name);
@@ -48,7 +48,7 @@ private:
     bool                        _ready = false;
     bool                        _enabled = false;
     String                      _name;
-    OneWireIface                *_ow = nullptr;
+    IfOneWire                *_ow = nullptr;
     GyverDS18                   _ds;
     std::vector<MeteoSensor *>  _sensors;
     

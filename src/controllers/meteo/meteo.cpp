@@ -33,13 +33,13 @@ bool MeteoCtrl::getEnabled() const
     return _enabled;
 }
 
-void MeteoCtrl::setOneWire(OneWireIface *ow)
+void MeteoCtrl::setOneWire(IfOneWire *ow)
 {
     _ow = ow;
     _ds.setPin(ow->getPin());
 }
 
-OneWireIface *MeteoCtrl::getOneWire()
+IfOneWire *MeteoCtrl::getOneWire()
 {
     return _ow;
 }

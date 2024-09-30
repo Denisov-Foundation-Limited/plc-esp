@@ -94,7 +94,7 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
             return true;
         }
 
-        Wireless.setStatusLed(static_cast<GPIOIface *>(iface));
+        Wireless.setStatusLed(static_cast<IfGPIO *>(iface));
 
         return true;
     }
@@ -192,15 +192,15 @@ bool CLIConfiguratorClass::configInterfaces(const String &cmd)
             return false;
 
         if (params[0] == "gpio") {
-            Interfaces.addInterface(static_cast<Interface *>(new GPIOIface(params[1], 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED, true)));
+            Interfaces.addInterface(static_cast<Interface *>(new IfGPIO(params[1], 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED, true)));
         } else if (params[0] == "ow") {
-            Interfaces.addInterface(static_cast<Interface *>(new OneWireIface(params[1], 0, true)));
+            Interfaces.addInterface(static_cast<Interface *>(new IfOneWire(params[1], 0, true)));
         } else if (params[0] == "i2c") {
-            Interfaces.addInterface(static_cast<Interface *>(new I2CIface(params[1], 0, 0, true)));
+            Interfaces.addInterface(static_cast<Interface *>(new IfI2C(params[1], 0, 0, true)));
         } else if (params[0] == "spi") {
-            Interfaces.addInterface(static_cast<Interface *>(new SPIface(params[1], 0, 0, 0, 0, 0, true)));
+            Interfaces.addInterface(static_cast<Interface *>(new IfSPI(params[1], 0, 0, 0, 0, 0, true)));
         } else if (params[0] == "uart") {
-            Interfaces.addInterface(static_cast<Interface *>(new UARTIface(params[1], 0, 0, 0, true)));
+            Interfaces.addInterface(static_cast<Interface *>(new IfUART(params[1], 0, 0, 0, true)));
         } else {
             Log.error(LOG_MOD_CLI, "Unknown interface type");
             return true;
@@ -260,7 +260,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
     switch (iface->getType()) {
         case INT_TYPE_GPIO:
             {
-                auto gpio = static_cast<GPIOIface *>(iface);
+                auto gpio = static_cast<IfGPIO *>(iface);
                 if (cmd.indexOf("pin ") >= 0) {
                     String  value(cmd);
 
@@ -330,7 +330,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
 
         case INT_TYPE_OW:
             {
-                auto ow = static_cast<OneWireIface *>(iface);
+                auto ow = static_cast<IfOneWire *>(iface);
                 if (cmd.indexOf("pin ") >= 0) {
                     String  value(cmd);
 
@@ -344,7 +344,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
 
         case INT_TYPE_I2C:
             {
-                auto i2c = static_cast<I2CIface *>(iface);
+                auto i2c = static_cast<IfI2C *>(iface);
                 if (cmd.indexOf("sda ") >= 0) {
                     String  value(cmd);
 
@@ -365,7 +365,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
 
         case INT_TYPE_SPI:
             {
-                auto spi = static_cast<SPIface *>(iface);
+                auto spi = static_cast<IfSPI *>(iface);
                 if (cmd.indexOf("miso ") >= 0) {
                     String  value(cmd);
 
@@ -400,7 +400,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
 
         case INT_TYPE_UART:
             {
-                auto uart = static_cast<UARTIface *>(iface);
+                auto uart = static_cast<IfUART *>(iface);
                 if (cmd.indexOf("rx ") >= 0) {
                     String  value(cmd);
 
@@ -720,7 +720,7 @@ bool CLIConfiguratorClass::configMeteoCtrl(const String &name, const String &cmd
         if ((iface == nullptr) || (iface->getType() != INT_TYPE_OW)) {
             return false;
         }
-        meteo->setOneWire(static_cast<OneWireIface *>(iface));
+        meteo->setOneWire(static_cast<IfOneWire *>(iface));
 
         return true;
     } else if (cmd.indexOf(F("add ds18b20 ")) >= 0) {

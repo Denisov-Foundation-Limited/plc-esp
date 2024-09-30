@@ -27,15 +27,15 @@ typedef enum {
 } I2cPin;
 
 
-class I2CIface : public Interface
+class IfI2C : public Interface
 {
 public:
-    I2CIface(const String &name, uint8_t sda, uint8_t scl, bool extended=false);
+    IfI2C(const String &name, uint8_t sda, uint8_t scl, bool extended=false);
     void setPin(I2cPin pin, uint8_t gpio);
     uint8_t getPin(I2cPin pin) const;
     const String &getName() const;
     void findDevices(std::vector<unsigned> &devices);
-    IntType getType() const;
+    IfType getType() const;
     void setName(const String &name);
     bool getExtended() const;
     void setExtended(bool state);

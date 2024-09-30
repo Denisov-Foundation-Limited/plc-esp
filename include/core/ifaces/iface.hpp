@@ -19,15 +19,17 @@ typedef enum {
     INT_TYPE_SPI,
     INT_TYPE_I2C,
     INT_TYPE_OW,
-    INT_TYPE_UART
-} IntType;
+    INT_TYPE_UART,
+    INT_TYPE_RELAY,
+    INT_TYPE_DIGITAL_INPUT
+} IfType;
 
 class Interface
 {
 public:
     virtual const String &getName() const = 0;
     virtual void setName(const String &name) = 0;
-    virtual IntType getType() const = 0;
+    virtual IfType getType() const = 0;
     virtual bool getExtended() const = 0;
     virtual void setExtended(bool state) = 0;
 };

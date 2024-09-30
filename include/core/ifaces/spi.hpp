@@ -25,17 +25,17 @@ typedef enum {
 } SpiPin;
 
 
-class SPIface : public Interface
+class IfSPI : public Interface
 {
 public:
-    SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq, bool extended=false);
+    IfSPI(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq, bool extended=false);
     void setPin(SpiPin pin, uint8_t gpio);
     uint8_t getPin(SpiPin pin) const;
     void setFrequency(unsigned freq);
     unsigned getFrequency() const;
     const String &getName() const;
     void setName(const String &name);
-    IntType getType() const;
+    IfType getType() const;
     bool getExtended() const;
     void setExtended(bool state);
 

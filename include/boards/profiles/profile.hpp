@@ -64,6 +64,8 @@ typedef struct {
 } ProfSPI;
 
 typedef struct {
+    ProfGpio        relays[8];
+    ProfGpio        inputs[16];
     ProfGpio        gpio[32];
     ProfOneWire     onewire[4];
     ProfUART        uart[4];

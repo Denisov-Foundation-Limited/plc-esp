@@ -69,7 +69,7 @@ void Socket::readButton()
 
 void Socket::setGpio(SockIfType type, Interface *iface)
 {
-    _gpio[type] = static_cast<GPIOIface *>(iface);
+    _gpio[type] = static_cast<IfGPIO *>(iface);
 }
 
 Interface *Socket::getGpio(SockIfType type) const

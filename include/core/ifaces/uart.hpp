@@ -23,16 +23,16 @@ typedef enum {
     UART_PIN_MAX
 } UARTPin;
 
-class UARTIface : public Interface
+class IfUART : public Interface
 {
 public:
-    UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate, bool extended=false);
+    IfUART(const String &name, uint8_t rx, uint8_t tx, unsigned rate, bool extended=false);
     void setPin(UARTPin pin, uint8_t gpio);
     uint8_t getPin(UARTPin pin) const;
     const String &getName() const;
     unsigned getRate() const;
     void setRate(unsigned rate);
-    IntType getType() const;
+    IfType getType() const;
     void setName(const String &name);
     bool getExtended() const;
     void setExtended(bool state);

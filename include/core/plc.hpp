@@ -36,8 +36,8 @@ public:
     void setAlarm(PlcMod mod, bool status);
     void setBuzzer(PlcMod mod, bool status);
     void setStatus(PlcMod mod, bool status);
-    GPIOIface *getPin(PlcGpioType type) const;
-    void setPin(PlcGpioType type, GPIOIface *pin);
+    IfGPIO *getPin(PlcGpioType type) const;
+    void setPin(PlcGpioType type, IfGPIO *pin);
     const String& getName() const;
     void setName(const String &name);
     void begin();
@@ -45,7 +45,7 @@ public:
 
 private:
     String      _name;
-    GPIOIface  *_pins[PLC_GPIO_MAX];
+    IfGPIO  *_pins[PLC_GPIO_MAX];
     unsigned    _timer = 0;
     unsigned    _alarm = 0;
     unsigned    _buzzer = 0;

@@ -46,7 +46,7 @@ private:
     bool        _status = false;
     bool        _reading = false;
     unsigned    _timer;
-    GPIOIface   *_gpio[SOCK_IF_MAX] = { nullptr, nullptr };
+    IfGPIO   *_gpio[SOCK_IF_MAX] = { nullptr, nullptr };
 };
 
 class SocketCtrl : public Controller

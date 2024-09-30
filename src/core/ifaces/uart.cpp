@@ -11,7 +11,7 @@
 
 #include "core/ifaces/uart.hpp"
 
-UARTIface::UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate, bool extended)
+IfUART::IfUART(const String &name, uint8_t rx, uint8_t tx, unsigned rate, bool extended)
 {
     _name = name;
     _pins[UART_PIN_RX] = rx;
@@ -20,47 +20,47 @@ UARTIface::UARTIface(const String &name, uint8_t rx, uint8_t tx, unsigned rate, 
     _extended = extended;
 }
 
-void UARTIface::setPin(UARTPin pin, uint8_t gpio)
+void IfUART::setPin(UARTPin pin, uint8_t gpio)
 {
     _pins[pin] = gpio;
 }
 
-uint8_t UARTIface::getPin(UARTPin pin) const
+uint8_t IfUART::getPin(UARTPin pin) const
 {
     return _pins[pin];
 }
 
-bool UARTIface::getExtended() const
+bool IfUART::getExtended() const
 {
     return _extended;
 }
 
-void UARTIface::setExtended(bool state)
+void IfUART::setExtended(bool state)
 {
     _extended = state;
 }
 
-const String &UARTIface::getName() const
+const String &IfUART::getName() const
 {
     return _name;
 }
 
-unsigned UARTIface::getRate() const
+unsigned IfUART::getRate() const
 {
     return _rate;
 }
 
-void UARTIface::setRate(unsigned rate)
+void IfUART::setRate(unsigned rate)
 {
     _rate = rate;
 }
 
-IntType UARTIface::getType() const
+IfType IfUART::getType() const
 {
     return INT_TYPE_UART;
 }
 
-void UARTIface::setName(const String &name)
+void IfUART::setName(const String &name)
 {
     _name = name;
 }

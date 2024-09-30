@@ -33,8 +33,8 @@ public:
     void setCreds(const String &ssid, const String &passwd);
     const String &getSSID() const;
     const String &getPasswd() const;
-    GPIOIface *getStatusLed() const;
-    void setStatusLed(GPIOIface *gpio);
+    IfGPIO *getStatusLed() const;
+    void setStatusLed(IfGPIO *gpio);
     void setEnabled(bool status);
     bool getEnabled() const;
     void setAP(bool status);
@@ -49,7 +49,7 @@ public:
 private:
     String      _ssid;
     String      _passwd;
-    GPIOIface  *_statusLed = nullptr;
+    IfGPIO  *_statusLed = nullptr;
     bool        _enabled = false;
     bool        _ap = true;
     wl_status_t _status = WL_NO_SHIELD;

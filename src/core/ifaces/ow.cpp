@@ -11,45 +11,45 @@
 
 #include "core/ifaces/ow.hpp"
 
-OneWireIface::OneWireIface(const String &name, uint8_t pin, bool extended)
+IfOneWire::IfOneWire(const String &name, uint8_t pin, bool extended)
 {
     _name = name;
     _pin = pin;
     _extended = extended;
 }
 
-void OneWireIface::setPin(uint8_t gpio)
+void IfOneWire::setPin(uint8_t gpio)
 {
     _pin = gpio;
     _bus.begin(gpio);
 }
 
-uint8_t OneWireIface::getPin() const
+uint8_t IfOneWire::getPin() const
 {
     return _pin;
 }
 
-const String &OneWireIface::getName() const
+const String &IfOneWire::getName() const
 {
     return _name;
 }
 
-void OneWireIface::setName(const String &name)
+void IfOneWire::setName(const String &name)
 {
     _name = name;
 }
 
-bool OneWireIface::getExtended() const
+bool IfOneWire::getExtended() const
 {
     return _extended;
 }
 
-void OneWireIface::setExtended(bool state)
+void IfOneWire::setExtended(bool state)
 {
     _extended = state;
 }
 
-void OneWireIface::findAddresses(std::vector<String> &addrs)
+void IfOneWire::findAddresses(std::vector<String> &addrs)
 {
     uint8_t addr[8];
 
@@ -71,7 +71,7 @@ void OneWireIface::findAddresses(std::vector<String> &addrs)
     }
 }
 
-IntType OneWireIface::getType() const
+IfType IfOneWire::getType() const
 {
     return INT_TYPE_OW;
 }

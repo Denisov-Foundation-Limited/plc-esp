@@ -31,10 +31,10 @@ void EthernetClass::setInterface(EthIfaceType type, Interface *iface)
 {
     switch (type) {
         case ETH_IF_SPI:
-            _spi = static_cast<SPIface *>(iface);
+            _spi = static_cast<IfSPI *>(iface);
             break;
         case ETH_IF_IRQ:
-            _irq = static_cast<GPIOIface *>(iface);
+            _irq = static_cast<IfGPIO *>(iface);
             break;
     }
 }

@@ -65,12 +65,12 @@ void PlcClass::setStatus(PlcMod mod, bool status)
     }
 }
 
-GPIOIface *PlcClass::getPin(PlcGpioType type) const
+IfGPIO *PlcClass::getPin(PlcGpioType type) const
 {
     return _pins[type];
 }
 
-void PlcClass::setPin(PlcGpioType type, GPIOIface *pin)
+void PlcClass::setPin(PlcGpioType type, IfGPIO *pin)
 {
     _pins[type] = pin;
 }

@@ -35,6 +35,14 @@ void InterfacesClass::addInterface(Interface *iface)
         case INT_TYPE_UART:
             sType = F("UART");
             break;
+
+        case INT_TYPE_RELAY:
+            sType = F("Relay");
+            break;
+
+        case INT_TYPE_DIGITAL_INPUT:
+            sType = F("DigitalInput");
+            break;
     }
 
     _ifaces.push_back(iface);
@@ -62,24 +70,11 @@ const std::vector<Interface *> &InterfacesClass::getInterfaces() const
     return _ifaces;
 }
 
-void InterfacesClass::getInputs(std::vector<GPIOIface *> &inputs)
+void InterfacesClass::getInterfacesByType(std::vector<Interface *> &ifs, IfType type)
 {
     for (auto *iface : _ifaces) {
-        if (iface->getType() == INT_TYPE_GPIO) {
-            if (static_cast<GPIOIface *>(iface)->getMode() == GPIO_MOD_INPUT) {
-                inputs.push_back(static_cast<GPIOIface *>(iface));
-            }
-        }
-    }
-}
-
-void InterfacesClass::getOutputs(std::vector<GPIOIface *> &outs)
-{
-    for (auto *iface : _ifaces) {
-        if (iface->getType() == INT_TYPE_GPIO) {
-            if (static_cast<GPIOIface *>(iface)->getMode() == GPIO_MOD_OUTPUT) {
-                outs.push_back(static_cast<GPIOIface *>(iface));
-            }
+        if (iface->getType() == type) {
+            ifs.push_back(iface);
         }
     }
 }

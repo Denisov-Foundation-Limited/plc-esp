@@ -22,7 +22,7 @@ GsmModemClass::GsmModemClass()
     _modem = new TinyGsm(_gsmUart);
 }
 
-void GsmModemClass::setUart(UARTIface *uart)
+void GsmModemClass::setUart(IfUART *uart)
 {
     _uart = uart;
 }
@@ -37,7 +37,7 @@ bool GsmModemClass::getEnabled() const
     return _enabled;
 }
 
-UARTIface *GsmModemClass::getUart() const
+IfUART *GsmModemClass::getUart() const
 {
     return _uart;
 }

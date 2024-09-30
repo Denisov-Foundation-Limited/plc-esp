@@ -26,7 +26,7 @@ class GsmModemClass
 {
 private:
     bool        _enabled = false;
-    UARTIface   *_uart;
+    IfUART   *_uart;
 
     UART        _gsmUart;
     TinyGsm     *_modem;
@@ -35,8 +35,8 @@ private:
     String getSigLevel(int level) const;
 public:
     GsmModemClass();
-    void setUart(UARTIface *uart);
-    UARTIface *getUart() const;
+    void setUart(IfUART *uart);
+    IfUART *getUart() const;
     void setEnabled(bool status);
     bool getEnabled() const;
     void begin();

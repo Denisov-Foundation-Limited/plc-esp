@@ -44,7 +44,7 @@ bool ConfigsClass::begin()
     if ((iface = Interfaces.getInterface(F("spi-sd"))) == nullptr) {
         Log.warning(LOG_MOD_CFG, F("Interface SDcard SPI not found"));
     }
-    auto *spiSD = static_cast<SPIface *>(iface);
+    auto *spiSD = static_cast<IfSPI *>(iface);
 
     SPI.end();
     SPI.begin(spiSD->getPin(SPI_PIN_SCK), spiSD->getPin(SPI_PIN_MISO), spiSD->getPin(SPI_PIN_MOSI));
@@ -157,12 +157,30 @@ void ConfigsClass::_initInterfaces()
         Extenders.addExtender(new Extender(static_cast<ExtenderId>(ext.id), ext.addr));
     }
 
+    /* Relays Interfaces */
+
+    for (auto relay : ActiveBoard.interfaces.relays) {
+        if (relay.pin == 0)
+            break;
+        Interfaces.addInterface(new IfRelay(relay.name, relay.pin, static_cast<GpioMode>(relay.mode),
+                                static_cast<GpioPull>(relay.pull), static_cast<ExtenderId>(relay.extId)));
+    }
+
+    /* Inputs Interfaces */
+
+    for (auto inputs : ActiveBoard.interfaces.inputs) {
+        if (inputs.pin == 0)
+            break;
+        Interfaces.addInterface(new IfDInput(inputs.name, inputs.pin, static_cast<GpioMode>(inputs.mode),
+                                static_cast<GpioPull>(inputs.pull), static_cast<ExtenderId>(inputs.extId)));
+    }
+
     /* GPIO Interfaces */
 
     for (auto gpio : ActiveBoard.interfaces.gpio) {
         if (gpio.pin == 0)
             break;
-        Interfaces.addInterface(new GPIOIface(gpio.name, gpio.pin, static_cast<GpioMode>(gpio.mode),
+        Interfaces.addInterface(new IfGPIO(gpio.name, gpio.pin, static_cast<GpioMode>(gpio.mode),
                                 static_cast<GpioPull>(gpio.pull), static_cast<ExtenderId>(gpio.extId)));
     }
 
@@ -171,7 +189,7 @@ void ConfigsClass::_initInterfaces()
     for (auto ow : ActiveBoard.interfaces.onewire) {
         if (ow.pin == 0)
             break;
-        Interfaces.addInterface(new OneWireIface(ow.name, ow.pin));
+        Interfaces.addInterface(new IfOneWire(ow.name, ow.pin));
     }
 
     /* I2C Interface */
@@ -179,7 +197,7 @@ void ConfigsClass::_initInterfaces()
     for (auto i2c : ActiveBoard.interfaces.i2c) {
         if (i2c.sda == 0)
             break;
-        Interfaces.addInterface(new I2CIface(i2c.name, i2c.sda, i2c.scl));
+        Interfaces.addInterface(new IfI2C(i2c.name, i2c.sda, i2c.scl));
     }
 
     /* SPI Interface */
@@ -187,7 +205,7 @@ void ConfigsClass::_initInterfaces()
     for (auto spi : ActiveBoard.interfaces.spi) {
         if (spi.miso == 0)
             break;
-        Interfaces.addInterface(new SPIface(spi.name, spi.miso, spi.mosi, spi.sck, spi.ss, spi.freq));
+        Interfaces.addInterface(new IfSPI(spi.name, spi.miso, spi.mosi, spi.sck, spi.ss, spi.freq));
     }
 
     /* UART Interface */
@@ -195,7 +213,7 @@ void ConfigsClass::_initInterfaces()
     for (auto uart : ActiveBoard.interfaces.uart) {
         if (uart.rx == 0)
             break;
-        Interfaces.addInterface(new UARTIface(uart.name, uart.rx, uart.tx, uart.rate));
+        Interfaces.addInterface(new IfUART(uart.name, uart.rx, uart.tx, uart.rate));
     }
 
     /* Wi-Fi setup */
@@ -203,29 +221,29 @@ void ConfigsClass::_initInterfaces()
     if ((iface = Interfaces.getInterface(ActiveBoard.net.led)) == nullptr) {
         Log.warning(LOG_MOD_CFG, F("Interface NET LED not found"));
     }
-    Wireless.setStatusLed(static_cast<GPIOIface *>(iface));
+    Wireless.setStatusLed(static_cast<IfGPIO *>(iface));
 
     /* PLC setup */
 
     if ((iface = Interfaces.getInterface(ActiveBoard.plc.alarm)) == nullptr) {
         Log.warning(LOG_MOD_CFG, F("Interface PLC Alarm not found"));
     }
-    Plc.setPin(PLC_GPIO_ALARM_LED, static_cast<GPIOIface *>(iface));
+    Plc.setPin(PLC_GPIO_ALARM_LED, static_cast<IfGPIO *>(iface));
     if ((iface = Interfaces.getInterface(ActiveBoard.plc.status)) == nullptr) {
         Log.warning(LOG_MOD_CFG, F("Interface PLC Status not found"));
     }
-    Plc.setPin(PLC_GPIO_STATUS_LED, static_cast<GPIOIface *>(iface));
+    Plc.setPin(PLC_GPIO_STATUS_LED, static_cast<IfGPIO *>(iface));
     if ((iface = Interfaces.getInterface(ActiveBoard.plc.buzzer)) == nullptr) {
         Log.warning(LOG_MOD_CFG, F("Interface PLC Buzzer not found"));
     }
-    Plc.setPin(PLC_GPIO_BUZZER, static_cast<GPIOIface *>(iface));
+    Plc.setPin(PLC_GPIO_BUZZER, static_cast<IfGPIO *>(iface));
 
     /* GSM Modem setup */
 
     if ((iface = Interfaces.getInterface(ActiveBoard.net.gsm.uart)) == nullptr) {
         Log.warning(LOG_MOD_CFG, F("Interface GSM UART not found"));
     }
-    GsmModem.setUart(static_cast<UARTIface *>(iface));
+    GsmModem.setUart(static_cast<IfUART *>(iface));
 
     /* Ethernet MAC addr */
 
@@ -318,7 +336,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
 
     JsonArray jifaces = doc[F("interfaces")];
     for (uint8_t i = 0; i < jifaces.size(); i++) {
-        if (jifaces[i][F("type")] == "gpio") {
+        if (jifaces[i][F("type")] == "gpio" || jifaces[i][F("type")] == "relay" || jifaces[i][F("type")] == "input") {
             GpioMode    type = GPIO_MOD_INPUT;
             GpioPull    pull = GPIO_PULL_NONE;
 
@@ -344,16 +362,22 @@ bool ConfigsClass::_readAll(ConfigsSource src)
                 return false;
             }
 
-            Interfaces.addInterface(new GPIOIface(jifaces[i][F("name")], jifaces[i][F("pin")], type, pull, jifaces[i][F("ext")], true));
+            if (jifaces[i][F("type")] == "gpio") {
+                Interfaces.addInterface(new IfGPIO(jifaces[i][F("name")], jifaces[i][F("pin")], type, pull, jifaces[i][F("ext")], true));
+            } else if (jifaces[i][F("type")] == "relay") {
+                Interfaces.addInterface(new IfRelay(jifaces[i][F("name")], jifaces[i][F("pin")], type, pull, jifaces[i][F("ext")], true));
+            } else if (jifaces[i][F("type")] == "input") {
+                Interfaces.addInterface(new IfDInput(jifaces[i][F("name")], jifaces[i][F("pin")], type, pull, jifaces[i][F("ext")], true));
+            }
         } else if (jifaces[i][F("type")] == "ow") {
-            Interfaces.addInterface(new OneWireIface(jifaces[i][F("name")], jifaces[i][F("pin")], true));
+            Interfaces.addInterface(new IfOneWire(jifaces[i][F("name")], jifaces[i][F("pin")], true));
         } else if (jifaces[i][F("type")] == "spi") {
-            Interfaces.addInterface(new SPIface(jifaces[i][F("name")], jifaces[i][F("miso")], jifaces[i][F("mosi")],
+            Interfaces.addInterface(new IfSPI(jifaces[i][F("name")], jifaces[i][F("miso")], jifaces[i][F("mosi")],
                                                 jifaces[i][F("sck")], jifaces[i][F("ss")], jifaces[i][F("freq")], true));
         } else if (jifaces[i][F("type")] == "i2c") {
-            Interfaces.addInterface(new I2CIface(jifaces[i][F("name")], jifaces[i][F("sda")], jifaces[i][F("scl")], true));
+            Interfaces.addInterface(new IfI2C(jifaces[i][F("name")], jifaces[i][F("sda")], jifaces[i][F("scl")], true));
         } else if (jifaces[i][F("type")] == "uart") {
-            Interfaces.addInterface(new UARTIface(jifaces[i][F("name")], jifaces[i][F("rx")], jifaces[i][F("tx")], jifaces[i][F("rate")], true));
+            Interfaces.addInterface(new IfUART(jifaces[i][F("name")], jifaces[i][F("rx")], jifaces[i][F("tx")], jifaces[i][F("rate")], true));
         } else {
             Log.error(LOG_MOD_CFG, String(F("Interface type unknown: ")) + jifaces[i][F("type")].as<String>());
             doc.clear();
@@ -384,11 +408,11 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     Wireless.setAP(jwifi[F("ap")]);
     pin = Interfaces.getInterface(jwifi[F("iface")]);
     if (pin != nullptr && pin->getType() == INT_TYPE_GPIO) {
-        Wireless.setStatusLed(static_cast<GPIOIface *>(pin));
+        Wireless.setStatusLed(static_cast<IfGPIO *>(pin));
     } else {
         Log.warning(LOG_MOD_CFG, F("WiFi status led GPIO interface not found"));
     }
-    Wireless.setStatusLed(static_cast<GPIOIface *>(pin));
+    Wireless.setStatusLed(static_cast<IfGPIO *>(pin));
     Wireless.setEnabled(jwifi[F("enabled")]);
 
     /*
@@ -397,7 +421,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
 
     pin = Interfaces.getInterface(doc[F("gsm")][F("iface")]);
     if (pin != nullptr && pin->getType() == INT_TYPE_UART) {
-        GsmModem.setUart(static_cast<UARTIface *>(pin));
+        GsmModem.setUart(static_cast<IfUART *>(pin));
     } else {
         Log.warning(LOG_MOD_CFG, F("GsmModem UART interface not found"));
     }
@@ -441,7 +465,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             auto *meteo = new MeteoCtrl(jctrl[F("name")].as<String>());
             auto *iface = Interfaces.getInterface(jctrl[F("ow")]);
             if (iface != nullptr && iface->getType() == INT_TYPE_OW) {
-                meteo->setOneWire(static_cast<OneWireIface *>(iface));
+                meteo->setOneWire(static_cast<IfOneWire *>(iface));
             } else {
                 Log.warning(LOG_MOD_CFG, String(F("Meteo controller ")) +
                         meteo->getName() + String(F(" OneWire interface not found")));
@@ -555,10 +579,18 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
             case INT_TYPE_UART:
                 jifaces[i][F("type")] = F("uart");
                 break;
+
+            case INT_TYPE_RELAY:
+                jifaces[i][F("type")] = F("relay");
+                break;
+
+            case INT_TYPE_DIGITAL_INPUT:
+                jifaces[i][F("type")] = F("input");
+                break;
         }
 
-        if (p->getType() == INT_TYPE_GPIO) {
-            auto gpio = static_cast<GPIOIface *>(p);
+        if (p->getType() == INT_TYPE_GPIO || p->getType() == INT_TYPE_RELAY || p->getType() == INT_TYPE_DIGITAL_INPUT) {
+            auto gpio = static_cast<IfGPIO *>(p);
             jifaces[i][F("pin")] = gpio->getPin();
             switch (gpio->getMode()) {
                 case GPIO_MOD_INPUT:
@@ -584,21 +616,21 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
             }
             jifaces[i][F("ext")] = gpio->getExtId();
         } else if (p->getType() == INT_TYPE_SPI) {
-            auto spi = static_cast<SPIface *>(p);
+            auto spi = static_cast<IfSPI *>(p);
             jifaces[i][F("miso")] = spi->getPin(SPI_PIN_MISO);
             jifaces[i][F("mosi")] = spi->getPin(SPI_PIN_MOSI);
             jifaces[i][F("sck")] = spi->getPin(SPI_PIN_SCK);
             jifaces[i][F("ss")] = spi->getPin(SPI_PIN_SS);
             jifaces[i][F("freq")] = spi->getFrequency();
         } else if (p->getType() == INT_TYPE_OW) {
-            auto ow = static_cast<OneWireIface *>(p);
+            auto ow = static_cast<IfOneWire *>(p);
             jifaces[i][F("pin")] = ow->getPin();
         } else if (p->getType() == INT_TYPE_I2C) {
-            auto i2c = static_cast<I2CIface *>(p);
+            auto i2c = static_cast<IfI2C *>(p);
             jifaces[i][F("sda")] = i2c->getPin(I2C_PIN_SDA);
             jifaces[i][F("scl")] = i2c->getPin(I2C_PIN_SCL);
         } else if (p->getType() == INT_TYPE_UART) {
-            auto uart = static_cast<UARTIface *>(p);
+            auto uart = static_cast<IfUART *>(p);
             jifaces[i][F("rx")] = uart->getPin(UART_PIN_RX);
             jifaces[i][F("tx")] = uart->getPin(UART_PIN_TX);
             jifaces[i][F("rate")] = uart->getRate();

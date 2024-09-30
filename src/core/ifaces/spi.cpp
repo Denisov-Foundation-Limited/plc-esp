@@ -11,7 +11,7 @@
 
 #include "core/ifaces/spi.hpp"
 
-SPIface::SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq, bool extended)
+IfSPI::IfSPI(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq, bool extended)
 {
     _name = name;
     _pins[SPI_PIN_MISO] = miso;
@@ -22,47 +22,47 @@ SPIface::SPIface(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, ui
     _extended = extended;
 }
 
-void SPIface::setPin(SpiPin pin, uint8_t gpio)
+void IfSPI::setPin(SpiPin pin, uint8_t gpio)
 {
     _pins[pin] = gpio;
 }
 
-bool SPIface::getExtended() const
+bool IfSPI::getExtended() const
 {
     return _extended;
 }
 
-void SPIface::setExtended(bool state)
+void IfSPI::setExtended(bool state)
 {
     _extended = state;
 }
 
-uint8_t SPIface::getPin(SpiPin pin) const
+uint8_t IfSPI::getPin(SpiPin pin) const
 {
     return _pins[pin];
 }
 
-void SPIface::setFrequency(unsigned freq)
+void IfSPI::setFrequency(unsigned freq)
 {
     _freq = freq;
 }
 
-unsigned SPIface::getFrequency() const
+unsigned IfSPI::getFrequency() const
 {
     return _freq;
 }
 
-const String &SPIface::getName() const
+const String &IfSPI::getName() const
 {
     return _name;
 }
 
-void SPIface::setName(const String &name)
+void IfSPI::setName(const String &name)
 {
     _name = name;
 }
 
-IntType SPIface::getType() const
+IfType IfSPI::getType() const
 {
     return INT_TYPE_SPI;
 }

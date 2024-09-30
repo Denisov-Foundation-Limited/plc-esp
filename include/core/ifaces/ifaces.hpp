@@ -25,8 +25,7 @@ public:
     void addInterface(Interface *iface);
     Interface *getInterface(const String &name);
     const std::vector<Interface *> &getInterfaces() const;
-    void getInputs(std::vector<GPIOIface *> &inputs);
-    void getOutputs(std::vector<GPIOIface *> &outs);
+    void getInterfacesByType(std::vector<Interface *> &ifs, IfType type);
 
 private:
     std::vector<Interface *>  _ifaces;

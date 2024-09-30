@@ -91,21 +91,35 @@ void CLIInformerClass::showInterfaces()
     Serial.println(F("\t----------   --------   -----------   -------   -----   ----"));
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_GPIO) {
+        if (iface->getType() != INT_TYPE_GPIO && iface->getType() != INT_TYPE_DIGITAL_INPUT && iface->getType() != INT_TYPE_RELAY) {
             continue;
         }
 
-        auto gpio = static_cast<GPIOIface *>(iface);
+        auto gpio = static_cast<IfGPIO *>(iface);
 
-        String sType, sPull;
+        String sType, sMode, sPull;
+
+        switch (iface->getType()) {
+            case INT_TYPE_GPIO:
+                sType = F("GPIO");
+                break;
+
+            case INT_TYPE_DIGITAL_INPUT:
+                sType = F("Input");
+                break;
+            
+            case INT_TYPE_RELAY:
+                sType = F("Relay");
+                break;
+        }
 
         switch (gpio->getMode()) {
             case GPIO_MOD_INPUT:
-                sType = "Input";
+                sMode = "Input";
                 break;
 
             case GPIO_MOD_OUTPUT:
-                sType = "Output";
+                sMode = "Output";
                 break;
         }
 
@@ -124,7 +138,7 @@ void CLIInformerClass::showInterfaces()
         }
 
         Serial.printf("\t%-10s   %-8s   %-11d   %-7s   %-5s   %-8s\n",
-            gpio->getName().c_str(), F("GPIO"), gpio->getPin(), sType.c_str(),
+            gpio->getName().c_str(), sType.c_str(), gpio->getPin(), sMode.c_str(),
             sPull.c_str(),
             (gpio->getExtId() == EXT_NOT_USED) ? "CPU" : String(gpio->getExtId()).c_str());
     }
@@ -134,7 +148,7 @@ void CLIInformerClass::showInterfaces()
             continue;
         }
 
-        auto ow = static_cast<OneWireIface *>(iface);
+        auto ow = static_cast<IfOneWire *>(iface);
 
         Serial.printf("\t%-10s   %-8s   %-11d   %-7s   %-5s   %-8s\n",
             ow->getName().c_str(), F("OneWire"), ow->getPin(), F("N/S"),
@@ -146,7 +160,7 @@ void CLIInformerClass::showInterfaces()
             continue;
         }
 
-        auto i2c = static_cast<I2CIface *>(iface);
+        auto i2c = static_cast<IfI2C *>(iface);
 
         String sPins = String(i2c->getPin(I2C_PIN_SDA)) + "," +
                         String(i2c->getPin(I2C_PIN_SCL));
@@ -161,7 +175,7 @@ void CLIInformerClass::showInterfaces()
             continue;
         }
 
-        auto uart = static_cast<UARTIface *>(iface);
+        auto uart = static_cast<IfUART *>(iface);
 
         String sPins = String(uart->getPin(UART_PIN_RX)) + "," +
                         String(uart->getPin(UART_PIN_TX));
@@ -176,7 +190,7 @@ void CLIInformerClass::showInterfaces()
             continue;
         }
 
-        auto spi = static_cast<SPIface *>(iface);
+        auto spi = static_cast<IfSPI *>(iface);
 
         String sPins = String(spi->getPin(SPI_PIN_MISO)) + "," +
                         String(spi->getPin(SPI_PIN_MOSI))  + "," +
@@ -201,7 +215,7 @@ void CLIInformerClass::showInterfacesStatus()
             continue;
         }
 
-        auto gpio = static_cast<GPIOIface *>(iface);
+        auto gpio = static_cast<IfGPIO *>(iface);
 
         Serial.printf("\t%-20s   %-5s\n",
             gpio->getName().c_str(),
@@ -353,7 +367,7 @@ void CLIInformerClass::showOneWire()
         Serial.println(F("\tNum   Id"));
         Serial.println(F("\t---   ------------------"));
 
-        auto ow = static_cast<OneWireIface *>(iface);
+        auto ow = static_cast<IfOneWire *>(iface);
         std::vector<String> addrs;
         ow->findAddresses(addrs);
 
@@ -380,7 +394,7 @@ void CLIInformerClass::showI2C()
         Serial.println(F("\tNum   Address   Hex"));
         Serial.println(F("\t---   -------   -----"));
 
-        auto i2c = static_cast<I2CIface *>(iface);
+        auto i2c = static_cast<IfI2C *>(iface);
         std::vector<unsigned> devs;
         i2c->findDevices(devs);
 

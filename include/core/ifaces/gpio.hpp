@@ -30,10 +30,10 @@ typedef enum {
     GPIO_PULL_DOWN
 } GpioPull;
 
-class GPIOIface : public Interface
+class IfGPIO : public Interface
 {
 public:
-    GPIOIface(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended=false);
+    IfGPIO(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended=false);
     void setPin(uint8_t pin);
     void setPull(GpioPull pull);
     void setMode(GpioMode mode);
@@ -46,7 +46,7 @@ public:
     bool read();
     bool getState();
     const String &getName() const ;
-    IntType getType() const;
+    IfType getType() const;
     void setName(const String &name);
     bool getExtended() const;
     void setExtended(bool state);
@@ -59,6 +59,32 @@ private:
     ExtenderId  _extId;
     bool        _state = false;
     bool        _extended = false;
+};
+
+class IfDInput : public IfGPIO
+{
+public:
+    IfDInput(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended=false) :
+        IfGPIO(name, pin, mode, pull, extId, extended)
+    { }
+
+    IfType getType() const
+    {
+        return INT_TYPE_DIGITAL_INPUT;
+    }
+};
+
+class IfRelay : public IfGPIO
+{
+public:
+    IfRelay(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended=false) :
+        IfGPIO(name, pin, mode, pull, extId, extended)
+    { }
+
+    IfType getType() const
+    {
+        return INT_TYPE_RELAY;
+    }
 };
 
 #endif /* __GPIO_HPP__ */

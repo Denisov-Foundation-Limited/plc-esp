@@ -391,14 +391,14 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 
 void WebGUIClass::_helperSocketsPage()
 {
-    std::vector<GPIOIface *>    inputs;
-    std::vector<GPIOIface *>    outputs;
+    std::vector<Interface *> inputs;
+    std::vector<Interface *> outputs;
 
     auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
     _socket.curSock = sock->getSockets().size();
 
-    Interfaces.getOutputs(outputs);
-    Interfaces.getInputs(inputs);
+    Interfaces.getInterfacesByType(outputs, INT_TYPE_RELAY);
+    Interfaces.getInterfacesByType(inputs, INT_TYPE_DIGITAL_INPUT);
 
     _socket.curRly = outputs.size();
     _socket.curBtn = inputs.size();
@@ -460,13 +460,13 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
         if (b.beginGroup(F("Редактировать"))) {
             String                      sSockets = "";
             String                      sIn = "", sOut = "";
-            std::vector<GPIOIface *>    inputs;
-            std::vector<GPIOIface *>    outputs;
+            std::vector<Interface *>    inputs;
+            std::vector<Interface *>    outputs;
 
             auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
 
-            Interfaces.getOutputs(outputs);
-            Interfaces.getInputs(inputs);
+            Interfaces.getInterfacesByType(outputs, INT_TYPE_RELAY);
+            Interfaces.getInterfacesByType(inputs, INT_TYPE_DIGITAL_INPUT);
 
             for (size_t i = 0; i < sock->getSockets().size(); i++) {
                 sSockets += sock->getSockets()[i]->getName() + ";";
@@ -566,7 +566,7 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
     auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
     for (auto s : sock->getSockets()) {
-        if (b.beginGroup(F("Розетки"))) {
+        if (b.beginGroup(s->getName())) {
             b.LED(F("Статус"), s->getStatus());
             b.beginButtons();
             if (b.Button(su::SH(String("ctrl_sock_on_" + s->getName()).c_str()), F("Включить"))) {

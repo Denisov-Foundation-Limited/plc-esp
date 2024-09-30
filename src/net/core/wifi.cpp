@@ -43,12 +43,12 @@ const String &WirelessClass::getPasswd() const
     return _passwd;
 }
 
-GPIOIface *WirelessClass::getStatusLed() const
+IfGPIO *WirelessClass::getStatusLed() const
 {
     return _statusLed;
 }
 
-void WirelessClass::setStatusLed(GPIOIface *gpio)
+void WirelessClass::setStatusLed(IfGPIO *gpio)
 {
     _statusLed = gpio;
 }

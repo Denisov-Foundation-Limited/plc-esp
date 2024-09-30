@@ -19,16 +19,16 @@
 
 #include "core/ifaces/iface.hpp"
 
-class OneWireIface : public Interface
+class IfOneWire : public Interface
 {
 public:
-    OneWireIface(const String &name, uint8_t pin, bool extended=false);
+    IfOneWire(const String &name, uint8_t pin, bool extended=false);
     void setPin(uint8_t gpio);
     uint8_t getPin() const;
     const String &getName() const;
     void setName(const String &name);
     void findAddresses(std::vector<String> &addrs);
-    IntType getType() const;
+    IfType getType() const;
     bool getExtended() const;
     void setExtended(bool state);
 

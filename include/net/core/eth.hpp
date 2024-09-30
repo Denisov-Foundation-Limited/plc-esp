@@ -60,8 +60,8 @@ private:
     IPAddress   _addr[ETH_ADDR_MAX];
     byte        _mac[ETH_MAC_SIZE] = { 0 };
     bool        _dhcp = true;
-    SPIface     *_spi = nullptr;
-    GPIOIface   *_irq = nullptr;
+    IfSPI     *_spi = nullptr;
+    IfGPIO   *_irq = nullptr;
 };
 
 extern EthernetClass Ethernet;
