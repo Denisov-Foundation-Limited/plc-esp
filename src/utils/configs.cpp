@@ -145,6 +145,8 @@ bool ConfigsClass::showRunning()
 
 void ConfigsClass::_initInterfaces()
 {
+    Interface *iface = nullptr;
+
     Log.info(LOG_MOD_CFG, String(F("Selected board: ")) + String(ActiveBoard.name));
 
     /* Extenders */
@@ -157,7 +159,7 @@ void ConfigsClass::_initInterfaces()
 
     /* GPIO Interfaces */
 
-    for (auto gpio : ActiveBoard.gpio) {
+    for (auto gpio : ActiveBoard.interfaces.gpio) {
         if (gpio.pin == 0)
             break;
         Interfaces.addInterface(new GPIOIface(gpio.name, gpio.pin, static_cast<GpioMode>(gpio.mode),
@@ -166,7 +168,7 @@ void ConfigsClass::_initInterfaces()
 
     /* OneWire Interface */
 
-    for (auto ow : ActiveBoard.onewire) {
+    for (auto ow : ActiveBoard.interfaces.onewire) {
         if (ow.pin == 0)
             break;
         Interfaces.addInterface(new OneWireIface(ow.name, ow.pin));
@@ -174,7 +176,7 @@ void ConfigsClass::_initInterfaces()
 
     /* I2C Interface */
 
-    for (auto i2c : ActiveBoard.i2c) {
+    for (auto i2c : ActiveBoard.interfaces.i2c) {
         if (i2c.sda == 0)
             break;
         Interfaces.addInterface(new I2CIface(i2c.name, i2c.sda, i2c.scl));
@@ -182,7 +184,7 @@ void ConfigsClass::_initInterfaces()
 
     /* SPI Interface */
 
-    for (auto spi : ActiveBoard.spi) {
+    for (auto spi : ActiveBoard.interfaces.spi) {
         if (spi.miso == 0)
             break;
         Interfaces.addInterface(new SPIface(spi.name, spi.miso, spi.mosi, spi.sck, spi.ss, spi.freq));
@@ -190,11 +192,52 @@ void ConfigsClass::_initInterfaces()
 
     /* UART Interface */
 
-    for (auto uart : ActiveBoard.uart) {
+    for (auto uart : ActiveBoard.interfaces.uart) {
         if (uart.rx == 0)
             break;
         Interfaces.addInterface(new UARTIface(uart.name, uart.rx, uart.tx, uart.rate));
     }
+
+    /* Wi-Fi setup */
+
+    if ((iface = Interfaces.getInterface(ActiveBoard.net.led)) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface NET LED not found"));
+    }
+    Wireless.setStatusLed(static_cast<GPIOIface *>(iface));
+
+    /* PLC setup */
+
+    if ((iface = Interfaces.getInterface(ActiveBoard.plc.alarm)) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface PLC Alarm not found"));
+    }
+    Plc.setPin(PLC_GPIO_ALARM_LED, static_cast<GPIOIface *>(iface));
+    if ((iface = Interfaces.getInterface(ActiveBoard.plc.status)) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface PLC Status not found"));
+    }
+    Plc.setPin(PLC_GPIO_STATUS_LED, static_cast<GPIOIface *>(iface));
+    if ((iface = Interfaces.getInterface(ActiveBoard.plc.buzzer)) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface PLC Buzzer not found"));
+    }
+    Plc.setPin(PLC_GPIO_BUZZER, static_cast<GPIOIface *>(iface));
+
+    /* GSM Modem setup */
+
+    if ((iface = Interfaces.getInterface(ActiveBoard.net.gsm.uart)) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface GSM UART not found"));
+    }
+    GsmModem.setUart(static_cast<UARTIface *>(iface));
+
+    /* Ethernet MAC addr */
+
+    Ethernet.setMAC((byte *)ActiveBoard.net.ethernet.mac_addr);
+    if ((iface = Interfaces.getInterface(ActiveBoard.net.ethernet.spi)) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface Ethernet SPI not found"));
+    }
+    Ethernet.setInterface(ETH_IF_SPI, iface);
+    if ((iface = Interfaces.getInterface(ActiveBoard.net.ethernet.irq)) == nullptr) {
+        Log.warning(LOG_MOD_CFG, F("Interface Ethernet IRQ not found"));
+    }
+    Ethernet.setInterface(ETH_IF_IRQ, iface);
 }
 
 bool ConfigsClass::_printFile(const String &name)
@@ -220,53 +263,18 @@ bool ConfigsClass::_printFile(const String &name)
 
 bool ConfigsClass::_initDevice()
 {
-    Interface *iface = nullptr;
-
     Log.info(LOG_MOD_CFG, F("Configs not found. Init new device"));
-
-    /* GSM Modem setup */
-
-    if ((iface = Interfaces.getInterface("uart-gsm")) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface uart-gsm not found"));
-    }
-    GsmModem.setUart(static_cast<UARTIface *>(iface));
-
-    /* PLC setup */
-
-    if ((iface = Interfaces.getInterface("led-alrm")) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface led-alrm not found"));
-    }
-    Plc.setPin(PLC_GPIO_ALARM_LED, static_cast<GPIOIface *>(iface));
-    if ((iface = Interfaces.getInterface("led-sts")) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface led-sts not found"));
-    }
-    Plc.setPin(PLC_GPIO_STATUS_LED, static_cast<GPIOIface *>(iface));
-    if ((iface = Interfaces.getInterface("buzzer")) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface buzzer not found"));
-    }
-    Plc.setPin(PLC_GPIO_BUZZER, static_cast<GPIOIface *>(iface));
 
     /* Wi-Fi setup */
 
-    Wireless.setHostname(F("FCPLC"));
-    if ((iface = Interfaces.getInterface("led-net")) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface led-net not found"));
-    }
-    Wireless.setStatusLed(static_cast<GPIOIface *>(iface));
+    Wireless.setEnabled(ActiveBoard.net.wifi.enabled);
+    Wireless.setHostname(ActiveBoard.net.hostname);
+    Wireless.setCreds(ActiveBoard.net.wifi.ssid, ActiveBoard.net.wifi.passwd);
 
     /* Ethernet setup */
     
-    Ethernet.setEnabled(true);
-    Ethernet.setHostname(F("FCPLC"));
-    Ethernet.setMAC((byte *)ActiveBoard.mac_addr);
-    if ((iface = Interfaces.getInterface("spi-eth")) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface Ethernet SPI not found"));
-    }
-    Ethernet.setInterface(ETH_IF_SPI, iface);
-    if ((iface = Interfaces.getInterface("eth-irq")) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface Ethernet IRQ not found"));
-    }
-    Ethernet.setInterface(ETH_IF_IRQ, iface);
+    Ethernet.setEnabled(ActiveBoard.net.ethernet.enabled);
+    Ethernet.setHostname(F(ActiveBoard.net.hostname));
 
     /* TgBot setup */
 
@@ -354,31 +362,6 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     }
 
     /*
-     * PLC general configurations
-     */
-
-    pin = Interfaces.getInterface(doc[F("plc")][F("iface")][F("status")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_GPIO) {
-        Plc.setPin(PLC_GPIO_STATUS_LED, static_cast<GPIOIface *>(pin));
-    } else {
-        Log.warning(LOG_MOD_CFG, F("PLC status LED GPIO interface not found"));
-    }
-
-    pin = Interfaces.getInterface(doc[F("plc")][F("iface")][F("alarm")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_GPIO) {
-        Plc.setPin(PLC_GPIO_ALARM_LED, static_cast<GPIOIface *>(pin));
-    } else {
-        Log.warning(LOG_MOD_CFG, F("PLC alarm LED GPIO interface not found"));
-    }
-
-    pin = Interfaces.getInterface(doc[F("plc")][F("iface")][F("buzzer")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_GPIO) {
-        Plc.setPin(PLC_GPIO_BUZZER, static_cast<GPIOIface *>(pin));
-    } else {
-        Log.warning(LOG_MOD_CFG, F("PLC buzzer GPIO interface not found"));
-    }
-
-    /*
      * Network configurations
      */
 
@@ -393,18 +376,6 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         Ethernet.setAddress(ETH_ADDR_SUBNET, jeth[F("static")][F("subnet")]);
         Ethernet.setAddress(ETH_ADDR_GATEWAY, jeth[F("static")][F("gateway")]);
         Ethernet.setAddress(ETH_ADDR_DNS, jeth[F("static")][F("dns")]);
-    }
-    pin = Interfaces.getInterface(jeth[F("iface")][F("spi")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_SPI) {
-        Ethernet.setInterface(ETH_IF_SPI, pin);
-    } else {
-        Log.warning(LOG_MOD_CFG, F("Ethernet SPI interface not found"));
-    }
-    pin = Interfaces.getInterface(jeth[F("iface")][F("irq")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_GPIO) {
-        Ethernet.setInterface(ETH_IF_IRQ, pin);
-    } else {
-        Log.warning(LOG_MOD_CFG, F("Ethernet IRQ interface not found"));
     }
 
     auto jwifi = jnet[F("wifi")];
@@ -507,9 +478,6 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
     auto jplc = doc[F("plc")];
     jplc[F("name")] = Plc.getName();
-    jplc[F("iface")][F("alarm")] = (Plc.getPin(PLC_GPIO_ALARM_LED) == nullptr) ? "" : Plc.getPin(PLC_GPIO_ALARM_LED)->getName();
-    jplc[F("iface")][F("status")] = (Plc.getPin(PLC_GPIO_STATUS_LED) == nullptr) ? "" : Plc.getPin(PLC_GPIO_STATUS_LED)->getName();
-    jplc[F("iface")][F("buzzer")] = (Plc.getPin(PLC_GPIO_BUZZER) == nullptr) ? "" : Plc.getPin(PLC_GPIO_BUZZER)->getName();
 
     /*
      * Network configurations
@@ -526,8 +494,6 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         jeth[F("static")][F("gateway")] = Ethernet.getAddress(ETH_ADDR_GATEWAY).toString();
         jeth[F("static")][F("dns")] = Ethernet.getAddress(ETH_ADDR_DNS).toString();
     }
-    jeth[F("iface")][F("spi")] = (Ethernet.getInterface(ETH_IF_SPI) == nullptr) ? "" : Ethernet.getInterface(ETH_IF_SPI)->getName();
-    jeth[F("iface")][F("irq")] = (Ethernet.getInterface(ETH_IF_IRQ) == nullptr) ? "" : Ethernet.getInterface(ETH_IF_IRQ)->getName();
 
     auto jwifi = jnet[F("wifi")];
     jwifi[F("enabled")] = Wireless.getEnabled();
@@ -535,7 +501,6 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     jwifi[F("ssid")] = Wireless.getSSID();
     jwifi[F("passwd")] = Wireless.getPasswd();
     jwifi[F("ap")] = Wireless.getAP();
-    jwifi[F("iface")] = (Wireless.getStatusLed() == nullptr) ? "" : Wireless.getStatusLed()->getName();
 
     /*
      * GSM modem configurations
@@ -543,7 +508,6 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
     auto jgsm = doc[F("gsm")];
     jgsm[F("enabled")] = GsmModem.getEnabled();
-    jgsm[F("iface")] = (GsmModem.getUart() == nullptr) ? "" : GsmModem.getUart()->getName();
 
     /*
      * Extenders configurations

@@ -64,15 +64,51 @@ typedef struct {
 } ProfSPI;
 
 typedef struct {
-    const char      *name;
-    unsigned        serial_rate;
-    unsigned        mac_addr[6];
-    ProfExtender    extenders[8];
     ProfGpio        gpio[32];
     ProfOneWire     onewire[4];
     ProfUART        uart[4];
     ProfI2C         i2c[2];
     ProfSPI         spi[4];
+} ProfInterfaces;
+
+typedef struct {
+    bool        enabled;
+    const char  *ssid;
+    const char  *passwd;
+} ProfWiFi;
+
+typedef struct {
+    bool        enabled;
+    unsigned    mac_addr[6];
+    const char  *spi;
+    const char  *irq;
+} ProfEthernet;
+
+typedef struct {
+    const char  *uart;
+} ProfGSM;
+
+typedef struct {
+    const char      *hostname;
+    const char      *led;
+    ProfWiFi        wifi;
+    ProfEthernet    ethernet;
+    ProfGSM         gsm;
+} ProfNetwork;
+
+typedef struct {
+    const char  *status;
+    const char  *alarm;
+    const char  *buzzer;
+} ProfPLC;
+
+typedef struct {
+    const char      *name;
+    unsigned        serial_rate;
+    ProfExtender    extenders[8];
+    ProfInterfaces  interfaces;
+    ProfNetwork     net;
+    ProfPLC         plc;
 } BoardProfile;
 
 #endif /* __PROFILE_HPP__ */

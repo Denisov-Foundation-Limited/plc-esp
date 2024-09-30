@@ -52,7 +52,7 @@ private:
     GPIOIface  *_statusLed = nullptr;
     bool        _enabled = false;
     bool        _ap = true;
-    wl_status_t _status = WL_DISCONNECTED;
+    wl_status_t _status = WL_NO_SHIELD;
     unsigned    _timer = 0;
 
     void statusTask();

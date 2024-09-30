@@ -20,7 +20,6 @@
 
 WirelessClass::WirelessClass()
 {
-    _ssid = F("FutCityPLC");
 }
 
 void WirelessClass::setCreds(const String &ssid, const String &passwd)
@@ -100,15 +99,18 @@ void WirelessClass::begin()
         WiFi.mode(WIFI_STA);
         WiFi.begin(_ssid, _passwd);
     } else {
-        Log.info(LOG_MOD_WIFI, F("Starting Wi-Fi AP"));
+        Log.info(LOG_MOD_WIFI, String(F("Starting Wi-Fi AP: ")) + _ssid);
         WiFi.mode(WIFI_AP);
         WiFi.softAP(_ssid, _passwd);
         Plc.setAlarm(PLC_MOD_WIFI, false);
+        Log.info(LOG_MOD_WIFI, String(F("IP address: ")) + getIP());
     }
 }
 
 void WirelessClass::loop()
 {
+    if (!_enabled) return;
+
     if (millis() - _timer >= WIFI_DELAY_MS) {
         _timer = millis();
         statusTask();
@@ -123,7 +125,7 @@ void WirelessClass::loop()
 
 void WirelessClass::statusTask()
 {
-    if ((WiFi.status() != _status) && (!_ap)) {
+    if (WiFi.status() != _status) {
         _status = WiFi.status();
 
         switch (_status)
@@ -142,6 +144,9 @@ void WirelessClass::statusTask()
             break;
 
         case WL_IDLE_STATUS:
+            break;
+
+        case WL_NO_SHIELD:
             break;
 
         case WL_NO_SSID_AVAIL:
