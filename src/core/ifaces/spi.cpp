@@ -64,5 +64,5 @@ void IfSPI::setName(const String &name)
 
 IfType IfSPI::getType() const
 {
-    return INT_TYPE_SPI;
+    return IF_TYPE_SPI;
 }

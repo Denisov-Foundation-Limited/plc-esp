@@ -23,6 +23,7 @@
 #include "controllers/meteo/sensors/ds18b20.hpp"
 #include "controllers/ctrls.hpp"
 #include "net/core/eth.hpp"
+#include "controllers/socket/socket.hpp"
 
 #include <LittleFS.h>
 #include <SD.h>
@@ -219,29 +220,29 @@ void ConfigsClass::_initInterfaces()
     /* Wi-Fi setup */
 
     if ((iface = Interfaces.getInterface(ActiveBoard.net.led)) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface NET LED not found"));
+        if (ActiveBoard.net.led != "") { Log.error(LOG_MOD_CFG, F("Interface NET LED not found")); }
     }
     Wireless.setStatusLed(static_cast<IfGPIO *>(iface));
 
     /* PLC setup */
 
     if ((iface = Interfaces.getInterface(ActiveBoard.plc.alarm)) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface PLC Alarm not found"));
+        if (ActiveBoard.plc.alarm != "") { Log.error(LOG_MOD_CFG, F("Interface PLC Alarm not found")); }
     }
     Plc.setPin(PLC_GPIO_ALARM_LED, static_cast<IfGPIO *>(iface));
     if ((iface = Interfaces.getInterface(ActiveBoard.plc.status)) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface PLC Status not found"));
+        if (ActiveBoard.plc.status != "") { Log.error(LOG_MOD_CFG, F("Interface PLC Status not found")); }
     }
     Plc.setPin(PLC_GPIO_STATUS_LED, static_cast<IfGPIO *>(iface));
     if ((iface = Interfaces.getInterface(ActiveBoard.plc.buzzer)) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface PLC Buzzer not found"));
+        if (ActiveBoard.plc.buzzer != "") { Log.warning(LOG_MOD_CFG, F("Interface PLC Buzzer not found")); }
     }
     Plc.setPin(PLC_GPIO_BUZZER, static_cast<IfGPIO *>(iface));
 
     /* GSM Modem setup */
 
     if ((iface = Interfaces.getInterface(ActiveBoard.net.gsm.uart)) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface GSM UART not found"));
+        if (ActiveBoard.net.gsm.uart != "") { Log.error(LOG_MOD_CFG, F("Interface GSM UART not found")); }
     }
     GsmModem.setUart(static_cast<IfUART *>(iface));
 
@@ -249,11 +250,11 @@ void ConfigsClass::_initInterfaces()
 
     Ethernet.setMAC((byte *)ActiveBoard.net.ethernet.mac_addr);
     if ((iface = Interfaces.getInterface(ActiveBoard.net.ethernet.spi)) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface Ethernet SPI not found"));
+        if (ActiveBoard.net.ethernet.spi != "") { Log.error(LOG_MOD_CFG, F("Interface Ethernet SPI not found")); }
     }
     Ethernet.setInterface(ETH_IF_SPI, iface);
     if ((iface = Interfaces.getInterface(ActiveBoard.net.ethernet.irq)) == nullptr) {
-        Log.warning(LOG_MOD_CFG, F("Interface Ethernet IRQ not found"));
+        if (ActiveBoard.net.ethernet.irq != "") { Log.warning(LOG_MOD_CFG, F("Interface Ethernet IRQ not found")); }
     }
     Ethernet.setInterface(ETH_IF_IRQ, iface);
 }
@@ -407,7 +408,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     Wireless.setHostname(jwifi[F("hostname")]);
     Wireless.setAP(jwifi[F("ap")]);
     pin = Interfaces.getInterface(jwifi[F("iface")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_GPIO) {
+    if (pin != nullptr && pin->getType() == IF_TYPE_GPIO) {
         Wireless.setStatusLed(static_cast<IfGPIO *>(pin));
     } else {
         Log.warning(LOG_MOD_CFG, F("WiFi status led GPIO interface not found"));
@@ -420,7 +421,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
      */
 
     pin = Interfaces.getInterface(doc[F("gsm")][F("iface")]);
-    if (pin != nullptr && pin->getType() == INT_TYPE_UART) {
+    if (pin != nullptr && pin->getType() == IF_TYPE_UART) {
         GsmModem.setUart(static_cast<IfUART *>(pin));
     } else {
         Log.warning(LOG_MOD_CFG, F("GsmModem UART interface not found"));
@@ -464,7 +465,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         if (jctrl[F("type")] == "meteo") {
             auto *meteo = new MeteoCtrl(jctrl[F("name")].as<String>());
             auto *iface = Interfaces.getInterface(jctrl[F("ow")]);
-            if (iface != nullptr && iface->getType() == INT_TYPE_OW) {
+            if (iface != nullptr && iface->getType() == IF_TYPE_OW) {
                 meteo->setOneWire(static_cast<IfOneWire *>(iface));
             } else {
                 Log.warning(LOG_MOD_CFG, String(F("Meteo controller ")) +
@@ -482,7 +483,31 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             meteo->setEnabled(jctrl[F("enabled")]);
             Controllers.addController(meteo);
         } else if (jctrl[F("type")] == "socket") {
-            
+            auto *socket = new SocketCtrl(jctrl[F("name")].as<String>());
+            JsonArray jsock = jctrl[F("sockets")];
+            for (auto js : jsock) {
+                auto s = new Socket(js[F("name")].as<String>());
+
+                auto *iface = Interfaces.getInterface(js[F("relay")]);
+                if (iface != nullptr) {
+                    s->setInterface(SOCK_IF_RELAY, iface);
+                } else {
+                    if (js[F("relay")] != "") {
+                        Log.error(LOG_MOD_CFG, String(F("Socket interface not found Relay: ")) + js[F("relay")].as<String>());
+                    }
+                }
+                iface = Interfaces.getInterface(js[F("button")]);
+                if (iface != nullptr) {
+                    s->setInterface(SOCK_IF_BUTTON, iface);
+                } else {
+                    if (js[F("button")] != "") {
+                        Log.error(LOG_MOD_CFG, String(F("Socket interface not found Button: ")) + js[F("button")].as<String>());
+                    }
+                }
+                socket->addSocket(s);
+            }
+            socket->setEnabled(jctrl[F("enabled")]);
+            Controllers.addController(socket);
         } else if (jctrl[F("type")] == "security") {
             
         } else if (jctrl[F("type")] == "tank") {
@@ -560,36 +585,36 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         jifaces[i][F("name")] = p->getName();
 
         switch (p->getType()) {
-            case INT_TYPE_GPIO:
+            case IF_TYPE_GPIO:
                 jifaces[i][F("type")] = F("gpio");
                 break;
 
-            case INT_TYPE_OW:
+            case IF_TYPE_OW:
                 jifaces[i][F("type")] = F("ow");
                 break;
 
-            case INT_TYPE_I2C:
+            case IF_TYPE_I2C:
                 jifaces[i][F("type")] = F("i2c");
                 break;
 
-            case INT_TYPE_SPI:
+            case IF_TYPE_SPI:
                 jifaces[i][F("type")] = F("spi");
                 break;
 
-            case INT_TYPE_UART:
+            case IF_TYPE_UART:
                 jifaces[i][F("type")] = F("uart");
                 break;
 
-            case INT_TYPE_RELAY:
+            case IF_TYPE_RELAY:
                 jifaces[i][F("type")] = F("relay");
                 break;
 
-            case INT_TYPE_DIGITAL_INPUT:
+            case IF_TYPE_DIGITAL_INPUT:
                 jifaces[i][F("type")] = F("input");
                 break;
         }
 
-        if (p->getType() == INT_TYPE_GPIO || p->getType() == INT_TYPE_RELAY || p->getType() == INT_TYPE_DIGITAL_INPUT) {
+        if (p->getType() == IF_TYPE_GPIO || p->getType() == IF_TYPE_RELAY || p->getType() == IF_TYPE_DIGITAL_INPUT) {
             auto gpio = static_cast<IfGPIO *>(p);
             jifaces[i][F("pin")] = gpio->getPin();
             switch (gpio->getMode()) {
@@ -615,21 +640,21 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
                     break;
             }
             jifaces[i][F("ext")] = gpio->getExtId();
-        } else if (p->getType() == INT_TYPE_SPI) {
+        } else if (p->getType() == IF_TYPE_SPI) {
             auto spi = static_cast<IfSPI *>(p);
             jifaces[i][F("miso")] = spi->getPin(SPI_PIN_MISO);
             jifaces[i][F("mosi")] = spi->getPin(SPI_PIN_MOSI);
             jifaces[i][F("sck")] = spi->getPin(SPI_PIN_SCK);
             jifaces[i][F("ss")] = spi->getPin(SPI_PIN_SS);
             jifaces[i][F("freq")] = spi->getFrequency();
-        } else if (p->getType() == INT_TYPE_OW) {
+        } else if (p->getType() == IF_TYPE_OW) {
             auto ow = static_cast<IfOneWire *>(p);
             jifaces[i][F("pin")] = ow->getPin();
-        } else if (p->getType() == INT_TYPE_I2C) {
+        } else if (p->getType() == IF_TYPE_I2C) {
             auto i2c = static_cast<IfI2C *>(p);
             jifaces[i][F("sda")] = i2c->getPin(I2C_PIN_SDA);
             jifaces[i][F("scl")] = i2c->getPin(I2C_PIN_SCL);
-        } else if (p->getType() == INT_TYPE_UART) {
+        } else if (p->getType() == IF_TYPE_UART) {
             auto uart = static_cast<IfUART *>(p);
             jifaces[i][F("rx")] = uart->getPin(UART_PIN_RX);
             jifaces[i][F("tx")] = uart->getPin(UART_PIN_TX);
@@ -703,6 +728,18 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     for (auto *c : Controllers.getControllers()) {
         if (c->getType() != CTRL_TYPE_SOCKET) {
             continue;
+        }
+        auto *socket = static_cast<SocketCtrl *>(c);
+        jctrls[i][F("name")] = socket->getName();
+        jctrls[i][F("type")] = F("socket");
+        jctrls[i][F("enabled")] = socket->getEnabled();
+        unsigned j = 0;
+        auto jsocks = jctrls[i][F("sockets")];
+        for (auto *s : socket->getSockets()) {
+            jsocks[j][F("name")] = s->getName();
+            jsocks[j][F("relay")] = (s->getInterface(SOCK_IF_RELAY) == nullptr) ? "" : s->getInterface(SOCK_IF_RELAY)->getName();
+            jsocks[j][F("button")] = (s->getInterface(SOCK_IF_BUTTON) == nullptr) ? "" : s->getInterface(SOCK_IF_BUTTON)->getName();
+            j++;
         }
         i++;
     }

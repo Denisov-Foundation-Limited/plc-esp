@@ -57,7 +57,7 @@ void IfUART::setRate(unsigned rate)
 
 IfType IfUART::getType() const
 {
-    return INT_TYPE_UART;
+    return IF_TYPE_UART;
 }
 
 void IfUART::setName(const String &name)

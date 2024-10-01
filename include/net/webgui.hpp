@@ -24,7 +24,8 @@ typedef enum {
     WEB_PAGE_TELEGRAM,
     WEB_PAGE_CONTROLLERS,
     WEB_PAGE_SOCKETS,
-    WEB_PAGE_SETTINGS
+    WEB_PAGE_SETTINGS,
+    WEB_PAGE_SYSTEM
 } WebGuiPage;
 
 class WebGUIClass : public SettingsAsync
@@ -39,7 +40,16 @@ private:
     String      _password = "";
     WebGuiPage  _curPage = WEB_PAGE_MAIN;
 
-    TgUser      _newTgUser;
+    struct {
+        String      AddName;
+        String      NewName;
+        String      EdName;
+        unsigned    chatID;
+        bool        Admin;
+        bool        Notify;
+        String      Error;
+        unsigned    curUser;
+    } _tgUser;
 
     struct {
         String      Name;
@@ -53,8 +63,7 @@ private:
         String  EdName;
         String  Button;
         String  Relay;
-        String  EdError;
-        String  AddError;
+        String  Error;
         size_t  curRly;
         size_t  curBtn;
         size_t  curSock;

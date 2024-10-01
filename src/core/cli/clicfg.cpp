@@ -89,7 +89,7 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
             return true;
         }
 
-        if (iface->getType() != INT_TYPE_GPIO) {
+        if (iface->getType() != IF_TYPE_GPIO) {
             Log.error(LOG_MOD_CLI, "Interface is not GPIO");
             return true;
         }
@@ -219,26 +219,26 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
     if (cmd == "?" || cmd == "help") {
         Serial.println(    F("\nInterface configurations commands:"));
         Serial.println(    F("\tname <string>       : name for Interface"));
-        if (iface->getType() == INT_TYPE_GPIO || iface->getType() == INT_TYPE_OW) {
+        if (iface->getType() == IF_TYPE_GPIO || iface->getType() == IF_TYPE_OW) {
             Serial.println(F("\tpin <integer>       : Setup pin for GPIO/OneWire interface"));
         }
-        if (iface->getType() == INT_TYPE_GPIO) {
+        if (iface->getType() == IF_TYPE_GPIO) {
             Serial.println(F("\tmode <input/output> : Setup mode for GPIO interface"));
             Serial.println(F("\tpull <none/up/down> : Setup pull for GPIO interface"));
             Serial.println(F("\text <integer>       : Setup extender for GPIO interface"));
         }
-        if (iface->getType() == INT_TYPE_I2C) {
+        if (iface->getType() == IF_TYPE_I2C) {
             Serial.println(F("\tsda <integer>       : Setup SDA pin for I2C interface"));
             Serial.println(F("\tscl <integer>       : Setup SCL pin for I2C interface"));
         }
-        if (iface->getType() == INT_TYPE_SPI) {
+        if (iface->getType() == IF_TYPE_SPI) {
             Serial.println(F("\tmiso <integer>      : Setup MISO pin for SPI interface"));
             Serial.println(F("\tmosi <integer>      : Setup MOSI pin for SPI interface"));
             Serial.println(F("\tsck <integer>       : Setup SCK pin for SPI interface"));
             Serial.println(F("\tss <integer>        : Setup SS pin for SPI interface"));
             Serial.println(F("\tfreq <integer>      : Setup Frequency for SPI interface"));
         }
-        if (iface->getType() == INT_TYPE_UART) {
+        if (iface->getType() == IF_TYPE_UART) {
             Serial.println(F("\trx <integer>        : Setup RX pin for UART interface"));
             Serial.println(F("\ttx <integer>        : Setup TX pin for UART interface"));
             Serial.println(F("\tctrl <integer>      : Setup CTRL pin for UART interface"));
@@ -258,7 +258,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
     }
 
     switch (iface->getType()) {
-        case INT_TYPE_GPIO:
+        case IF_TYPE_GPIO:
             {
                 auto gpio = static_cast<IfGPIO *>(iface);
                 if (cmd.indexOf("pin ") >= 0) {
@@ -328,7 +328,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
             }
             break;
 
-        case INT_TYPE_OW:
+        case IF_TYPE_OW:
             {
                 auto ow = static_cast<IfOneWire *>(iface);
                 if (cmd.indexOf("pin ") >= 0) {
@@ -342,7 +342,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
             }
             break;
 
-        case INT_TYPE_I2C:
+        case IF_TYPE_I2C:
             {
                 auto i2c = static_cast<IfI2C *>(iface);
                 if (cmd.indexOf("sda ") >= 0) {
@@ -363,7 +363,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
             }
             break;
 
-        case INT_TYPE_SPI:
+        case IF_TYPE_SPI:
             {
                 auto spi = static_cast<IfSPI *>(iface);
                 if (cmd.indexOf("miso ") >= 0) {
@@ -398,7 +398,7 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
             }
             break;
 
-        case INT_TYPE_UART:
+        case IF_TYPE_UART:
             {
                 auto uart = static_cast<IfUART *>(iface);
                 if (cmd.indexOf("rx ") >= 0) {
@@ -717,7 +717,7 @@ bool CLIConfiguratorClass::configMeteoCtrl(const String &name, const String &cmd
 
         value.remove(0, 3);
         auto iface = Interfaces.getInterface(value);
-        if ((iface == nullptr) || (iface->getType() != INT_TYPE_OW)) {
+        if ((iface == nullptr) || (iface->getType() != IF_TYPE_OW)) {
             return false;
         }
         meteo->setOneWire(static_cast<IfOneWire *>(iface));

@@ -70,7 +70,7 @@ public:
 
     IfType getType() const
     {
-        return INT_TYPE_DIGITAL_INPUT;
+        return IF_TYPE_DIGITAL_INPUT;
     }
 };
 
@@ -83,7 +83,7 @@ public:
 
     IfType getType() const
     {
-        return INT_TYPE_RELAY;
+        return IF_TYPE_RELAY;
     }
 };
 

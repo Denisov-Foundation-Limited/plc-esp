@@ -163,5 +163,5 @@ ExtenderId IfGPIO::getExtId() const
 
 IfType IfGPIO::getType() const
 {
-    return INT_TYPE_GPIO;
+    return IF_TYPE_GPIO;
 }

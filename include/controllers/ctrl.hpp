@@ -15,10 +15,10 @@
 #include <Arduino.h>
 
 typedef enum {
+    CTRL_TYPE_SOCKET,
     CTRL_TYPE_METEO,
     CTRL_TYPE_SECURITY,
-    CTRL_TYPE_TANK,
-    CTRL_TYPE_SOCKET
+    CTRL_TYPE_TANK
 } CtrlType;
 
 class Controller

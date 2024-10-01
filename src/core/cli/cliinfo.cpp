@@ -91,7 +91,7 @@ void CLIInformerClass::showInterfaces()
     Serial.println(F("\t----------   --------   -----------   -------   -----   ----"));
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_GPIO && iface->getType() != INT_TYPE_DIGITAL_INPUT && iface->getType() != INT_TYPE_RELAY) {
+        if (iface->getType() != IF_TYPE_GPIO && iface->getType() != IF_TYPE_DIGITAL_INPUT && iface->getType() != IF_TYPE_RELAY) {
             continue;
         }
 
@@ -100,15 +100,15 @@ void CLIInformerClass::showInterfaces()
         String sType, sMode, sPull;
 
         switch (iface->getType()) {
-            case INT_TYPE_GPIO:
+            case IF_TYPE_GPIO:
                 sType = F("GPIO");
                 break;
 
-            case INT_TYPE_DIGITAL_INPUT:
+            case IF_TYPE_DIGITAL_INPUT:
                 sType = F("Input");
                 break;
             
-            case INT_TYPE_RELAY:
+            case IF_TYPE_RELAY:
                 sType = F("Relay");
                 break;
         }
@@ -144,7 +144,7 @@ void CLIInformerClass::showInterfaces()
     }
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_OW) {
+        if (iface->getType() != IF_TYPE_OW) {
             continue;
         }
 
@@ -156,7 +156,7 @@ void CLIInformerClass::showInterfaces()
     }
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_I2C) {
+        if (iface->getType() != IF_TYPE_I2C) {
             continue;
         }
 
@@ -171,7 +171,7 @@ void CLIInformerClass::showInterfaces()
     }
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_UART) {
+        if (iface->getType() != IF_TYPE_UART) {
             continue;
         }
 
@@ -186,7 +186,7 @@ void CLIInformerClass::showInterfaces()
     }
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_SPI) {
+        if (iface->getType() != IF_TYPE_SPI) {
             continue;
         }
 
@@ -211,7 +211,7 @@ void CLIInformerClass::showInterfacesStatus()
     Serial.println(F("\t----------   -----"));
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_GPIO) {
+        if (iface->getType() != IF_TYPE_GPIO) {
             continue;
         }
 
@@ -359,7 +359,7 @@ void CLIInformerClass::showOneWire()
     Serial.println("");
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_OW) {
+        if (iface->getType() != IF_TYPE_OW) {
             continue;
         }
 
@@ -386,7 +386,7 @@ void CLIInformerClass::showI2C()
 
     Serial.println("");
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != INT_TYPE_I2C) {
+        if (iface->getType() != IF_TYPE_I2C) {
             continue;
         }
 

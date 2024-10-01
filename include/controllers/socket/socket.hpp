@@ -38,8 +38,8 @@ public:
     void begin();
     void loop();
     void readButton();
-    void setGpio(SockIfType type, Interface *iface);
-    Interface *getGpio(SockIfType type) const;
+    void setInterface(SockIfType type, Interface *iface);
+    Interface *getInterface(SockIfType type) const;
 
 private:
     String      _name;
@@ -69,7 +69,7 @@ private:
     std::vector<Socket *>   _sockets;
     bool                    _reading = false;
     unsigned                _timer;
-    unsigned                _curSocket;
+    unsigned                _curSocket = 0;
     bool                    _enabled;
     String                  _name;
 };

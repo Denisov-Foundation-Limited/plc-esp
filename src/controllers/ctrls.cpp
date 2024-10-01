@@ -10,6 +10,7 @@
 /**********************************************************************/
 
 #include "controllers/ctrls.hpp"
+#include "utils/log.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -19,6 +20,7 @@
 
 void ControllersClass::addController(Controller *ctrl)
 {
+    Log.info(LOG_MOD_CTRLS, String(F("Add controller: ")) + ctrl->getName());
     _ctrls.push_back(ctrl);
 }
 
@@ -49,6 +51,7 @@ Controller *ControllersClass::getController(const String &name)
 
 void ControllersClass::begin()
 {
+    Log.info(LOG_MOD_CTRLS, F("Starting controllers"));
     for (auto c : _ctrls) {
         c->begin();
     }

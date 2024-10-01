@@ -16,31 +16,31 @@ void InterfacesClass::addInterface(Interface *iface)
     String sType;
 
     switch (iface->getType()) {
-        case INT_TYPE_GPIO:
+        case IF_TYPE_GPIO:
             sType = F("GPIO");
             break;
 
-        case INT_TYPE_SPI:
+        case IF_TYPE_SPI:
             sType = F("SPI");
             break;
 
-        case INT_TYPE_I2C:
+        case IF_TYPE_I2C:
             sType = F("I2C");
             break;
 
-        case INT_TYPE_OW:
+        case IF_TYPE_OW:
             sType = F("OneWire");
             break;
 
-        case INT_TYPE_UART:
+        case IF_TYPE_UART:
             sType = F("UART");
             break;
 
-        case INT_TYPE_RELAY:
+        case IF_TYPE_RELAY:
             sType = F("Relay");
             break;
 
-        case INT_TYPE_DIGITAL_INPUT:
+        case IF_TYPE_DIGITAL_INPUT:
             sType = F("DigitalInput");
             break;
     }

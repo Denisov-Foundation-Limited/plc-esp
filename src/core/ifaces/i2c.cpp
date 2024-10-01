@@ -59,7 +59,7 @@ void IfI2C::setExtended(bool state)
 
 IfType IfI2C::getType() const
 {
-    return INT_TYPE_I2C;
+    return IF_TYPE_I2C;
 }
 
 void IfI2C::setName(const String &name)

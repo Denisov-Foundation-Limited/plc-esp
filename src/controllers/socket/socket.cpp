@@ -67,12 +67,12 @@ void Socket::readButton()
     }
 }
 
-void Socket::setGpio(SockIfType type, Interface *iface)
+void Socket::setInterface(SockIfType type, Interface *iface)
 {
     _gpio[type] = static_cast<IfGPIO *>(iface);
 }
 
-Interface *Socket::getGpio(SockIfType type) const
+Interface *Socket::getInterface(SockIfType type) const
 {
     return _gpio[type];
 }
@@ -84,6 +84,7 @@ SocketCtrl::SocketCtrl(const String &name)
 
 void SocketCtrl::addSocket(Socket *sock)
 {
+    Log.info(LOG_MOD_SOCKET, String(F("Add socket: ")) + sock->getName());
     _sockets.push_back(sock);
 }
 
@@ -123,6 +124,7 @@ void SocketCtrl::begin()
 void SocketCtrl::loop()
 {
     if (!_enabled) return;
+    if (_sockets.size() == 0) return;
 
     for (auto s : _sockets) {
         s->loop();
@@ -134,8 +136,9 @@ void SocketCtrl::loop()
             _reading = false;
             _timer = millis();
             _curSocket = 0;
+        } else {
+            _curSocket++;
         }
-        _curSocket++;
     } else {
         if ((millis() - _timer) >= SOCKET_BUTTON_READ_MS) {
             _reading = true;

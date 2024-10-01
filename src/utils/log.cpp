@@ -51,62 +51,70 @@ void LogClass::_logging(LogType type, LogModule mod, const String &msg)
     switch (type)
     {
     case LOG_TYPE_ERROR:
-        sType = "ERROR";
+        sType = F("ERROR");
         break;
     
     case LOG_TYPE_INFO:
-        sType = "INFO";
+        sType = F("INFO");
         break;
 
     case LOG_TYPE_WARNING:
-        sType = "WARN";
+        sType = F("WARN");
         break;
     }
 
     switch (mod)
     {
     case LOG_MOD_CFG:
-        sMod = "CONFIGS";
+        sMod = F("CONFIGS");
         break;
 
     case LOG_MOD_MAIN:
-        sMod = "MAIN";
+        sMod = F("MAIN");
         break;
 
     case LOG_MOD_GPIO:
-        sMod = "GPIO";
+        sMod = F("GPIO");
         break;
 
     case LOG_MOD_GSM:
-        sMod = "GSM";
+        sMod = F("GSM");
         break;
 
     case LOG_MOD_WIFI:
-        sMod = "WIFI";
+        sMod = F("WIFI");
         break;
 
     case LOG_MOD_CLI:
-        sMod = "CLI";
+        sMod = F("CLI");
         break;
 
     case LOG_MOD_IFACES:
-        sMod = "IFACE";
+        sMod = F("IFACE");
         break;
 
     case LOG_MOD_TG:
-        sMod = "TGBOT";
+        sMod = F("TGBOT");
         break;
 
     case LOG_MOD_WEB:
-        sMod = "WEB";
+        sMod = F("WEB");
         break;
 
     case LOG_MOD_METEO:
-        sMod = "METEO";
+        sMod = F("METEO");
         break;
 
     case LOG_MOD_ETH:
         sMod = F("ETHERNET");
+        break;
+
+    case LOG_MOD_CTRLS:
+        sMod = F("CTRLS");
+        break;
+
+    case LOG_MOD_SOCKET:
+        sMod = F("SOCKET");
         break;
     }
 

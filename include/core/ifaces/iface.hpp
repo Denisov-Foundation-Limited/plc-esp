@@ -15,13 +15,13 @@
 #include <Arduino.h>
 
 typedef enum {
-    INT_TYPE_GPIO,
-    INT_TYPE_SPI,
-    INT_TYPE_I2C,
-    INT_TYPE_OW,
-    INT_TYPE_UART,
-    INT_TYPE_RELAY,
-    INT_TYPE_DIGITAL_INPUT
+    IF_TYPE_GPIO,
+    IF_TYPE_SPI,
+    IF_TYPE_I2C,
+    IF_TYPE_OW,
+    IF_TYPE_UART,
+    IF_TYPE_RELAY,
+    IF_TYPE_DIGITAL_INPUT
 } IfType;
 
 class Interface

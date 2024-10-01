@@ -73,5 +73,5 @@ void IfOneWire::findAddresses(std::vector<String> &addrs)
 
 IfType IfOneWire::getType() const
 {
-    return INT_TYPE_OW;
+    return IF_TYPE_OW;
 }

@@ -89,6 +89,11 @@ bool TgBotClass::removeUser(const String &name)
     return false;
 }
 
+unsigned TgBotClass::getLastID() const
+{
+    return _lastID;
+}
+
 /*********************************************************************/
 /*                                                                   */
 /*                          PRIVATE FUNCTIONS                         */
@@ -164,6 +169,8 @@ void TgBotClass::_updateHandler(fb::Update& upd)
     auto id = upd.message().from().id().toInt32();
     auto user = getUser(id);
     auto msg = upd.message().text().decodeUnicode();
+
+    _lastID = id;
 
     if (user == nullptr) {
         fb::Message msg;

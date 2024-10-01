@@ -62,12 +62,14 @@ public:
     TgUser *getUser(unsigned chatId);
     bool removeUser(const String &name);
     const std::vector<TgUser *> &getUsers();
+    unsigned getLastID() const;
     void begin();
     void loop();
 
 private:
     std::vector<TgUser *>   _users;
     bool                    _enabled = false;
+    unsigned                _lastID = 0;
 
     void _backMenu(TgUser *user);
     bool _processLevel(TgUser *user, const String &msg);
