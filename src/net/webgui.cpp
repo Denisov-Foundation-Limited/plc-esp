@@ -464,12 +464,18 @@ void WebGUIClass::_helperSocketsPage()
 void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
 {
     auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+
     _helperSocketsPage();
+
     upd.update("ctrl_sock_sel"_h, String(_socket.curSock));
     upd.update("ctrl_sock_erly"_h, String(_socket.curRly));
     upd.update("ctrl_sock_ebtn"_h, String(_socket.curBtn));
     upd.update("ctrl_sock_ename"_h, (_socket.NewName != "") ? _socket.NewName : _socket.EdName);
     upd.update("ctrl_sock_en"_h, String(sock->getEnabled()));
+
+    for (auto s : sock->getSockets()) {
+        upd.update(su::SH(String("ctrl_sock_led_" + s->getName()).c_str()), s->getStatus());
+    }
 }
 
 void WebGUIClass::_buildSocketsPage(sets::Builder& b)
@@ -616,7 +622,7 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
     for (auto s : sock->getSockets()) {
         if (b.beginGroup(s->getName())) {
-            b.LED(F("Статус"), s->getStatus());
+            b.LED(su::SH(String("ctrl_sock_led_" + s->getName()).c_str()), F("Статус"), s->getStatus());
             b.beginButtons();
             if (b.Button(su::SH(String("ctrl_sock_on_" + s->getName()).c_str()), F("Включить"))) {
                 s->setStatus(true, true);

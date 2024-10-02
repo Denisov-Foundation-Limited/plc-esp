@@ -12,6 +12,8 @@
 #include "net/tgbot.hpp"
 #include "net/core/wifi.hpp"
 #include "net/core/eth.hpp"
+#include "controllers/ctrls.hpp"
+#include "controllers/socket/socket.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -192,50 +194,35 @@ void TgBotClass::_updateHandler(fb::Update& upd)
 bool TgBotClass::_mainHandler(TgUser *user, const String &msg)
 {
     fb::Message resp;
-    fb::Menu menu;
+    fb::Menu    menu;
 
-    if (msg == "Метео") {
-        user->level = TG_MENU_METEO;
-        return true;
-    } else if (msg == "Камеры") {
-        user->level = TG_MENU_CAMS;
-        return true;
-    } else if (msg == "Термо") {
-        user->level = TG_MENU_THERMS;
-        return true;
-    } else if (msg == "Охрана") {
-        user->level = TG_MENU_SECURITY;
-        return true;
-    } else if (msg == "Свет") {
-        user->level = TG_MENU_LIGHTS;
-        return true;
-    } else if (msg == "Розетки") {
-        user->level = TG_MENU_SOCKETS;
-        return true;
-    } else if (msg == "Бак") {
-        user->level = TG_MENU_TANKS;
-        return true;
-    } else if (msg == "Полив") {
-        user->level = TG_MENU_WATERING;
-        return true;
+    auto *ctrl = Controllers.getController(msg);
+    if (ctrl != nullptr) {
+        user->ctrl = ctrl->getName();
+
+        switch (ctrl->getType()) {
+            case CTRL_TYPE_SOCKET:
+                user->level = TG_MENU_SOCKETS;
+                return true;
+        }
     }
 
     resp.chatID = user->chatId;
     resp.mode = fb::Message::Mode::HTML;
-    resp.text = F("<b>Добро пожаловать в Умный Дом</b>");
+    resp.text = F("<b>Добро пожаловать в Город Будущего</b>");
 
-    menu.addButton("Я дома");
-    menu.addButton("Ушёл");
+    menu.addButton(F("Я дома"));
+    menu.addButton(F("Ушёл"));
     menu.newRow();
-    menu.addButton("Камеры");
-    menu.addButton("Метео");
-    menu.addButton("Охрана");
-    menu.addButton("Свет");
-    menu.newRow();
-    menu.addButton("Розетки");
-    menu.addButton("Термо");
-    menu.addButton("Баки");
-    menu.addButton("Полив");
+
+    size_t i = 0;
+    for (auto *ctrl : Controllers.getControllers()) {
+        i++;
+        menu.addButton(ctrl->getName());
+        if (i % 4 == 0) {
+            menu.newRow();
+        }
+    }
 
     resp.setMenu(menu);
     sendMessage(resp);
@@ -318,13 +305,48 @@ bool TgBotClass::_socketsHandler(TgUser *user, const String &msg)
 
     resp.chatID = user->chatId;
     resp.mode = fb::Message::Mode::HTML;
-    resp.text = F("<b>Розетки</b>");
 
-    menu.addButton(F("Обновить"));
+    auto ctrl = static_cast<SocketCtrl *>(Controllers.getController(user->ctrl));
+    if (ctrl == nullptr) {
+        user->level = TG_MENU_MAIN;
+        resp.text = F("<b>Ошибка:</b> Контроллер не найден");
+        sendMessage(resp);
+        return false;
+    }
+
+    resp.text.concat(F("<b>РОЗЕТКИ: "));
+    resp.text.concat(ctrl->getName());
+    resp.text.concat(F("</b>\n\n"));
+
     menu.addButton(F("Назад"));
+    menu.addButton(F("Статус"));
+    menu.addButton(F("Вкл.все"));
+    menu.addButton(F("Откл.все"));
+    menu.newRow();
+
+    for (auto *socket : ctrl->getSockets()) {
+        if (msg == socket->getName()) {
+            socket->setStatus(!socket->getStatus(), true);
+        } else if (msg == "Вкл.все") {
+            socket->setStatus(true, true);
+        } else if (msg == "Откл.все") {
+            socket->setStatus(false, true);
+        }
+    }
+
+    for (auto *socket : ctrl->getSockets()) {
+        resp.text.concat("<b>");
+        resp.text.concat(socket->getName());
+        resp.text.concat(":</b> ");
+        resp.text.concat((socket->getStatus() ? F("Включен") : F("Отключен")));
+        resp.text.concat("\n");
+        menu.addButton(socket->getName());
+        menu.newRow();
+    }
 
     resp.setMenu(menu);
     sendMessage(resp);
+
     return false;
 }
 

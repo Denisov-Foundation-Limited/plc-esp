@@ -39,9 +39,8 @@ typedef enum {
 } TgMenuLevel;
 
 typedef struct {
-    TgMenuLevel level;
-    bool        read;
-    bool        write;
+    bool    read;
+    bool    write;
 } TgUserRight;
 
 typedef struct {
@@ -50,6 +49,8 @@ typedef struct {
     bool        notify;
     bool        admin;
     TgMenuLevel level;
+    String      ctrl;
+    String      item;
 } TgUser;
 
 class TgBotClass : public FastBot2
