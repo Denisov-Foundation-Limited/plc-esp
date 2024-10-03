@@ -68,7 +68,7 @@ void WebGUIClass::begin()
 
     setTitle(F("Future City PLC"));
     setPass(_password);
-    setUpdatePeriod(500);
+    setUpdatePeriod(100);
     SettingsAsync::begin();
 }
 
@@ -474,7 +474,7 @@ void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
     upd.update("ctrl_sock_en"_h, String(sock->getEnabled()));
 
     for (auto s : sock->getSockets()) {
-        upd.update(su::SH(String("ctrl_sock_led_" + s->getName()).c_str()), s->getStatus());
+        upd.update(su::SH(String("ctrl_sock_sw_" + s->getName()).c_str()), String(s->getStatus()));
     }
 }
 
@@ -620,21 +620,13 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
         b.endGroup();
     }
 
-    for (auto s : sock->getSockets()) {
-        if (b.beginGroup(s->getName())) {
-            b.LED(su::SH(String("ctrl_sock_led_" + s->getName()).c_str()), F("Статус"), s->getStatus());
-            b.beginButtons();
-            if (b.Button(su::SH(String("ctrl_sock_on_" + s->getName()).c_str()), F("Включить"))) {
-                s->setStatus(true, true);
-                b.reload();
-            }
-            if (b.Button(su::SH(String("ctrl_sock_off_" + s->getName()).c_str()), F("Отключить"), sets::Colors::Red)) {
-                s->setStatus(false, true);
-                b.reload();
-            }
-            b.endButtons();
-            b.endGroup();
+    if (b.beginGroup("Розетки")) {
+        for (auto s : sock->getSockets()) {
+            if (b.Switch(su::SH(String("ctrl_sock_sw_" + s->getName()).c_str()), s->getName(), String(s->getStatus()))) {
+                s->setStatus(b.build().value().toBool());
+            }      
         }
+        b.endGroup();
     }       
 }
 
