@@ -484,8 +484,8 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
     auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
 
-    if (b.beginGroup(F("Общее"))) {
-        b.Label(F("Контроллер"), _ctrl.Name);
+    if (b.beginGroup(F("Контроллер"))) {
+        b.Label(F("Имя"), _ctrl.Name);
         b.Label(F("Тип"), F("Розетки"));
         if (_socket.Error != "") {
             b.Label(F("Ошибка"), _socket.Error, sets::Colors::Red);
