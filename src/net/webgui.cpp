@@ -57,6 +57,7 @@ void WebGUIClass::begin()
                 _updateTgBotPage(upd);
                 break;
             case WEB_PAGE_CONTROLLERS:
+                _updateCtrlsPage(upd);
                 break;
             case WEB_PAGE_SETTINGS:
                 break;
@@ -378,7 +379,7 @@ void WebGUIClass::_updateTgBotPage(sets::Updater& upd)
 void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 {
     if (b.beginMenu(F("Настройки"))) {
-        if (b.beginGroup(F("Настройки"))) {
+        if (b.beginGroup(F("Добавить контроллер"))) {
             if (b.Input("ctrl_name"_h, F("Имя"), _ctrl.Name)) {
                 _ctrl.Name = b.build().value();            
             }
@@ -402,6 +403,46 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
                 b.reload();
             }
             b.endGroup();
+
+            if (b.beginGroup(F("Редактировать"))) {
+                Controller *curCtrl = nullptr;
+                String      sCtrls = "";
+                size_t      last = Controllers.getControllers().size() - 1;
+                size_t      i = 0;
+
+                for (auto *ctrl : Controllers.getControllers()) {
+                    sCtrls += ctrl->getName();
+                    if (i < last) {
+                        sCtrls += ";";
+                    }
+                    i++;
+                }
+                if (b.Select("ctrl_ed_sel"_h, F("Выбрать"), sCtrls, String(_ctrl.curCtrl))) {
+                    _ctrl.curCtrl = b.build().value().toInt32();
+                }
+                if (Controllers.getControllers().size() > 0) {
+                    curCtrl = Controllers.getControllers()[_ctrl.curCtrl];
+                }
+                if (b.Input("ctrl_ed_name"_h, F("Имя"), (curCtrl == nullptr) ? "" : curCtrl->getName())) {
+                    if (b.build().value().toString() != "") {
+                        if (curCtrl != nullptr) {
+                            curCtrl->setName(b.build().value().toString());
+                            b.reload();
+                        }
+                        _ctrl.Error = "";
+                    } else {
+                        _ctrl.Error = F("Пустое имя");
+                    }
+                }
+                if (b.Button("ctrl_rm"_h, "Удалить", sets::Colors::Red)) {
+                    if (Controllers.getControllers().size() > 0) {
+                        Controllers.remove(b.build().value().toInt32());
+                        _ctrl.curCtrl = 0;
+                        b.reload();
+                    }
+                }
+                b.endGroup();
+            }
         }
         b.endMenu();
     }
@@ -428,60 +469,18 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
     }
 }
 
-void WebGUIClass::_helperSocketsPage()
+void WebGUIClass::_updateCtrlsPage(sets::Updater& upd)
 {
-    std::vector<Interface *> inputs;
-    std::vector<Interface *> outputs;
-
-    auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
-    _socket.curSock = sock->getSockets().size();
-
-    Interfaces.getInterfacesByType(outputs, IF_TYPE_RELAY);
-    Interfaces.getInterfacesByType(inputs, IF_TYPE_DIGITAL_INPUT);
-
-    _socket.curRly = outputs.size();
-    _socket.curBtn = inputs.size();
-
-    for (size_t i = 0; i < sock->getSockets().size(); i++) {
-        if (sock->getSockets()[i]->getName() == _socket.EdName) {
-            _socket.curSock = i;
-        }
-    }
-
-    for (size_t i = 0; i < outputs.size(); i++) {
-        if (_socket.Relay == outputs[i]->getName()) {
-            _socket.curRly = i;
-        }
-    }
-
-    for (size_t i = 0; i < inputs.size(); i++) {
-        if (_socket.Button == inputs[i]->getName()) {
-            _socket.curBtn = i;
-        }
-    }
-}
-
-void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
-{
-    auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
-
-    _helperSocketsPage();
-
-    upd.update("ctrl_sock_sel"_h, String(_socket.curSock));
-    upd.update("ctrl_sock_erly"_h, String(_socket.curRly));
-    upd.update("ctrl_sock_ebtn"_h, String(_socket.curBtn));
-    upd.update("ctrl_sock_ename"_h, (_socket.NewName != "") ? _socket.NewName : _socket.EdName);
-    upd.update("ctrl_sock_en"_h, String(sock->getEnabled()));
-
-    for (auto s : sock->getSockets()) {
-        upd.update(su::SH(String("ctrl_sock_sw_" + s->getName()).c_str()), String(s->getStatus()));
+    Controller *curCtrl = nullptr;
+    if (Controllers.getControllers().size() > 0) {
+        curCtrl = Controllers.getControllers()[_ctrl.curCtrl];
+        upd.update("ctrl_ed_sel"_h, String(_ctrl.curCtrl));
+        upd.update("ctrl_ed_name"_h, curCtrl->getName());    
     }
 }
 
 void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 {
-    _helperSocketsPage();
-
     auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
 
     if (b.beginGroup(F("Контроллер"))) {
@@ -498,17 +497,14 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
     if (b.beginMenu(F("Настройки"))) {
         if (b.beginGroup(F("Добавить Розетку"))) {
-            if (b.Input("ctrl_sock_name"_h, "Имя", _socket.AddName)) {
-                _socket.AddName = b.build().value();
-            }
-            if (b.Button("ctrl_sock_add"_h, F("Добавить"))) {
-                if (_socket.AddName == "") {
+            if (b.Input("ctrl_sock_name"_h, "Имя", _socket.Name)) {
+                _socket.Name = b.build().value().toString();
+                if (_socket.Name == "") {
                     _socket.Error = F("Пустое имя");
-                } else if (sock->isExists(_socket.AddName)) {
+                } else if (sock->isExists(_socket.Name)) {
                     _socket.Error = F("Имя занято");
                 } else {
-                    sock->addSocket(new Socket(_socket.AddName));
-                    _socket.AddName = "";
+                    sock->addSocket(new Socket(_socket.Name));
                     _socket.Error = "";
                 }
                 b.reload();
@@ -521,14 +517,16 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
             String                      sIn = "", sOut = "";
             std::vector<Interface *>    inputs;
             std::vector<Interface *>    outputs;
-
-            auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+            Socket                      *curSocket = nullptr;
 
             Interfaces.getInterfacesByType(outputs, IF_TYPE_RELAY);
             Interfaces.getInterfacesByType(inputs, IF_TYPE_DIGITAL_INPUT);
 
             for (size_t i = 0; i < sock->getSockets().size(); i++) {
-                sSockets += sock->getSockets()[i]->getName() + ";";
+                sSockets += sock->getSockets()[i]->getName();
+                if (i < (sock->getSockets().size() - 1)) {
+                    sSockets += ";";
+                }
             }
 
             for (size_t i = 0; i < outputs.size(); i++) {
@@ -540,59 +538,64 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
             }
 
             if (b.Select("ctrl_sock_sel"_h, F("Розетка"), sSockets, String(_socket.curSock))) {
-                auto value = b.build().value().toInt32();
-                if (sock->getSockets().size() > 0 && value < sock->getSockets().size()) {
-                    auto s = sock->getSockets()[value];
-                    if (s != nullptr) {
-                        _socket.EdName = s->getName();
-                        if (s->getInterface(SOCK_IF_BUTTON) != nullptr) {
-                            _socket.Button = s->getInterface(SOCK_IF_BUTTON)->getName();
-                        } else {
-                            _socket.Button = "";
+                _socket.curSock = b.build().value().toInt32();
+                
+                if (sock->getSockets().size() > 0) {
+                    Interfaces.getInterfacesByType(outputs, IF_TYPE_RELAY);
+                    Interfaces.getInterfacesByType(inputs, IF_TYPE_DIGITAL_INPUT);
+
+                    curSocket = sock->getSockets()[_socket.curSock];
+
+                    if (curSocket->getInterface(SOCK_IF_RELAY) == nullptr) {
+                        _socket.curRly = outputs.size();
+                    } else {
+                        for (size_t i = 0; i < outputs.size(); i++) {
+                            if (outputs[i]->getName() == curSocket->getInterface(SOCK_IF_RELAY)->getName()) {
+                                _socket.curRly = i;
+                                break;
+                            }
                         }
-                        if (s->getInterface(SOCK_IF_RELAY) != nullptr) {
-                            _socket.Relay = s->getInterface(SOCK_IF_RELAY)->getName();
-                        } else {
-                            _socket.Relay = "";
+                    }
+
+                    if (curSocket->getInterface(SOCK_IF_BUTTON) == nullptr) {
+                        _socket.curBtn = inputs.size();
+                        Serial.println("NULL");
+                    } else {
+                        Serial.println("NOT NULL");
+                        for (size_t i = 0; i < inputs.size(); i++) {
+                            if (inputs[i]->getName() == curSocket->getInterface(SOCK_IF_BUTTON)->getName()) {
+                                _socket.curBtn = i;
+                                break;
+                            }
                         }
                     }
                 }
             }
 
-            if (b.Input("ctrl_sock_ename"_h, F("Имя"), _socket.EdName)) {
-                _socket.NewName = b.build().value();
+            if (sock->getSockets().size() > 0) {
+                curSocket = sock->getSockets()[_socket.curSock];
             }
-            if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(_socket.curRly))) {
-                auto value = b.build().value().toInt32();
-                if (value == outputs.size()) {
-                    _socket.Relay = "";
+
+            if (b.Input("ctrl_sock_ename"_h, F("Имя"), (curSocket != nullptr) ? curSocket->getName() : "")) {
+                String name = b.build().value().toString();
+                if (name == "") {
+                    _socket.Error = F("Пустое имя");
+                } else if (sock->isExists(name)) {
+                    _socket.Error = F("Имя занято");
                 } else {
-                    auto iface = outputs[value];
-                    _socket.Relay = iface != nullptr ? iface->getName() : "";
-                }
-            }
-            if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(_socket.curBtn))) {
-                auto value = b.build().value().toInt32();
-                if (value == inputs.size()) {
-                    _socket.Button = "";
-                } else {
-                    auto iface = inputs[value];
-                    _socket.Button = iface != nullptr ? iface->getName() : "";
-                }
-            }
-            if (b.Button("ctrl_sock_e"_h, F("Изменить"))) {
-                auto s = sock->getSocket(_socket.EdName);
-                if (s != nullptr) {
-                    s->setInterface(SOCK_IF_RELAY, (_socket.Relay == "") ? nullptr : Interfaces.getInterface(_socket.Relay));
-                    s->setInterface(SOCK_IF_BUTTON, (_socket.Button == "") ? nullptr : Interfaces.getInterface(_socket.Button));
-                    if (_socket.NewName != "") {
-                        s->setName(_socket.NewName);
-                        _socket.EdName = _socket.NewName;
-                        _socket.NewName = "";
-                        _socket.Error = "";
-                    }
+                    curSocket->setName(name);
                     b.reload();
                 }
+            }
+
+            if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(_socket.curRly))) {
+                _socket.curRly = b.build().value().toInt32();
+                curSocket->setInterface(SOCK_IF_RELAY, (_socket.curRly == outputs.size()) ? nullptr : outputs[_socket.curRly]);
+            }
+
+            if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(_socket.curBtn))) {
+                _socket.curBtn = b.build().value().toInt32();
+                curSocket->setInterface(SOCK_IF_BUTTON, (_socket.curBtn == inputs.size()) ? nullptr : inputs[_socket.curBtn]);
             }
             b.endGroup();
         }
@@ -628,6 +631,27 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
         }
         b.endGroup();
     }       
+}
+
+void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
+{
+    auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
+    Socket *curSocket = nullptr;
+
+    upd.update("ctrl_sock_en"_h, String(sock->getEnabled()));
+
+    if (sock->getSockets().size() > 0) {
+        curSocket = sock->getSockets()[_socket.curSock];
+    }
+
+    upd.update("ctrl_sock_sel"_h, String(_socket.curSock));
+    upd.update("ctrl_sock_erly"_h, String(_socket.curRly));
+    upd.update("ctrl_sock_ebtn"_h, String(_socket.curBtn));
+    upd.update("ctrl_sock_ename"_h, (curSocket != nullptr) ? curSocket->getName() : "");
+
+    for (auto s : sock->getSockets()) {
+        upd.update(su::SH(String("ctrl_sock_sw_" + s->getName()).c_str()), String(s->getStatus()));
+    }
 }
 
 void WebGUIClass::_buildSettingsPage(sets::Builder& b)

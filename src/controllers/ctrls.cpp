@@ -64,4 +64,9 @@ void ControllersClass::loop()
     }
 }
 
+void ControllersClass::remove(size_t idx)
+{
+    _ctrls.erase(_ctrls.cbegin() + idx);
+}
+
 ControllersClass Controllers;

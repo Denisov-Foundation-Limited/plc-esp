@@ -26,6 +26,7 @@ public:
     void begin();
     void loop();
     bool isExists(const String &name) const;
+    void remove(size_t idx);
 
 private:
     std::vector<Controller *> _ctrls;

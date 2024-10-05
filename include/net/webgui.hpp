@@ -55,18 +55,15 @@ private:
         String      Name;
         CtrlType    Type = CTRL_TYPE_SOCKET;
         String      Error;
+        unsigned    curCtrl = 0;
     } _ctrl;
 
     struct {
-        String  AddName;
-        String  NewName;
-        String  EdName;
-        String  Button;
-        String  Relay;
+        String  Name;
         String  Error;
-        size_t  curRly;
-        size_t  curBtn;
-        size_t  curSock;
+        size_t  curRly = 0;
+        size_t  curBtn = 0;
+        size_t  curSock = 0;
     } _socket;
 
     void _buildMenu(sets::Builder& b);
@@ -75,11 +72,11 @@ private:
     void _buildTgBotPage(sets::Builder& b);
     void _updateTgBotPage(sets::Updater& upd);
     void _buildCtrlsPage(sets::Builder& b);
+    void _updateCtrlsPage(sets::Updater& upd);
     void _buildSettingsPage(sets::Builder& b);
 
     void _buildSocketsPage(sets::Builder& b);
     void _updateSocketsPage(sets::Updater& upd);
-    void _helperSocketsPage();
 };
 
 extern WebGUIClass WebGUI;
