@@ -61,9 +61,10 @@ public:
     void addUser(TgUser *user);
     TgUser *getUser(const String &name);
     TgUser *getUser(unsigned chatId);
-    bool removeUser(const String &name);
+    void removeUser(size_t idx);
     const std::vector<TgUser *> &getUsers();
     unsigned getLastID() const;
+    bool isUserExists(const String &name) const;
     void begin();
     void loop();
 

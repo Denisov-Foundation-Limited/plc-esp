@@ -56,6 +56,16 @@ TgUser *TgBotClass::getUser(unsigned chatId)
     return nullptr;
 }
 
+bool TgBotClass::isUserExists(const String &name) const
+{
+    for (auto u : _users) {
+        if (u->name == name) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const std::vector<TgUser *> &TgBotClass::getUsers()
 {
     return _users;
@@ -80,15 +90,10 @@ void TgBotClass::loop()
     tick();
 }
 
-bool TgBotClass::removeUser(const String &name)
+void TgBotClass::removeUser(size_t idx)
 {
-    for (size_t i = 0; i < _users.size(); i++) {
-        if (_users[i]->name == name) {
-            //_users.erase(std::next(_users.begin(), i));
-            return true;
-        }
-    }
-    return false;
+    delete _users[idx];
+    _users.erase(_users.cbegin() + idx);
 }
 
 unsigned TgBotClass::getLastID() const

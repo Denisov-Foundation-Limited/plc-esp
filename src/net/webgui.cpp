@@ -270,20 +270,20 @@ void WebGUIClass::_buildTgBotPage(sets::Builder& b)
 
         if (b.beginMenu(F("Настройки"))) {
             if (b.beginGroup(F("Добавить пользователя"))) {
-                if (b.Input("tg_nuser_new_name"_h, F("Имя"), _tgUser.AddName)) {
-                    _tgUser.AddName = b.build().value().toString();
-                }
-                if (b.Button("tg_nusr_add"_h, F("Добавить"))) {
-                    if (_tgUser.AddName != "") {
-                        auto user = new TgUser();
-                        user->name = _tgUser.AddName;
-                        user->level = TG_MENU_MAIN;
-                        TgBot.addUser(user);
-                        _tgUser.AddName = "";
-                        _tgUser.Error = "";
-                    } else {
+                if (b.Input("tg_nuser_new_name"_h, F("Имя"), _tgUser.Name)) {
+                    _tgUser.Name = b.build().value().toString();
+                    if (_tgUser.Name == "") {
                         _tgUser.Error = F("Пустое имя");
-                    }
+                    } else if (TgBot.isUserExists(_tgUser.Name)) {
+                        _tgUser.Error = F("Имя занято");
+                    } else {
+                    auto user = new TgUser();
+                    user->name = _tgUser.Name;
+                    user->level = TG_MENU_MAIN;
+                    TgBot.addUser(user);
+                    _tgUser.Name = "";
+                    _tgUser.Error = "";
+                }
                     b.reload();
                 }
                 b.endGroup();
@@ -301,51 +301,39 @@ void WebGUIClass::_buildTgBotPage(sets::Builder& b)
                     i++;
                 }
                 if (b.Select("tg_susr"_h, F("Name"), users, String(_tgUser.curUser))) {
-                    auto usrNum = b.build().value().toInt32();
-                    if (usrNum < TgBot.getUsers().size()) {
-                        auto *user = TgBot.getUsers()[usrNum];
-                        if (user != nullptr) {
-                            _tgUser.EdName = user->name;
-                            _tgUser.chatID = user->chatId;
-                            _tgUser.Notify = user->notify;
-                            _tgUser.Admin = user->admin;
-                            _tgUser.curUser = b.build().value().toInt32();
+                    _tgUser.curUser = b.build().value().toInt32();
+                }
+                TgUser *curUser = nullptr;
+                if (TgBot.getUsers().size() > 0 && _tgUser.curUser < TgBot.getUsers().size()) {
+                    curUser = TgBot.getUsers()[_tgUser.curUser];
+                    if (curUser != nullptr) {
+                        if (b.Input("tg_nusr_name"_h, F("Name"), curUser->name)) {
+                            if (curUser != nullptr) {
+                                curUser->name = b.build().value().toString();
+                            }
+                        }
+                        if (b.Input("tg_nusr_id"_h, F("ChatID"), String(curUser->chatId))) {
+                            if (curUser != nullptr) {
+                                curUser->chatId = b.build().value().toInt32();
+                            }
+                        }
+                        if (b.Switch("tg_nusr_ntf"_h, F("Notify"), String(curUser->notify))) {
+                            if (curUser != nullptr) {
+                                curUser->notify = b.build().value().toBool();
+                            }
+                        }
+                        if (b.Switch("tg_nusr_adm"_h, F("Admin"), String(curUser->admin))) {
+                            if (curUser != nullptr) {
+                                curUser->admin = b.build().value().toBool();
+                            }
+                        }
+                        if (b.Button("tg_nusr_rm"_h, F("Удалить"), sets::Colors::Red)) {
+                            TgBot.removeUser(_tgUser.curUser);
+                            _tgUser.curUser = 0;
+                            b.reload();
                         }
                     }
                 }
-
-                if (b.Input("tg_nusr_name"_h, F("Name"), _tgUser.EdName)) {
-                    _tgUser.NewName = b.build().value();
-                }
-                if (b.Input("tg_nusr_id"_h, F("ChatID"), String(_tgUser.chatID))) {
-                    _tgUser.chatID = b.build().value().toInt32();
-                }
-                if (b.Switch("tg_nusr_ntf"_h, F("Notify"), String(_tgUser.Notify))) {
-                    _tgUser.Notify = b.build().value().toBool();
-                }
-                if (b.Switch("tg_nusr_adm"_h, F("Admin"), String(_tgUser.Admin))) {
-                    _tgUser.Admin = b.build().value().toBool();
-                }
-                b.beginButtons();
-                
-                if (b.Button("tg_nusr_upd"_h, F("Изменить"), sets::Colors::Aqua)) {
-                    auto user = TgBot.getUser(_tgUser.EdName);
-                    if (user != nullptr) {
-                        if (_tgUser.NewName != "") {
-                            user->name = _tgUser.NewName;
-                        }
-                        user->chatId = _tgUser.chatID;
-                        user->notify = _tgUser.Notify;
-                        user->admin = _tgUser.Admin;
-                        _tgUser.NewName = "";
-                        _tgUser.Error = "";
-                    }
-                    b.reload();
-                }
-                if (b.Button("tg_nusr_rm"_h, F("Удалить"), sets::Colors::Red)) {
-                    TgBot.removeUser(_tgUser.EdName);
-                }
-                b.endButtons();
                 b.endGroup();
             }
             b.endMenu();
@@ -354,10 +342,10 @@ void WebGUIClass::_buildTgBotPage(sets::Builder& b)
         size_t i = 1;
         for (auto *user : TgBot.getUsers()) {
             if (b.beginGroup("Пользователь #" + String(i))) {
-                b.Label(F("Имя"), user->name);
-                b.Label(F("ChatID"), String(user->chatId));
-                b.LED("tg_usr_ntf"_h, F("Уведомления"), user->notify);
-                b.LED("tg_usr_adm"_h, F("Админ"), user->admin);
+                b.Label(su::SH(String("tg_usr_nm_" + user->name).c_str()), F("Имя"), user->name);
+                b.Label(su::SH(String("tg_usr_id_" + user->name).c_str()), F("ChatID"), String(user->chatId));
+                b.LED(su::SH(String("tg_usr_ntf_" + user->name).c_str()), F("Уведомления"), user->notify);
+                b.LED(su::SH(String("tg_usr_adm_" + user->name).c_str()), F("Админ"), user->admin);
                 b.endGroup();
             }
             i++;
@@ -367,13 +355,28 @@ void WebGUIClass::_buildTgBotPage(sets::Builder& b)
 
 void WebGUIClass::_updateTgBotPage(sets::Updater& upd)
 {
-    upd.update("tg_nuser_new_name"_h, _tgUser.AddName);
-    upd.update("tg_nusr_name"_h, (_tgUser.NewName != "") ? _tgUser.NewName : _tgUser.EdName);
-    upd.update("tg_nusr_id"_h, String(_tgUser.chatID));
-    upd.update("tg_nusr_ntf"_h, String(_tgUser.Notify));
-    upd.update("tg_nusr_adm"_h, String(_tgUser.Admin));
+    TgUser *curUser = nullptr;
+
+    if (TgBot.getUsers().size() > 0 && _tgUser.curUser < TgBot.getUsers().size()) {
+        curUser = TgBot.getUsers()[_tgUser.curUser];
+        if (curUser != nullptr) {
+            upd.update("tg_nuser_new_name"_h, curUser->name);
+            upd.update("tg_nusr_name"_h, curUser->name);
+            upd.update("tg_nusr_id"_h, String(curUser->chatId));
+            upd.update("tg_nusr_ntf"_h, String(curUser->notify));
+            upd.update("tg_nusr_adm"_h, String(curUser->admin));
+        }
+    }
+
     upd.update("tg_susr"_h, String(_tgUser.curUser));
     upd.update("tg_last_id"_h, String(TgBot.getLastID()));
+
+    for (auto *user : TgBot.getUsers()) {
+        upd.update(su::SH(String("tg_usr_nm_" + user->name).c_str()), user->name);
+        upd.update(su::SH(String("tg_usr_id_" + user->name).c_str()), String(user->chatId));
+        upd.update(su::SH(String("tg_usr_ntf_" + user->name).c_str()), user->notify);
+        upd.update(su::SH(String("tg_usr_adm_" + user->name).c_str()), user->admin);
+    }
 }
 
 void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
@@ -420,25 +423,27 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
                 if (b.Select("ctrl_ed_sel"_h, F("Выбрать"), sCtrls, String(_ctrl.curCtrl))) {
                     _ctrl.curCtrl = b.build().value().toInt32();
                 }
-                if (Controllers.getControllers().size() > 0) {
+                if (Controllers.getControllers().size() > 0 && _ctrl.curCtrl < Controllers.getControllers().size()) {
                     curCtrl = Controllers.getControllers()[_ctrl.curCtrl];
-                }
-                if (b.Input("ctrl_ed_name"_h, F("Имя"), (curCtrl == nullptr) ? "" : curCtrl->getName())) {
-                    if (b.build().value().toString() != "") {
-                        if (curCtrl != nullptr) {
-                            curCtrl->setName(b.build().value().toString());
-                            b.reload();
+                    if (curCtrl != nullptr) {
+                        if (b.Input("ctrl_ed_name"_h, F("Имя"), curCtrl->getName())) {
+                            if (b.build().value().toString() != "") {
+                                if (curCtrl != nullptr) {
+                                    curCtrl->setName(b.build().value().toString());
+                                    b.reload();
+                                }
+                                _ctrl.Error = "";
+                            } else {
+                                _ctrl.Error = F("Пустое имя");
+                            }
                         }
-                        _ctrl.Error = "";
-                    } else {
-                        _ctrl.Error = F("Пустое имя");
-                    }
-                }
-                if (b.Button("ctrl_rm"_h, "Удалить", sets::Colors::Red)) {
-                    if (Controllers.getControllers().size() > 0) {
-                        Controllers.remove(_ctrl.curCtrl);
-                        _ctrl.curCtrl = 0;
-                        b.reload();
+                        if (b.Button("ctrl_rm"_h, "Удалить", sets::Colors::Red)) {
+                            if (Controllers.getControllers().size() > 0) {
+                                Controllers.remove(_ctrl.curCtrl);
+                                _ctrl.curCtrl = 0;
+                                b.reload();
+                            }
+                        }
                     }
                 }
                 b.endGroup();
@@ -472,11 +477,15 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 void WebGUIClass::_updateCtrlsPage(sets::Updater& upd)
 {
     Controller *curCtrl = nullptr;
-    if (Controllers.getControllers().size() > 0) {
+
+    if (Controllers.getControllers().size() > 0 && _ctrl.curCtrl < Controllers.getControllers().size()) {
         curCtrl = Controllers.getControllers()[_ctrl.curCtrl];
-        upd.update("ctrl_ed_sel"_h, String(_ctrl.curCtrl));
-        upd.update("ctrl_ed_name"_h, curCtrl->getName());    
+        if (curCtrl != nullptr) {
+            upd.update("ctrl_ed_name"_h, curCtrl->getName());
+        } 
     }
+
+    upd.update("ctrl_ed_sel"_h, String(_ctrl.curCtrl));
 }
 
 void WebGUIClass::_buildSocketsPage(sets::Builder& b)
@@ -539,76 +548,69 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
             if (b.Select("ctrl_sock_sel"_h, F("Розетка"), sSockets, String(_socket.curSock))) {
                 _socket.curSock = b.build().value().toInt32();
+            }
 
-                if (sock->getSockets().size() > 0) {
-                    Interfaces.getInterfacesByType(outputs, IF_TYPE_RELAY);
-                    Interfaces.getInterfacesByType(inputs, IF_TYPE_DIGITAL_INPUT);
-
+            if (sock->getSockets().size() > 0 && _socket.curSock < sock->getSockets().size()) {
                     curSocket = sock->getSockets()[_socket.curSock];
+                    if (curSocket != nullptr) {
+                        if (curSocket->getInterface(SOCK_IF_RELAY) == nullptr) {
+                            _socket.curRly = outputs.size();
+                        } else {
+                            for (size_t i = 0; i < outputs.size(); i++) {
+                                if (outputs[i]->getName() == curSocket->getInterface(SOCK_IF_RELAY)->getName()) {
+                                    _socket.curRly = i;
+                                    break;
+                                }
+                            }
+                        }
+                        if (curSocket->getInterface(SOCK_IF_BUTTON) == nullptr) {
+                            _socket.curBtn = inputs.size();
+                        } else {
+                            for (size_t i = 0; i < inputs.size(); i++) {
+                                if (inputs[i]->getName() == curSocket->getInterface(SOCK_IF_BUTTON)->getName()) {
+                                    _socket.curBtn = i;
+                                    break;
+                                }
+                            }
+                        }
 
-                    if (curSocket->getInterface(SOCK_IF_RELAY) == nullptr) {
-                        _socket.curRly = outputs.size();
-                    } else {
-                        for (size_t i = 0; i < outputs.size(); i++) {
-                            if (outputs[i]->getName() == curSocket->getInterface(SOCK_IF_RELAY)->getName()) {
-                                _socket.curRly = i;
-                                break;
+                        if (b.Input("ctrl_sock_ename"_h, F("Имя"), (curSocket != nullptr) ? curSocket->getName() : "")) {
+                            String name = b.build().value().toString();
+                            if (name == "") {
+                                _socket.Error = F("Пустое имя");
+                            } else if (sock->isExists(name)) {
+                                _socket.Error = F("Имя занято");
+                            } else {
+                                if (sock->getSockets().size() > 0) {
+                                    curSocket->setName(name);
+                                    b.reload();
+                                }
+                            }
+                        }
+
+                        if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(_socket.curRly))) {
+                            _socket.curRly = b.build().value().toInt32();
+                            if (sock->getSockets().size() > 0) {
+                                curSocket->setInterface(SOCK_IF_RELAY, (_socket.curRly == outputs.size()) ? nullptr : outputs[_socket.curRly]);
+                            }
+                        }
+
+                        if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(_socket.curBtn))) {
+                            _socket.curBtn = b.build().value().toInt32();
+                            if (sock->getSockets().size() > 0) {
+                                curSocket->setInterface(SOCK_IF_BUTTON, (_socket.curBtn == inputs.size()) ? nullptr : inputs[_socket.curBtn]);
+                            }
+                        }
+
+                        if (b.Button("ctrl_sock_rm"_h, F("Удалить"), sets::Colors::Red)) {
+                            if (sock->getSockets().size() > 0) {
+                                sock->remove(_socket.curSock);
+                                _socket.curSock = 0;
+                                b.reload();
                             }
                         }
                     }
-
-                    if (curSocket->getInterface(SOCK_IF_BUTTON) == nullptr) {
-                        _socket.curBtn = inputs.size();
-                    } else {
-                        for (size_t i = 0; i < inputs.size(); i++) {
-                            if (inputs[i]->getName() == curSocket->getInterface(SOCK_IF_BUTTON)->getName()) {
-                                _socket.curBtn = i;
-                                break;
-                            }
-                        }
-                    }
                 }
-            }
-
-            if (sock->getSockets().size() > 0) {
-                curSocket = sock->getSockets()[_socket.curSock];
-            }
-
-            if (b.Input("ctrl_sock_ename"_h, F("Имя"), (curSocket != nullptr) ? curSocket->getName() : "")) {
-                String name = b.build().value().toString();
-                if (name == "") {
-                    _socket.Error = F("Пустое имя");
-                } else if (sock->isExists(name)) {
-                    _socket.Error = F("Имя занято");
-                } else {
-                    if (sock->getSockets().size() > 0) {
-                        curSocket->setName(name);
-                        b.reload();
-                    }
-                }
-            }
-
-            if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(_socket.curRly))) {
-                _socket.curRly = b.build().value().toInt32();
-                if (sock->getSockets().size() > 0) {
-                    curSocket->setInterface(SOCK_IF_RELAY, (_socket.curRly == outputs.size()) ? nullptr : outputs[_socket.curRly]);
-                }
-            }
-
-            if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(_socket.curBtn))) {
-                _socket.curBtn = b.build().value().toInt32();
-                if (sock->getSockets().size() > 0) {
-                    curSocket->setInterface(SOCK_IF_BUTTON, (_socket.curBtn == inputs.size()) ? nullptr : inputs[_socket.curBtn]);
-                }
-            }
-
-            if (b.Button("ctrl_sock_rm"_h, F("Удалить"), sets::Colors::Red)) {
-                if (sock->getSockets().size() > 0) {
-                    sock->remove(_socket.curSock);
-                    _ctrl.curCtrl = 0;
-                    b.reload();
-                }
-            }
             b.endGroup();
         }
         b.endMenu();
@@ -651,14 +653,16 @@ void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
 
     upd.update("ctrl_sock_en"_h, String(sock->getEnabled()));
 
-    if (sock->getSockets().size() > 0) {
+    if (sock->getSockets().size() > 0 && _socket.curSock < sock->getSockets().size()) {
         curSocket = sock->getSockets()[_socket.curSock];
+        if (curSocket != nullptr) {
+            upd.update("ctrl_sock_ename"_h,curSocket->getName());
+        }
     }
 
     upd.update("ctrl_sock_sel"_h, String(_socket.curSock));
     upd.update("ctrl_sock_erly"_h, String(_socket.curRly));
     upd.update("ctrl_sock_ebtn"_h, String(_socket.curBtn));
-    upd.update("ctrl_sock_ename"_h, (curSocket != nullptr) ? curSocket->getName() : "");
 
     for (auto s : sock->getSockets()) {
         upd.update(su::SH(String("ctrl_sock_sw_" + s->getName()).c_str()), String(s->getStatus()));

@@ -41,12 +41,7 @@ private:
     WebGuiPage  _curPage = WEB_PAGE_MAIN;
 
     struct {
-        String      AddName;
-        String      NewName;
-        String      EdName;
-        unsigned    chatID;
-        bool        Admin;
-        bool        Notify;
+        String      Name;
         String      Error;
         unsigned    curUser;
     } _tgUser;
