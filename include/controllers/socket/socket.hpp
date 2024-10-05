@@ -64,6 +64,7 @@ public:
     CtrlType getType() const;
     void setName(const String &name);
     const String &getName() const;
+    void remove(size_t idx);
 
 private:
     std::vector<Socket *>   _sockets;

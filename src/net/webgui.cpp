@@ -436,7 +436,7 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
                 }
                 if (b.Button("ctrl_rm"_h, "Удалить", sets::Colors::Red)) {
                     if (Controllers.getControllers().size() > 0) {
-                        Controllers.remove(b.build().value().toInt32());
+                        Controllers.remove(_ctrl.curCtrl);
                         _ctrl.curCtrl = 0;
                         b.reload();
                     }
@@ -539,7 +539,7 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
             if (b.Select("ctrl_sock_sel"_h, F("Розетка"), sSockets, String(_socket.curSock))) {
                 _socket.curSock = b.build().value().toInt32();
-                
+
                 if (sock->getSockets().size() > 0) {
                     Interfaces.getInterfacesByType(outputs, IF_TYPE_RELAY);
                     Interfaces.getInterfacesByType(inputs, IF_TYPE_DIGITAL_INPUT);
@@ -559,9 +559,7 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
                     if (curSocket->getInterface(SOCK_IF_BUTTON) == nullptr) {
                         _socket.curBtn = inputs.size();
-                        Serial.println("NULL");
                     } else {
-                        Serial.println("NOT NULL");
                         for (size_t i = 0; i < inputs.size(); i++) {
                             if (inputs[i]->getName() == curSocket->getInterface(SOCK_IF_BUTTON)->getName()) {
                                 _socket.curBtn = i;
@@ -583,19 +581,33 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
                 } else if (sock->isExists(name)) {
                     _socket.Error = F("Имя занято");
                 } else {
-                    curSocket->setName(name);
-                    b.reload();
+                    if (sock->getSockets().size() > 0) {
+                        curSocket->setName(name);
+                        b.reload();
+                    }
                 }
             }
 
             if (b.Select("ctrl_sock_erly"_h, F("Реле"), sOut, String(_socket.curRly))) {
                 _socket.curRly = b.build().value().toInt32();
-                curSocket->setInterface(SOCK_IF_RELAY, (_socket.curRly == outputs.size()) ? nullptr : outputs[_socket.curRly]);
+                if (sock->getSockets().size() > 0) {
+                    curSocket->setInterface(SOCK_IF_RELAY, (_socket.curRly == outputs.size()) ? nullptr : outputs[_socket.curRly]);
+                }
             }
 
             if (b.Select("ctrl_sock_ebtn"_h, F("Кнопка"), sIn, String(_socket.curBtn))) {
                 _socket.curBtn = b.build().value().toInt32();
-                curSocket->setInterface(SOCK_IF_BUTTON, (_socket.curBtn == inputs.size()) ? nullptr : inputs[_socket.curBtn]);
+                if (sock->getSockets().size() > 0) {
+                    curSocket->setInterface(SOCK_IF_BUTTON, (_socket.curBtn == inputs.size()) ? nullptr : inputs[_socket.curBtn]);
+                }
+            }
+
+            if (b.Button("ctrl_sock_rm"_h, F("Удалить"), sets::Colors::Red)) {
+                if (sock->getSockets().size() > 0) {
+                    sock->remove(_socket.curSock);
+                    _ctrl.curCtrl = 0;
+                    b.reload();
+                }
             }
             b.endGroup();
         }
@@ -604,14 +616,14 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
 
     if (b.beginGroup(F("Общее"))) {
         b.beginButtons();           
-        if (b.Button(su::SH(String("ctrl_sock_onall").c_str()), F("Включить все"))) {
+        if (b.Button("ctrl_sock_onall"_h, F("Включить все"))) {
             auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
             for (auto s : sock->getSockets()) {
                 s->setStatus(true, true);
             }
             b.reload();
         }
-        if (b.Button(su::SH(String("ctrl_sock_offall").c_str()), F("Отключить все"), sets::Colors::Red)) {
+        if (b.Button("ctrl_sock_offall"_h, F("Отключить все"), sets::Colors::Red)) {
             auto *sock = static_cast<SocketCtrl *>(Controllers.getController(_ctrl.Name));
             for (auto s : sock->getSockets()) {
                 s->setStatus(false, true);
@@ -619,11 +631,10 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
             b.reload();
         }
         b.endButtons();
-
         b.endGroup();
     }
 
-    if (b.beginGroup("Розетки")) {
+    if (b.beginGroup(F("Розетки"))) {
         for (auto s : sock->getSockets()) {
             if (b.Switch(su::SH(String("ctrl_sock_sw_" + s->getName()).c_str()), s->getName(), String(s->getStatus()))) {
                 s->setStatus(b.build().value().toBool());

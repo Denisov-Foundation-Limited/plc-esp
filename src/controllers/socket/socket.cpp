@@ -146,6 +146,12 @@ void SocketCtrl::loop()
     }
 }
 
+void SocketCtrl::remove(size_t idx)
+{
+    delete _sockets[idx];
+    _sockets.erase(_sockets.cbegin() + idx);
+}
+
 bool SocketCtrl::getEnabled() const
 {
     return _enabled;
