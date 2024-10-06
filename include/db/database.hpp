@@ -9,46 +9,30 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CONFIGS_HPP__
-#define __CONFIGS_HPP__
+#ifndef __DATABASE_HPP__
+#define __DATABASE_HPP__
 
 #include <Arduino.h>
 #include <ArduinoJson.h>
+#include "utils/configs.hpp"
+#include <LittleFS.h>
+#include <SD.h>
 
-#include "utils/log.hpp"
-#include "core/ext.hpp"
-#include "core/ifaces/ifaces.hpp"
-#include "net/core/gsm.hpp"
-#include "net/core/wifi.hpp"
-#include "core/plc.hpp"
-
-#define CONFIGS_STARTUP_FILE  F("/startup-config.json")
-
-typedef enum {
-    CFG_SRC_SD,
-    CFG_SRC_FLASH
-} ConfigsSource;
-
-class ConfigsClass
+class Database
 {
 public:
-    bool begin();
-    bool writeAll();
-    bool eraseAll();
-    bool showStartup();
-    bool showRunning();
-    ConfigsSource getSource() const;
+    void loadFromFile(const String &fileName);
+    void saveToFile();
+    JsonDocument *getData();
+    void clear();
+    void close();
+    bool isLoad();
 
 private:
-    ConfigsSource _src;
-
-    bool _initDevice();
-    bool _readAll(ConfigsSource src);
-    bool _printFile(const String &name);
-    bool _generateRunning(JsonDocument &doc);
-    void _initInterfaces();
+    JsonDocument    _data;
+    File            _file;
+    bool            _load = false;
+    String          _fileName = "";
 };
 
-extern ConfigsClass Configs;
-
-#endif /* __CONFIGS_HPP__ */
+#endif /* __DATABASE_HPP__ */

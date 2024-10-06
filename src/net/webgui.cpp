@@ -574,7 +574,7 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
                             }
                         }
 
-                        if (b.Input("ctrl_sock_ename"_h, F("Имя"), (curSocket != nullptr) ? curSocket->getName() : "")) {
+                        if (b.Input("ctrl_sock_ename"_h, F("Имя"), curSocket->getName())) {
                             String name = b.build().value().toString();
                             if (name == "") {
                                 _socket.Error = F("Пустое имя");
@@ -639,7 +639,7 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
     if (b.beginGroup(F("Розетки"))) {
         for (auto s : sock->getSockets()) {
             if (b.Switch(su::SH(String("ctrl_sock_sw_" + s->getName()).c_str()), s->getName(), String(s->getStatus()))) {
-                s->setStatus(b.build().value().toBool());
+                s->setStatus(b.build().value().toBool(), true);
             }      
         }
         b.endGroup();

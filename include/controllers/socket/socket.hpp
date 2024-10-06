@@ -27,6 +27,8 @@ typedef enum {
     SOCK_IF_MAX
 } SockIfType;
 
+class SocketCtrl;
+
 class Socket
 {
 public:
@@ -40,13 +42,15 @@ public:
     void readButton();
     void setInterface(SockIfType type, Interface *iface);
     Interface *getInterface(SockIfType type) const;
+    void setController(SocketCtrl *ctrl);
 
 private:
     String      _name;
     bool        _status = false;
     bool        _reading = false;
     unsigned    _timer;
-    IfGPIO   *_gpio[SOCK_IF_MAX] = { nullptr, nullptr };
+    IfGPIO      *_gpio[SOCK_IF_MAX] = { nullptr, nullptr };
+    SocketCtrl  *_ctrl = nullptr;
 };
 
 class SocketCtrl : public Controller

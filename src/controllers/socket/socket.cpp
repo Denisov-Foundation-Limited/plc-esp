@@ -10,6 +10,8 @@
 /**********************************************************************/
 
 #include "controllers/socket/socket.hpp"
+#include "db/socketdb.hpp"
+#include "StringUtils.h"
 
 Socket::Socket(const String &name)
 {
@@ -19,6 +21,15 @@ Socket::Socket(const String &name)
 void Socket::setStatus(bool status, bool save)
 {
     _status = status;
+    if (save) {
+        SocketDB    db;
+        db.loadFromFile(String(su::SH(_ctrl->getName().c_str()), HEX) + ".json");
+        db.close();
+        db.setStatus(getName(), status);
+        db.saveToFile();
+        db.close();
+        db.clear();
+    }
 }
 
 bool Socket::getStatus() const
@@ -65,6 +76,11 @@ void Socket::readButton()
             _timer = millis();
         }
     }
+}
+
+void Socket::setController(SocketCtrl *ctrl)
+{
+    _ctrl = ctrl;
 }
 
 void Socket::setInterface(SockIfType type, Interface *iface)

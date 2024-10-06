@@ -24,6 +24,7 @@
 #include "controllers/ctrls.hpp"
 #include "net/core/eth.hpp"
 #include "controllers/socket/socket.hpp"
+#include "db/socketdb.hpp"
 
 #include <LittleFS.h>
 #include <SD.h>
@@ -483,7 +484,11 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             meteo->setEnabled(jctrl[F("enabled")]);
             Controllers.addController(meteo);
         } else if (jctrl[F("type")] == "socket") {
-            auto *socket = new SocketCtrl(jctrl[F("name")].as<String>());
+            auto        *socket = new SocketCtrl(jctrl[F("name")].as<String>());
+            SocketDB    db;
+
+            db.loadFromFile(String(su::SH(socket->getName().c_str()), HEX) + ".json");
+
             JsonArray jsock = jctrl[F("sockets")];
             for (auto js : jsock) {
                 auto s = new Socket(js[F("name")].as<String>());
@@ -504,9 +509,20 @@ bool ConfigsClass::_readAll(ConfigsSource src)
                         Log.error(LOG_MOD_CFG, String(F("Socket interface not found Button: ")) + js[F("button")].as<String>());
                     }
                 }
+                if (db.isLoad()) {
+                    bool status = false;
+                    if (db.getStatus(s->getName(), status)) {
+                        s->setStatus(status, false);
+                    }
+                }
+                s->setController(socket);
                 socket->addSocket(s);
             }
             socket->setEnabled(jctrl[F("enabled")]);
+            if (db.isLoad()) {
+                db.clear();
+                db.close();
+            }
             Controllers.addController(socket);
         } else if (jctrl[F("type")] == "security") {
             
@@ -759,6 +775,11 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     }
 
     return true;
+}
+
+ConfigsSource ConfigsClass::getSource() const
+{
+    return _src;
 }
 
 ConfigsClass Configs;
