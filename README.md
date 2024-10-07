@@ -10,3 +10,17 @@ Programmable Logic Controller for ESP microcontrollers
 <img src="https://raw.githubusercontent.com/Denisov-Foundation-Limited/plc-esp/develop/img/board.png" width=700 />
 <br>
 <img src="https://raw.githubusercontent.com/Denisov-Foundation-Limited/plc-esp/develop/img/ext.png" width=700 />
+
+## API
+
+### Socket
+
+#### GET
+```
+http://192.168.0.8:8080/ctrl?name=Розетки
+http://192.168.0.8:8080/ctrl?name=Розетки&socket=Свитч1
+```
+#### SET
+```
+http://192.168.0.8:8080/ctrl?name=Розетки&socket=Свитч1&status=true
+```

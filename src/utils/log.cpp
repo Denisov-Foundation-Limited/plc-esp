@@ -97,8 +97,8 @@ void LogClass::_logging(LogType type, LogModule mod, const String &msg)
         sMod = F("TGBOT");
         break;
 
-    case LOG_MOD_WEB:
-        sMod = F("WEB");
+    case LOG_MOD_API:
+        sMod = F("API");
         break;
 
     case LOG_MOD_METEO:
