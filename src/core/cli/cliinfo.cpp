@@ -91,7 +91,7 @@ void CLIInformerClass::showInterfaces()
     Serial.println(F("\t----------   --------   -----------   -------   -----   ----"));
 
     for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_GPIO && iface->getType() != IF_TYPE_DIGITAL_INPUT && iface->getType() != IF_TYPE_RELAY) {
+        if (iface->getType() != IF_TYPE_GPIO) {
             continue;
         }
 
@@ -99,17 +99,17 @@ void CLIInformerClass::showInterfaces()
 
         String sType, sMode, sPull;
 
-        switch (iface->getType()) {
-            case IF_TYPE_GPIO:
-                sType = F("GPIO");
+        switch (gpio->getPinType()) {
+            case GPIO_TYPE_DINPUT:
+                sType = F("DInput");
                 break;
 
-            case IF_TYPE_DIGITAL_INPUT:
-                sType = F("Input");
-                break;
-            
-            case IF_TYPE_RELAY:
+            case GPIO_TYPE_RELAY:
                 sType = F("Relay");
+                break;
+
+            case GPIO_TYPE_GEN:
+                sType = F("General");
                 break;
         }
 

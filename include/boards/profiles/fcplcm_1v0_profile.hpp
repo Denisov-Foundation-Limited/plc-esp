@@ -22,26 +22,20 @@ BoardProfile PROGMEM ActiveBoard = {
     },
 
     .interfaces = {
-        .relays = {
-            { .name = "rly-0/1",  .pin = 4,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "rly-0/2",  .pin = 5,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "rly-0/3",  .pin = 6,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "rly-0/4",  .pin = 7,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "rly-0/5",  .pin = 15, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "rly-0/6",  .pin = 16, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-        },
-
-        .inputs = {
-            { .name = "in-0/6",   .pin = 42, .mode = PROF_MODE_INPUT,  .pull = PROF_PULL_DOWN, .extId = 0 },
-            { .name = "in-0/7",   .pin = 2,  .mode = PROF_MODE_INPUT,  .pull = PROF_PULL_DOWN, .extId = 0 },
-            { .name = "in-0/8",   .pin = 46, .mode = PROF_MODE_INPUT,  .pull = PROF_PULL_DOWN, .extId = 0 },
-        },
-
         .gpio = {
-            { .name = "buzzer",   .pin = 3,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "led-net",  .pin = 38, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "rs485-io", .pin = 14, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
-            { .name = "eth-irq",  .pin = 1,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "rly-0/1",  .type = PROF_TYPE_RELAY,  .pin = 4,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "rly-0/2",  .type = PROF_TYPE_RELAY,  .pin = 5,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "rly-0/3",  .type = PROF_TYPE_RELAY,  .pin = 6,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "rly-0/4",  .type = PROF_TYPE_RELAY,  .pin = 7,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "rly-0/5",  .type = PROF_TYPE_RELAY,  .pin = 15, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "rly-0/6",  .type = PROF_TYPE_RELAY,  .pin = 16, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "in-0/6",   .type = PROF_TYPE_DINPUT, .pin = 42, .mode = PROF_MODE_INPUT,  .pull = PROF_PULL_DOWN, .extId = 0 },
+            { .name = "in-0/7",   .type = PROF_TYPE_DINPUT, .pin = 2,  .mode = PROF_MODE_INPUT,  .pull = PROF_PULL_DOWN, .extId = 0 },
+            { .name = "in-0/8",   .type = PROF_TYPE_DINPUT, .pin = 46, .mode = PROF_MODE_INPUT,  .pull = PROF_PULL_DOWN, .extId = 0 },
+            { .name = "buzzer",   .type = PROF_TYPE_GEN,    .pin = 3,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "led-net",  .type = PROF_TYPE_GEN,    .pin = 38, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "rs485-io", .type = PROF_TYPE_GEN,    .pin = 14, .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 },
+            { .name = "eth-irq",  .type = PROF_TYPE_GEN,    .pin = 1,  .mode = PROF_MODE_OUTPUT, .pull = PROF_PULL_NONE, .extId = 0 }
         },
 
         .onewire = {

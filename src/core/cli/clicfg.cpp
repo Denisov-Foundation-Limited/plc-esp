@@ -192,7 +192,7 @@ bool CLIConfiguratorClass::configInterfaces(const String &cmd)
             return false;
 
         if (params[0] == "gpio") {
-            Interfaces.addInterface(static_cast<Interface *>(new IfGPIO(params[1], 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED, true)));
+            Interfaces.addInterface(static_cast<Interface *>(new IfGPIO(params[1], GPIO_TYPE_DINPUT, 0, GPIO_MOD_OUTPUT, GPIO_PULL_NONE, EXT_NOT_USED, true)));
         } else if (params[0] == "ow") {
             Interfaces.addInterface(static_cast<Interface *>(new IfOneWire(params[1], 0, true)));
         } else if (params[0] == "i2c") {
@@ -223,9 +223,10 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
             Serial.println(F("\tpin <integer>       : Setup pin for GPIO/OneWire interface"));
         }
         if (iface->getType() == IF_TYPE_GPIO) {
-            Serial.println(F("\tmode <input/output> : Setup mode for GPIO interface"));
-            Serial.println(F("\tpull <none/up/down> : Setup pull for GPIO interface"));
-            Serial.println(F("\text <integer>       : Setup extender for GPIO interface"));
+            Serial.println(F("\ttype <gen/relay/dinput> : Setup type for GPIO interface"));
+            Serial.println(F("\tmode <input/output>     : Setup mode for GPIO interface"));
+            Serial.println(F("\tpull <none/up/down>     : Setup pull for GPIO interface"));
+            Serial.println(F("\text <integer>           : Setup extender for GPIO interface"));
         }
         if (iface->getType() == IF_TYPE_I2C) {
             Serial.println(F("\tsda <integer>       : Setup SDA pin for I2C interface"));
@@ -283,6 +284,26 @@ bool CLIConfiguratorClass::configInterface(const String &ifaceName, const String
                     }
 
                     gpio->setMode(mode);
+
+                    return true;
+                } else if (cmd.indexOf("type ") >= 0) {
+                    String      value(cmd);
+                    GpioMode    mode;
+                    GpioType    type;
+
+                    value.remove(0, 5);
+
+                    if (value == "gen") {
+                        type = GPIO_TYPE_GEN;
+                    } else if (value == "relay") {
+                        type = GPIO_TYPE_RELAY;
+                    } else if (value == "dinput") {
+                        type = GPIO_TYPE_DINPUT;
+                    } else {
+                        return false;
+                    }
+
+                    gpio->setPinType(type);
 
                     return true;
                 } else if (cmd.indexOf("pull ") >= 0) {

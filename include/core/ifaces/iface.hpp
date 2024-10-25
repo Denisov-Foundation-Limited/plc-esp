@@ -19,9 +19,7 @@ typedef enum {
     IF_TYPE_SPI,
     IF_TYPE_I2C,
     IF_TYPE_OW,
-    IF_TYPE_UART,
-    IF_TYPE_RELAY,
-    IF_TYPE_DIGITAL_INPUT
+    IF_TYPE_UART
 } IfType;
 
 class Interface

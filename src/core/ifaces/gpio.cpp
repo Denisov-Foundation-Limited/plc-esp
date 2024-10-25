@@ -19,15 +19,26 @@
 /*                                                                   */
 /*********************************************************************/
 
-IfGPIO::IfGPIO(const String &name, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended)
+IfGPIO::IfGPIO(const String &name, GpioType type, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended)
 {
     _name = name;
     _pin = pin;
     _extId = extId;
     _extended = extended;
+    _type = type;
 
     setPull(pull);
     setMode(mode);
+}
+
+void IfGPIO::setPinType(GpioType type)
+{
+    _type = type;
+}
+
+GpioType IfGPIO::getPinType() const
+{
+    return _type;
 }
 
 bool IfGPIO::getExtended() const

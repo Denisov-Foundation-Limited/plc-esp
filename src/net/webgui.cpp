@@ -528,8 +528,8 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
             std::vector<Interface *>    outputs;
             Socket                      *curSocket = nullptr;
 
-            Interfaces.getInterfacesByType(outputs, IF_TYPE_RELAY);
-            Interfaces.getInterfacesByType(inputs, IF_TYPE_DIGITAL_INPUT);
+            Interfaces.getGpioByType(GPIO_TYPE_RELAY, outputs);
+            Interfaces.getGpioByType(GPIO_TYPE_DINPUT, inputs);
 
             for (size_t i = 0; i < sock->getSockets().size(); i++) {
                 sSockets += sock->getSockets()[i]->getName();

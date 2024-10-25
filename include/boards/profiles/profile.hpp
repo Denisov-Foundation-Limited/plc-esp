@@ -23,6 +23,12 @@ typedef enum {
     PROF_PULL_DOWN
 } ProfGpioPull;
 
+typedef enum {
+    PROF_TYPE_GEN,
+    PROF_TYPE_RELAY,
+    PROF_TYPE_DINPUT
+} ProfGpioType;
+
 typedef struct {
     unsigned id;
     unsigned addr;
@@ -30,6 +36,7 @@ typedef struct {
 
 typedef struct {
     const char      *name;
+    ProfGpioType    type;
     unsigned        pin;
     ProfGpioMode    mode;
     ProfGpioPull    pull;
@@ -64,8 +71,6 @@ typedef struct {
 } ProfSPI;
 
 typedef struct {
-    ProfGpio        relays[8];
-    ProfGpio        inputs[16];
     ProfGpio        gpio[32];
     ProfOneWire     onewire[4];
     ProfUART        uart[4];

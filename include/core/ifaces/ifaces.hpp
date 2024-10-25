@@ -25,7 +25,7 @@ public:
     void addInterface(Interface *iface);
     Interface *getInterface(const String &name);
     const std::vector<Interface *> &getInterfaces() const;
-    void getInterfacesByType(std::vector<Interface *> &ifs, IfType type);
+    void getGpioByType(GpioType type, std::vector<Interface *> &gpio);
 
 private:
     std::vector<Interface *>  _ifaces;

@@ -159,30 +159,12 @@ void ConfigsClass::_initInterfaces()
         Extenders.addExtender(new Extender(static_cast<ExtenderId>(ext.id), ext.addr));
     }
 
-    /* Relays Interfaces */
-
-    for (auto relay : ActiveBoard.interfaces.relays) {
-        if (relay.pin == 0)
-            break;
-        Interfaces.addInterface(new IfRelay(relay.name, relay.pin, static_cast<GpioMode>(relay.mode),
-                                static_cast<GpioPull>(relay.pull), static_cast<ExtenderId>(relay.extId)));
-    }
-
-    /* Inputs Interfaces */
-
-    for (auto inputs : ActiveBoard.interfaces.inputs) {
-        if (inputs.pin == 0)
-            break;
-        Interfaces.addInterface(new IfDInput(inputs.name, inputs.pin, static_cast<GpioMode>(inputs.mode),
-                                static_cast<GpioPull>(inputs.pull), static_cast<ExtenderId>(inputs.extId)));
-    }
-
     /* GPIO Interfaces */
 
     for (auto gpio : ActiveBoard.interfaces.gpio) {
         if (gpio.pin == 0)
             break;
-        Interfaces.addInterface(new IfGPIO(gpio.name, gpio.pin, static_cast<GpioMode>(gpio.mode),
+        Interfaces.addInterface(new IfGPIO(gpio.name, static_cast<GpioType>(gpio.type), gpio.pin, static_cast<GpioMode>(gpio.mode),
                                 static_cast<GpioPull>(gpio.pull), static_cast<ExtenderId>(gpio.extId)));
     }
 
@@ -339,13 +321,14 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     JsonArray jifaces = doc[F("interfaces")];
     for (uint8_t i = 0; i < jifaces.size(); i++) {
         if (jifaces[i][F("type")] == "gpio" || jifaces[i][F("type")] == "relay" || jifaces[i][F("type")] == "input") {
-            GpioMode    type = GPIO_MOD_INPUT;
+            GpioMode    mode = GPIO_MOD_INPUT;
             GpioPull    pull = GPIO_PULL_NONE;
+            GpioType    type = GPIO_TYPE_GEN;
 
             if (jifaces[i][F("mode")] == "input") {
-                type = GPIO_MOD_INPUT;
+                mode = GPIO_MOD_INPUT;
             } else if (jifaces[i][F("mode")] == "output") {
-                type = GPIO_MOD_OUTPUT;
+                mode = GPIO_MOD_OUTPUT;
             } else {
                 Log.error(LOG_MOD_CFG, String(F("GPIO mode not found: ")) + jifaces[i][F("mode")].as<String>());
                 doc.clear();
@@ -364,13 +347,14 @@ bool ConfigsClass::_readAll(ConfigsSource src)
                 return false;
             }
 
-            if (jifaces[i][F("type")] == "gpio") {
-                Interfaces.addInterface(new IfGPIO(jifaces[i][F("name")], jifaces[i][F("pin")], type, pull, jifaces[i][F("ext")], true));
+            if (jifaces[i][F("type")] == "general") {
+                type = GPIO_TYPE_GEN;
             } else if (jifaces[i][F("type")] == "relay") {
-                Interfaces.addInterface(new IfRelay(jifaces[i][F("name")], jifaces[i][F("pin")], type, pull, jifaces[i][F("ext")], true));
-            } else if (jifaces[i][F("type")] == "input") {
-                Interfaces.addInterface(new IfDInput(jifaces[i][F("name")], jifaces[i][F("pin")], type, pull, jifaces[i][F("ext")], true));
+                type = GPIO_TYPE_RELAY;
+            } else if (jifaces[i][F("type")] == "dinput") {
+                type = GPIO_TYPE_DINPUT;
             }
+            Interfaces.addInterface(new IfGPIO(jifaces[i][F("name")], type, jifaces[i][F("pin")], mode, pull, jifaces[i][F("ext")], true));
         } else if (jifaces[i][F("type")] == "ow") {
             Interfaces.addInterface(new IfOneWire(jifaces[i][F("name")], jifaces[i][F("pin")], true));
         } else if (jifaces[i][F("type")] == "spi") {
@@ -620,18 +604,23 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
             case IF_TYPE_UART:
                 jifaces[i][F("type")] = F("uart");
                 break;
-
-            case IF_TYPE_RELAY:
-                jifaces[i][F("type")] = F("relay");
-                break;
-
-            case IF_TYPE_DIGITAL_INPUT:
-                jifaces[i][F("type")] = F("input");
-                break;
         }
 
-        if (p->getType() == IF_TYPE_GPIO || p->getType() == IF_TYPE_RELAY || p->getType() == IF_TYPE_DIGITAL_INPUT) {
+        if (p->getType() == IF_TYPE_GPIO) {
             auto gpio = static_cast<IfGPIO *>(p);
+            switch (gpio->getPinType()) {
+                case GPIO_TYPE_GEN:
+                    jifaces[i][F("type")] = F("general");
+                    break;
+
+                case GPIO_TYPE_RELAY:
+                    jifaces[i][F("type")] = F("relay");
+                    break;
+
+                case GPIO_TYPE_DINPUT:
+                    jifaces[i][F("type")] = F("dinput");
+                    break;
+            }
             jifaces[i][F("pin")] = gpio->getPin();
             switch (gpio->getMode()) {
                 case GPIO_MOD_INPUT:
