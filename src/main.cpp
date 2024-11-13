@@ -42,6 +42,7 @@ void setup()
     Controllers.begin();
     CLIProcessor.begin();
     WebGUI.begin();
+    Configs.loadStates();
 }
 
 void loop()

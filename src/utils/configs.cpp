@@ -43,7 +43,7 @@ bool ConfigsClass::begin()
     _initInterfaces();
     Log.info(LOG_MOD_CFG, "Interfaces initialized");
 
-    if ((iface = Interfaces.getInterface(F("spi-sd"))) == nullptr) {
+    /*if ((iface = Interfaces.getInterface(F("spi-sd"))) == nullptr) {
         Log.warning(LOG_MOD_CFG, F("Interface SDcard SPI not found"));
     }
     auto *spiSD = static_cast<IfSPI *>(iface);
@@ -60,9 +60,11 @@ bool ConfigsClass::begin()
         } else {
             return _readAll(CFG_SRC_SD);
         }
-    }
+    }*/
 
     Log.warning(LOG_MOD_CFG, F("SD card not found. Trying to read from flash memory"));
+
+    _src = CFG_SRC_FLASH;
 
 #ifdef ESP32
     isOk = LittleFS.begin(true);
@@ -78,7 +80,6 @@ bool ConfigsClass::begin()
 
     if (!LittleFS.exists(CONFIGS_STARTUP_FILE))
     {
-        _src = CFG_SRC_FLASH;
         return _initDevice();
     }
 
@@ -469,9 +470,6 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             Controllers.addController(meteo);
         } else if (jctrl[F("type")] == "socket") {
             auto        *socket = new SocketCtrl(jctrl[F("name")].as<String>());
-            SocketDB    db;
-
-            db.loadFromFile(String(su::SH(socket->getName().c_str()), HEX) + ".json");
 
             JsonArray jsock = jctrl[F("sockets")];
             for (auto js : jsock) {
@@ -493,20 +491,10 @@ bool ConfigsClass::_readAll(ConfigsSource src)
                         Log.error(LOG_MOD_CFG, String(F("Socket interface not found Button: ")) + js[F("button")].as<String>());
                     }
                 }
-                if (db.isLoad()) {
-                    bool status = false;
-                    if (db.getStatus(s->getName(), status)) {
-                        s->setStatus(status, false);
-                    }
-                }
                 s->setController(socket);
                 socket->addSocket(s);
             }
             socket->setEnabled(jctrl[F("enabled")]);
-            if (db.isLoad()) {
-                db.clear();
-                db.close();
-            }
             Controllers.addController(socket);
         } else if (jctrl[F("type")] == "security") {
             
@@ -516,6 +504,33 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     }
 
     doc.clear();
+    return true;
+}
+
+bool ConfigsClass::loadStates()
+{
+    for (auto *ctrl : Controllers.getControllers()) {
+        switch (ctrl->getType()) {
+            case CTRL_TYPE_SOCKET:
+                {
+                    SocketDB    db;
+                    SocketCtrl *sockCtrl = static_cast<SocketCtrl *>(ctrl);
+
+                    db.loadFromFile(String(su::SH(sockCtrl->getName().c_str()), HEX) + ".json");
+                    if (db.isLoad()) {
+                        for (auto *socket : sockCtrl->getSockets()) {
+                            bool status = false;
+                            if (db.getStatus(socket->getName(), status)) {
+                                socket->setStatus(status, false);
+                            }
+                        }
+                        db.clear();
+                        db.close();
+                    }
+                }
+                break;
+        }
+    }
     return true;
 }
 

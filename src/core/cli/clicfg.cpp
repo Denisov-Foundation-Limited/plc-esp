@@ -34,7 +34,6 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
         Serial.println(F("\tssid <ssid>         : Setup WiFi SSID name"));
         Serial.println(F("\tpasswd <passwd>     : Setup WiFi password"));
         Serial.println(F("\tap <on/off>         : Setup Access Point status"));
-        Serial.println(F("\tstatus-led <iface>  : Setup Wi-Fi status LED"));
         Serial.println(F("\tshutdown            : Disable Wi-Fi"));
         Serial.println(F("\tno shutdown         : Enable Wi-Fi"));
         Serial.println(F("\texit                : Exit from WiFi configuration\n"));
@@ -45,9 +44,9 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
         Wireless.setEnabled(false);
         return true;
     } else if (cmd == "no shut" || cmd == "no shutdown") {
-        Wireless.setEnabled(true);
         Ethernet.setEnabled(false);
-        Log.info(LOG_MOD_WIFI, "Ethernet was disabled");
+        Wireless.setEnabled(true);
+        Log.info(LOG_MOD_CLI, F("Ethernet was disabled"));
         Wireless.begin();
         return true;
     } else if (cmd.indexOf(F("ssid ")) >= 0) {
@@ -77,29 +76,43 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
         }
 
         return true;
-    } else if (cmd.indexOf(F("status-led ")) >= 0) {
-        String value(cmd);
-
-        value.remove(0, 11);
-
-        auto iface = Interfaces.getInterface(value);
-
-        if (iface == nullptr) {
-            Log.error(LOG_MOD_CLI, "Interface not found");
-            return true;
-        }
-
-        if (iface->getType() != IF_TYPE_GPIO) {
-            Log.error(LOG_MOD_CLI, "Interface is not GPIO");
-            return true;
-        }
-
-        Wireless.setStatusLed(static_cast<IfGPIO *>(iface));
-
-        return true;
     }
 
     return false;
+}
+
+bool CLIConfiguratorClass::configEthernet(const String &cmd)
+{
+    if (cmd == "?" || cmd == "help") {
+        Serial.println(F("\nEthernet configurations commands:"));
+        Serial.println(F("\tstatic ip <ip>      : Setup Ethernet static IP"));
+        Serial.println(F("\tstatic subnet <ip>  : Setup Ethernet static Subnet"));
+        Serial.println(F("\tstatic gateway <ip> : Setup Ethernet static Gateway"));
+        Serial.println(F("\tdhcp <on/off>       : Enable or Disable DHCP"));
+        Serial.println(F("\tshutdown            : Disable Ethernet"));
+        Serial.println(F("\tno shutdown         : Enable Ethernet"));
+        Serial.println(F("\texit                : Exit from Ethernet configuration\n"));
+        return true;
+    }
+
+    if (cmd == "shut" || cmd == "shutdown") {
+        Wireless.setEnabled(false);
+        return true;
+    } else if (cmd == "no shut" || cmd == "no shutdown") {
+        Wireless.setEnabled(false);
+        Ethernet.setEnabled(true);
+        Log.info(LOG_MOD_CLI, "Wi-Fi was disabled");
+        Wireless.begin();
+        return true;
+    } else if (cmd.indexOf(F("ssid ")) >= 0) {
+        String value(cmd);
+
+        value.remove(0, 5);
+        Wireless.setCreds(value, Wireless.getPasswd());
+
+        return true;
+    }
+    return true;
 }
 
 bool CLIConfiguratorClass::configTanks(const String &cmd)

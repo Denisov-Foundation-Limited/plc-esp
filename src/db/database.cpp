@@ -36,6 +36,7 @@ void Database::saveToFile()
     } else {
         _file = LittleFS.open("/" + _fileName, "w");
     }
+    serializeJsonPretty(_data, _file);
 }
 
 void Database::clear()

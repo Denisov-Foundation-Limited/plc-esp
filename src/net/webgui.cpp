@@ -225,11 +225,13 @@ void WebGUIClass::_buildTgBotPage(sets::Builder& b)
     if (b.beginGroup(F("Telegram"))) {
         if (b.Switch("tg_en"_h, F("Enabled"), String(TgBot.getEnabled()))) {
             TgBot.setEnabled(b.build().value().toBool());
+            TgBot.begin();
             b.reload();
         }
         if (TgBot.getEnabled()) {
             if (b.Pass("tg_key"_h, F("Token"), TgBot.getToken())) {
                 TgBot.setToken(b.build().value());
+                TgBot.begin();
             }
             auto mode = TgBot.getPollMode();
             uint8_t modeNum = 0;
@@ -256,9 +258,11 @@ void WebGUIClass::_buildTgBotPage(sets::Builder& b)
                         TgBot.setPollMode(fb::Poll::Async, TgBot.getPollPeriod());
                         break;
                 }
+                TgBot.begin();
             }
             if (b.Slider("tg_period"_h, "Period", 100, 100000, 10, F("msec"), String(TgBot.getPollPeriod()))) {
                 TgBot.setPollMode(TgBot.getPollMode(), b.build().value().toInt32());
+                TgBot.begin();
             }
             b.Label("tg_last_id"_h, F("LastID"), String(TgBot.getLastID()));
         }
@@ -500,8 +504,13 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
         }
         if (b.Switch("ctrl_sock_en"_h, F("Включить"), String(sock->getEnabled()))) {
             sock->setEnabled(b.build().value().toBool());
+            b.reload();
         }
         b.endGroup();
+    }
+
+    if (!sock->getEnabled()) {
+        return;
     }
 
     if (b.beginMenu(F("Настройки"))) {

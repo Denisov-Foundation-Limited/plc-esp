@@ -128,7 +128,7 @@ void IfGPIO::setExtId(ExtenderId id)
 void IfGPIO::write(bool val)
 {
     if (_extId == EXT_NOT_USED) {
-        digitalWrite(_pin, val);
+        digitalWrite(_pin, (val == true) ? HIGH : LOW);
     } else {
         Extender *e = nullptr;
 
@@ -137,7 +137,7 @@ void IfGPIO::write(bool val)
             return;
         }
 
-        e->write(_pin, val);
+        e->write(_pin, (val == true) ? HIGH : LOW);
     }
     _state = val;
 }

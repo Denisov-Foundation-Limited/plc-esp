@@ -26,6 +26,7 @@ class CLIConfiguratorClass
 {
 public:
     bool configWiFi(const String &cmd);
+    bool configEthernet(const String &cmd);
     bool configTanks(const String &cmd);
     bool configTank(const String &tankName, const String &cmd);
     bool configInterfaces(const String &cmd);

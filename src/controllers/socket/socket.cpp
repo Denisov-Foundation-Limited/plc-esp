@@ -21,6 +21,11 @@ Socket::Socket(const String &name)
 void Socket::setStatus(bool status, bool save)
 {
     _status = status;
+
+    if (_gpio[SOCK_IF_RELAY] != nullptr) {
+        _gpio[SOCK_IF_RELAY]->write(status);
+    }
+
     if (save) {
         SocketDB    db;
         db.loadFromFile(String(su::SH(_ctrl->getName().c_str()), HEX) + ".json");

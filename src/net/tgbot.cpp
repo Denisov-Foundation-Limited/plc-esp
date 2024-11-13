@@ -84,7 +84,7 @@ void TgBotClass::begin()
 
 void TgBotClass::loop()
 {
-    if (!_enabled) return;
+    if (!_enabled || getToken() == "") return;
     if (Wireless.getEnabled() && Wireless.getStatus() != WL_CONNECTED) return;
     if (Ethernet.getEnabled() && !Ethernet.getStatus()) return;
     tick();

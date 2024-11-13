@@ -13,17 +13,19 @@
 
 void SocketDB::setStatus(const String &socket, bool status)
 {
-    auto data = Database::getData();
+    auto *data = Database::getData();
     (*data)[socket] = status;
 }
 
 bool SocketDB::getStatus(const String &socket, bool &status)
 {
-    auto data = Database::getData();
+    auto *data = Database::getData();
+
     if ((*data)[socket].isNull()) {
         return false;
     } else {
-        status = (*data)[socket];
+        status = (*data)[socket].as<bool>();
     }
+
     return true;
 }
