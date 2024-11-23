@@ -44,7 +44,7 @@ bool CLIConfiguratorClass::configWiFi(const String &cmd)
         Wireless.setEnabled(false);
         return true;
     } else if (cmd == "no shut" || cmd == "no shutdown") {
-        Ethernet.setEnabled(false);
+        EthernetCard.setEnabled(false);
         Wireless.setEnabled(true);
         Log.info(LOG_MOD_CLI, F("Ethernet was disabled"));
         Wireless.begin();
@@ -100,7 +100,7 @@ bool CLIConfiguratorClass::configEthernet(const String &cmd)
         return true;
     } else if (cmd == "no shut" || cmd == "no shutdown") {
         Wireless.setEnabled(false);
-        Ethernet.setEnabled(true);
+        EthernetCard.setEnabled(true);
         Log.info(LOG_MOD_CLI, "Wi-Fi was disabled");
         Wireless.begin();
         return true;

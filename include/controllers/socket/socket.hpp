@@ -18,7 +18,7 @@
 #include "core/ifaces/gpio.hpp"
 #include "controllers/ctrl.hpp"
 
-#define SOCKET_BUTTON_WAIT_MS   600
+#define SOCKET_BUTTON_WAIT_MS   1000
 #define SOCKET_BUTTON_READ_MS   100
 
 typedef enum {

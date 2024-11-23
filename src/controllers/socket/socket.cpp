@@ -20,6 +20,10 @@ Socket::Socket(const String &name)
 
 void Socket::setStatus(bool status, bool save)
 {
+    if (_status != status) {
+        Log.info(LOG_MOD_SOCKET, String(F("Socket ")) + _name + String(" changed status to ") + (_status ? "ON" : "OFF"));
+    }
+
     _status = status;
 
     if (_gpio[SOCK_IF_RELAY] != nullptr) {
@@ -75,7 +79,8 @@ void Socket::loop()
 void Socket::readButton()
 {
     if (_gpio[SOCK_IF_BUTTON] != nullptr) {
-        if (_gpio[SOCK_IF_BUTTON]->read() && !_reading) {
+        if (!_gpio[SOCK_IF_BUTTON]->read() && !_reading) {
+            Log.info(LOG_MOD_SOCKET, String(F("Socket ")) + _name + String(F(" button pressed")));
             setStatus(!getStatus(), true);
             _reading = true;
             _timer = millis();

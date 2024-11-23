@@ -35,7 +35,7 @@ typedef enum {
     ETH_IF_IRQ
 } EthIfaceType;
 
-class EthernetClass
+class EthernetCardClass
 {
 public:
     void setEnabled(bool status);
@@ -64,6 +64,6 @@ private:
     IfGPIO   *_irq = nullptr;
 };
 
-extern EthernetClass Ethernet;
+extern EthernetCardClass EthernetCard;
 
 #endif /* __ETHERNET_HPP__ */

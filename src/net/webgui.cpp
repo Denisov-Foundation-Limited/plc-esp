@@ -124,40 +124,40 @@ void WebGUIClass::_buildMenu(sets::Builder& b)
 
 void WebGUIClass::_buildMainPage(sets::Builder& b)
 {
-    if (b.beginGroup(F("Проводная сеть"))) {
-        if (b.Switch("main_eth_en"_h, F("Enabled"), String(Ethernet.getEnabled()))) {
-            Ethernet.setEnabled(b.build().value().toBool());
-            if (Ethernet.getEnabled()) {
+/*    if (b.beginGroup(F("Проводная сеть"))) {
+        if (b.Switch("main_eth_en"_h, F("Enabled"), String(EthernetCard.getEnabled()))) {
+            EthernetCard.setEnabled(b.build().value().toBool());
+            if (EthernetCard.getEnabled()) {
                 Wireless.setEnabled(false);
             }
             b.reload();
         }
-        if (Ethernet.getEnabled()) {
-            if (b.Input("main_eth_host"_h, F("Hostname"), Ethernet.getHostname())) {
-                Ethernet.setHostname(b.build().value().toString());
+        if (EthernetCard.getEnabled()) {
+            if (b.Input("main_eth_host"_h, F("Hostname"), EthernetCard.getHostname())) {
+                EthernetCard.setHostname(b.build().value().toString());
             }
-            if (b.Switch("main_eth_dhcp"_h, F("DHCP"), String(Ethernet.getDHCP()))) {
-                Ethernet.setDHCP(b.build().value().toBool());
+            if (b.Switch("main_eth_dhcp"_h, F("DHCP"), String(EthernetCard.getDHCP()))) {
+                EthernetCard.setDHCP(b.build().value().toBool());
             }
-            if (b.Input("main_eth_ip"_h, F("IP"), Ethernet.getAddress(ETH_ADDR_IP).toString())) {
-                Ethernet.setAddress(ETH_ADDR_IP, b.build().value().toString());
+            if (b.Input("main_eth_ip"_h, F("IP"), EthernetCard.getAddress(ETH_ADDR_IP).toString())) {
+                EthernetCard.setAddress(ETH_ADDR_IP, b.build().value().toString());
             }
-            if (b.Input("main_eth_sn"_h, F("Subnet"), Ethernet.getAddress(ETH_ADDR_SUBNET).toString())) {
-                Ethernet.setAddress(ETH_ADDR_SUBNET, b.build().value().toString());
+            if (b.Input("main_eth_sn"_h, F("Subnet"), EthernetCard.getAddress(ETH_ADDR_SUBNET).toString())) {
+                EthernetCard.setAddress(ETH_ADDR_SUBNET, b.build().value().toString());
             }
-            if (b.Input("main_eth_gw"_h, F("Gateway"), Ethernet.getAddress(ETH_ADDR_GATEWAY).toString())) {
-                Ethernet.setAddress(ETH_ADDR_GATEWAY, b.build().value().toString());
+            if (b.Input("main_eth_gw"_h, F("Gateway"), EthernetCard.getAddress(ETH_ADDR_GATEWAY).toString())) {
+                EthernetCard.setAddress(ETH_ADDR_GATEWAY, b.build().value().toString());
             }
-            if (b.Input("main_eth_dns"_h, F("DNS"), Ethernet.getAddress(ETH_ADDR_DNS).toString())) {
-                Ethernet.setAddress(ETH_ADDR_DNS, b.build().value().toString());
+            if (b.Input("main_eth_dns"_h, F("DNS"), EthernetCard.getAddress(ETH_ADDR_DNS).toString())) {
+                EthernetCard.setAddress(ETH_ADDR_DNS, b.build().value().toString());
             }
-            b.LED("main_con_eth"_h, F("Connection"), Ethernet.getStatus());
+            b.LED("main_con_eth"_h, F("Connection"), EthernetCard.getStatus());
 
             String sDup, sSpd;
 
-            if (Ethernet.getStatus()) {
-                sDup = Ethernet.isFullDuplex() ? F("Full") : F("Half");
-                sSpd = Ethernet.getSpeed() + String(F("Mb/s"));
+            if (EthernetCard.getStatus()) {
+                sDup = EthernetCard.isFullDuplex() ? F("Full") : F("Half");
+                sSpd = EthernetCard.getSpeed() + String(F("Mb/s"));
             } else {
                 sDup = F("None");
                 sSpd = F("None");
@@ -168,12 +168,12 @@ void WebGUIClass::_buildMainPage(sets::Builder& b)
         }
         b.endGroup();
     }
-
+*/
     if (b.beginGroup(F("Беспроводная сеть"))) {
         if (b.Switch("main_wf_en"_h, F("Enabled"), String(Wireless.getEnabled()))) {
             Wireless.setEnabled(b.build().value().toBool());
             if (Wireless.getEnabled()) {
-                Ethernet.setEnabled(false);
+                EthernetCard.setEnabled(false);
             }
             b.reload();
         }
@@ -200,17 +200,17 @@ void WebGUIClass::_updateMainPage(sets::Updater& upd)
 {
     String sDup, sSpd;
 
-    upd.update("main_eth_ip"_h, Ethernet.getAddress(ETH_ADDR_IP).toString());
-    upd.update("main_eth_sn"_h, Ethernet.getAddress(ETH_ADDR_SUBNET).toString());
-    upd.update("main_eth_gw"_h, Ethernet.getAddress(ETH_ADDR_GATEWAY).toString());
-    upd.update("main_eth_dns"_h, Ethernet.getAddress(ETH_ADDR_DNS).toString());
+    upd.update("main_eth_ip"_h, EthernetCard.getAddress(ETH_ADDR_IP).toString());
+    upd.update("main_eth_sn"_h, EthernetCard.getAddress(ETH_ADDR_SUBNET).toString());
+    upd.update("main_eth_gw"_h, EthernetCard.getAddress(ETH_ADDR_GATEWAY).toString());
+    upd.update("main_eth_dns"_h, EthernetCard.getAddress(ETH_ADDR_DNS).toString());
     upd.update("main_con_wf"_h, Wireless.getStatus() == WL_CONNECTED);
-    upd.update("main_con_eth"_h, Ethernet.getStatus());
+    upd.update("main_con_eth"_h, EthernetCard.getStatus());
     upd.update("main_wf_ip"_h, Wireless.getIP());
 
-    if (Ethernet.getStatus()) {
-        sDup = Ethernet.isFullDuplex() ? F("Full") : F("Half");
-        sSpd = Ethernet.getSpeed() + String(F("Mb/s"));
+    if (EthernetCard.getStatus()) {
+        sDup = EthernetCard.isFullDuplex() ? F("Full") : F("Half");
+        sSpd = EthernetCard.getSpeed() + String(F("Mb/s"));
     } else {
         sDup = F("");
         sSpd = F("");

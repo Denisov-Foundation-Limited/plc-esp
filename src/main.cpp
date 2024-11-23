@@ -35,7 +35,6 @@ void setup()
     if (!Configs.begin()) return;
     Plc.begin();
     Wireless.begin();
-    Ethernet.begin();
     TgBot.begin();
     GsmModem.begin();
     APIServer.begin();

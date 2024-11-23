@@ -11,23 +11,24 @@
 
 #include "net/core/eth.hpp"
 #include "net/core/wifi.hpp"
+#include "Ethernet.h"
 
-void EthernetClass::setEnabled(bool status)
+void EthernetCardClass::setEnabled(bool status)
 {
     _enabled = status;
 }
 
-bool EthernetClass::getEnabled() const
+bool EthernetCardClass::getEnabled() const
 {
     return _enabled;
 }
 
-void EthernetClass::setAddress(EthAddrType type, const String &addr)
+void EthernetCardClass::setAddress(EthAddrType type, const String &addr)
 {
     _addr[type].fromString(addr.c_str());
 }
 
-void EthernetClass::setInterface(EthIfaceType type, Interface *iface)
+void EthernetCardClass::setInterface(EthIfaceType type, Interface *iface)
 {
     switch (type) {
         case ETH_IF_SPI:
@@ -39,7 +40,7 @@ void EthernetClass::setInterface(EthIfaceType type, Interface *iface)
     }
 }
 
-Interface *EthernetClass::getInterface(EthIfaceType type)
+Interface *EthernetCardClass::getInterface(EthIfaceType type)
 {
     switch (type) {
         case ETH_IF_SPI:
@@ -50,33 +51,34 @@ Interface *EthernetClass::getInterface(EthIfaceType type)
     return nullptr;
 }
 
-IPAddress EthernetClass::getAddress(EthAddrType type) const
+IPAddress EthernetCardClass::getAddress(EthAddrType type) const
 {
     if (!_dhcp) {
         return _addr[type];
     } else {
         switch (type) {
             case ETH_ADDR_IP:
-                return ETH.localIP();
+                return IPAddress(0,0,0,0);
+                //;return Ethernet.localIP();
             case ETH_ADDR_GATEWAY:
-                return ETH.gatewayIP();
+                return IPAddress(0,0,0,0);//return Ethernet.gatewayIP();
             case ETH_ADDR_SUBNET:
-                return ETH.subnetMask();
+                return IPAddress(0,0,0,0);//return Ethernet.subnetMask();
             case ETH_ADDR_DNS:
-                return ETH.dnsIP();
+                return IPAddress(0,0,0,0);//return Ethernet.dnsIP();
         }
     }
     return IPAddress(0,0,0,0);
 }
 
-void EthernetClass::setMAC(byte *mac)
+void EthernetCardClass::setMAC(byte *mac)
 {
     for (int i = 0; i < ETH_MAC_SIZE; i++) {
         _mac[i] = mac[i];
     }
 }
 
-String EthernetClass::getMAC() const
+String EthernetCardClass::getMAC() const
 {
     String mac = "";
 
@@ -91,17 +93,17 @@ String EthernetClass::getMAC() const
     return mac;
 }
 
-bool EthernetClass::getDHCP() const
+bool EthernetCardClass::getDHCP() const
 {
     return _dhcp;
 }
 
-void EthernetClass::setDHCP(bool status)
+void EthernetCardClass::setDHCP(bool status)
 {
     _dhcp = status;
 }
 
-void EthernetClass::begin()
+void EthernetCardClass::begin()
 {
     if (!_enabled) return;
     if (_mac[0] = 0x0) return;
@@ -117,52 +119,56 @@ void EthernetClass::begin()
 
     Log.info(LOG_MOD_ETH, F("Connecting to wired network"));
 
-    ESP32_W5500_onEvent();
+    //ESP32_W5500_onEvent();
 
-    if (!ETH.begin( _spi->getPin(SPI_PIN_MISO), _spi->getPin(SPI_PIN_MOSI), _spi->getPin(SPI_PIN_SCK),
+    /*if (!Ethernet.begin( _spi->getPin(SPI_PIN_MISO), _spi->getPin(SPI_PIN_MOSI), _spi->getPin(SPI_PIN_SCK),
                 _spi->getPin(SPI_PIN_SS), _irq->getPin(), _spi->getFrequency(), SPI3_HOST, _mac)) {
         Log.error(LOG_MOD_ETH, F("Ethernet init error"));
         return;
     }
     if (!_dhcp) {
-        ETH.config(_addr[ETH_ADDR_IP], _addr[ETH_ADDR_GATEWAY], _addr[ETH_ADDR_SUBNET], _addr[ETH_ADDR_DNS]);
+        Ethernet.config(_addr[ETH_ADDR_IP], _addr[ETH_ADDR_GATEWAY], _addr[ETH_ADDR_SUBNET], _addr[ETH_ADDR_DNS]);
     }
     if (!ESP32_W5500_waitForConnect()) {
         Log.error(LOG_MOD_ETH, String(F("Failed to connect to wired network")));
-        Ethernet.setEnabled(false);
+        EthernetCard.setEnabled(false);
         Wireless.setAP(true);
         Wireless.setEnabled(true);
         Wireless.begin();
     } else {
         Log.info(LOG_MOD_ETH, String(F("Connected. IP: ")) + getAddress(ETH_ADDR_IP).toString() +
-                            String(F(" Duplex: ")) + (ETH.fullDuplex() ? "Full" : "Half") +
-                            String(F(" Speed: ")) + ETH.linkSpeed() + String(F("Mbps")));
-    }
+                            String(F(" Duplex: ")) + String("Full") +
+                            String(F(" Speed: ")) +  String(F("Mbps")));
+    }*/
+
+   Ethernet.init(_spi->getPin(SPI_PIN_SS));
+   Ethernet.begin(_mac);
+   
 }
 
-bool EthernetClass::isFullDuplex()
+bool EthernetCardClass::isFullDuplex()
 {
-    return ETH.fullDuplex();
+    return true; //return Ethernet.fullDuplex();
 }
 
-unsigned EthernetClass::getSpeed()
+unsigned EthernetCardClass::getSpeed()
 {
-    return ETH.linkSpeed();
+    return 0;//return Ethernet.linkSpeed();
 }
 
-bool EthernetClass::getStatus() const
+bool EthernetCardClass::getStatus() const
 {
-    return ESP32_W5500_isConnected();
+    return true; //return ESP32_W5500_isConnected();
 }
 
-String EthernetClass::getHostname() const
+String EthernetCardClass::getHostname() const
 {
-    return ESP32_W5500_get_hostname();
+    return "";//return ESP32_W5500_get_hostname();
 }
 
-void EthernetClass::setHostname(const String &name)
+void EthernetCardClass::setHostname(const String &name)
 {
-    ESP32_W5500_set_hostname(name);
+    //ESP32_W5500_set_hostname(name);
 }
 
-EthernetClass Ethernet;
+EthernetCardClass EthernetCard;

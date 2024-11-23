@@ -232,15 +232,15 @@ void ConfigsClass::_initInterfaces()
 
     /* Ethernet MAC addr */
 
-    Ethernet.setMAC((byte *)ActiveBoard.net.ethernet.mac_addr);
+    EthernetCard.setMAC((byte *)ActiveBoard.net.ethernet.mac_addr);
     if ((iface = Interfaces.getInterface(ActiveBoard.net.ethernet.spi)) == nullptr) {
         if (ActiveBoard.net.ethernet.spi != "") { Log.error(LOG_MOD_CFG, F("Interface Ethernet SPI not found")); }
     }
-    Ethernet.setInterface(ETH_IF_SPI, iface);
+    EthernetCard.setInterface(ETH_IF_SPI, iface);
     if ((iface = Interfaces.getInterface(ActiveBoard.net.ethernet.irq)) == nullptr) {
         if (ActiveBoard.net.ethernet.irq != "") { Log.warning(LOG_MOD_CFG, F("Interface Ethernet IRQ not found")); }
     }
-    Ethernet.setInterface(ETH_IF_IRQ, iface);
+    EthernetCard.setInterface(ETH_IF_IRQ, iface);
 }
 
 bool ConfigsClass::_printFile(const String &name)
@@ -276,8 +276,8 @@ bool ConfigsClass::_initDevice()
 
     /* Ethernet setup */
     
-    Ethernet.setEnabled(ActiveBoard.net.ethernet.enabled);
-    Ethernet.setHostname(F(ActiveBoard.net.hostname));
+    EthernetCard.setEnabled(ActiveBoard.net.ethernet.enabled);
+    EthernetCard.setHostname(F(ActiveBoard.net.hostname));
 
     /* TgBot setup */
 
@@ -379,14 +379,14 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     auto jnet = doc[F("network")];
     auto jeth = jnet[F("ethernet")];
 
-    Ethernet.setEnabled(jeth[F("enabled")]);
-    Ethernet.setHostname(jeth[F("hostname")]);
-    Ethernet.setDHCP(jeth[F("dhcp")]);
-    if (!Ethernet.getDHCP()) {
-        Ethernet.setAddress(ETH_ADDR_IP, jeth[F("static")][F("ip")]);
-        Ethernet.setAddress(ETH_ADDR_SUBNET, jeth[F("static")][F("subnet")]);
-        Ethernet.setAddress(ETH_ADDR_GATEWAY, jeth[F("static")][F("gateway")]);
-        Ethernet.setAddress(ETH_ADDR_DNS, jeth[F("static")][F("dns")]);
+    EthernetCard.setEnabled(jeth[F("enabled")]);
+    EthernetCard.setHostname(jeth[F("hostname")]);
+    EthernetCard.setDHCP(jeth[F("dhcp")]);
+    if (!EthernetCard.getDHCP()) {
+        EthernetCard.setAddress(ETH_ADDR_IP, jeth[F("static")][F("ip")]);
+        EthernetCard.setAddress(ETH_ADDR_SUBNET, jeth[F("static")][F("subnet")]);
+        EthernetCard.setAddress(ETH_ADDR_GATEWAY, jeth[F("static")][F("gateway")]);
+        EthernetCard.setAddress(ETH_ADDR_DNS, jeth[F("static")][F("dns")]);
     }
 
     auto jwifi = jnet[F("wifi")];
@@ -549,14 +549,14 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
     auto jnet = doc[F("network")];
     auto jeth = jnet[F("ethernet")];
-    jeth[F("enabled")] = Ethernet.getEnabled();
-    jeth[F("hostname")] = Ethernet.getHostname();
-    jeth[F("dhcp")] = Ethernet.getDHCP();
-    if (!Ethernet.getDHCP()) {
-        jeth[F("static")][F("ip")] = Ethernet.getAddress(ETH_ADDR_IP).toString();
-        jeth[F("static")][F("subnet")] = Ethernet.getAddress(ETH_ADDR_SUBNET).toString();
-        jeth[F("static")][F("gateway")] = Ethernet.getAddress(ETH_ADDR_GATEWAY).toString();
-        jeth[F("static")][F("dns")] = Ethernet.getAddress(ETH_ADDR_DNS).toString();
+    jeth[F("enabled")] = EthernetCard.getEnabled();
+    jeth[F("hostname")] = EthernetCard.getHostname();
+    jeth[F("dhcp")] = EthernetCard.getDHCP();
+    if (!EthernetCard.getDHCP()) {
+        jeth[F("static")][F("ip")] = EthernetCard.getAddress(ETH_ADDR_IP).toString();
+        jeth[F("static")][F("subnet")] = EthernetCard.getAddress(ETH_ADDR_SUBNET).toString();
+        jeth[F("static")][F("gateway")] = EthernetCard.getAddress(ETH_ADDR_GATEWAY).toString();
+        jeth[F("static")][F("dns")] = EthernetCard.getAddress(ETH_ADDR_DNS).toString();
     }
 
     auto jwifi = jnet[F("wifi")];

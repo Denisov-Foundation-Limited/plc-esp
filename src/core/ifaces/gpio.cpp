@@ -93,9 +93,9 @@ void IfGPIO::setMode(GpioMode mode)
     _mode = mode;
     switch (mode) {
         case GPIO_MOD_INPUT:
-            if (_pull = GPIO_PULL_DOWN) {
+            if (_pull == GPIO_PULL_DOWN) {
                 val = INPUT_PULLDOWN;
-            } else if (_pull = GPIO_PULL_UP) {
+            } else if (_pull == GPIO_PULL_UP) {
                 val = INPUT_PULLUP;
             } else {
                 val = INPUT;

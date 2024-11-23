@@ -62,8 +62,8 @@ public:
 private:
     String      _name;
     uint8_t     _pin;
-    GpioMode    _mode;
-    GpioPull    _pull;
+    GpioMode    _mode = GPIO_MOD_INPUT;
+    GpioPull    _pull = GPIO_PULL_NONE;
     ExtenderId  _extId;
     GpioType    _type;
     bool        _state = false;
