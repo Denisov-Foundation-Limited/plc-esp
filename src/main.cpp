@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -12,7 +12,6 @@
 #include "utils/log.hpp"
 #include "utils/configs.hpp"
 #include "core/ext.hpp"
-#include "core/ifaces/ifaces.hpp"
 #include "core/cli/clireader.hpp"
 #include "net/core/gsm.hpp"
 #include "net/core/wifi.hpp"
@@ -24,14 +23,19 @@
 #include "net/apiserver.hpp"
 #include "controllers/ctrls.hpp"
 #include "net/webgui.hpp"
-#include "net/core/eth.hpp"
+#include "core/ifaces/ow.hpp"
+#include "ftest.hpp"
 
 void setup()
 {
     Log.begin();
     delay(1000);
     Serial.println("");
-    Log.info(LOG_MOD_MAIN, F("Starting controller..."));
+    Log.info(F("MAIN"), F("Starting controller..."));
+    I2C.begin();
+    OneWireIf.begin();
+    Extenders.begin();
+    Gpio.begin();
     if (!Configs.begin()) return;
     Plc.begin();
     Wireless.begin();

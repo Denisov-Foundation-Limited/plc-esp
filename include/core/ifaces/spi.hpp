@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -14,7 +14,9 @@
 
 #include <Arduino.h>
 
-#include "core/ifaces/iface.hpp"
+#include "gpio.hpp"
+
+#define SPI_BUS_COUNT   PROF_SPI_MAX
 
 typedef enum {
     SPI_PIN_MISO,
@@ -24,26 +26,20 @@ typedef enum {
     SPI_PIN_MAX
 } SpiPin;
 
-
-class IfSPI : public Interface
+class SPIInterface
 {
 public:
-    IfSPI(const String &name, uint8_t miso, uint8_t mosi, uint8_t sck, uint8_t ss, unsigned freq, bool extended=false);
-    void setPin(SpiPin pin, uint8_t gpio);
-    uint8_t getPin(SpiPin pin) const;
+    void setPin(SpiPin pin, GpioPin *gpio);
+    GpioPin *getPin(SpiPin pin) const;
     void setFrequency(unsigned freq);
     unsigned getFrequency() const;
     const String &getName() const;
     void setName(const String &name);
-    IfType getType() const;
-    bool getExtended() const;
-    void setExtended(bool state);
 
 private:
-    uint8_t     _pins[SPI_PIN_MAX] = { 0 };
+    GpioPin     *_pins[SPI_PIN_MAX] = { nullptr };
     String      _name;
     unsigned    _freq;
-    bool        _extended = false;
 };
 
 #endif /* __SPI_HPP__ */

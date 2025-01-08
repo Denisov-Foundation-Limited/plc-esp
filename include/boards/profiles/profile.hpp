@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -12,110 +12,83 @@
 #ifndef __PROFILE_HPP__
 #define __PROFILE_HPP__
 
-typedef enum {
-    PROF_MODE_INPUT,
-    PROF_MODE_OUTPUT
-} ProfGpioMode;
+#include <Arduino.h>
+
+#define PROF_GPIO_MAX   40
+#define PROF_SPI_MAX    2
+#define PROF_I2C_MAX    2
+#define PROF_EXT_MAX    10
+#define PROF_OW_MAX     2
+#define PROF_UART_MAX   1
 
 typedef enum {
-    PROF_PULL_NONE,
-    PROF_PULL_UP,
-    PROF_PULL_DOWN
-} ProfGpioPull;
-
-typedef enum {
-    PROF_TYPE_GEN,
-    PROF_TYPE_RELAY,
-    PROF_TYPE_DINPUT
+    PROF_GPIO_SENSOR,
+    PROF_GPIO_RELAY,
+    PROF_GPIO_INPUT,
+    PROF_GPIO_GENERIC,
+    PROF_GPIO_BUZZER
 } ProfGpioType;
 
 typedef struct {
-    unsigned id;
-    unsigned addr;
-} ProfExtender;
+    uint8_t id;
+    uint8_t i2c;
+    uint8_t addr;
+} ProfExt;
 
 typedef struct {
-    const char      *name;
+    uint16_t        id;
+    uint8_t         pin;
     ProfGpioType    type;
-    unsigned        pin;
-    ProfGpioMode    mode;
-    ProfGpioPull    pull;
-    unsigned        extId;
+    uint8_t         ext;
 } ProfGpio;
 
 typedef struct {
-    const char  *name;
-    unsigned    rx;
-    unsigned    tx;
-    unsigned    rate;
-} ProfUART;
-
-typedef struct {
-    const char  *name;
-    unsigned    pin;
-} ProfOneWire;
-
-typedef struct {
-    const char  *name;
-    unsigned    sda;
-    unsigned    scl;
-} ProfI2C;
-
-typedef struct {
-    const char  *name;
-    unsigned    miso;
-    unsigned    mosi;
-    unsigned    sck;
-    unsigned    ss;
-    unsigned    freq;
+    uint8_t id;
+    uint8_t miso;
+    uint8_t mosi;
+    uint8_t sck;
+    uint8_t ss;
 } ProfSPI;
 
 typedef struct {
-    ProfGpio        gpio[32];
-    ProfOneWire     onewire[4];
-    ProfUART        uart[4];
-    ProfI2C         i2c[2];
-    ProfSPI         spi[4];
-} ProfInterfaces;
+    uint8_t id;
+    uint8_t pin;
+} ProfOneWire;
+
+typedef struct {
+    uint8_t id;
+    uint8_t sda;
+    uint8_t scl;
+} ProfI2C;
+
+typedef struct {
+    uint8_t     id;
+    uint8_t     rx;
+    uint8_t     tx;
+    unsigned    speed;
+} ProfUART;
 
 typedef struct {
     bool        enabled;
-    const char  *ssid;
-    const char  *passwd;
+    const char *ssid;
+    const char *passwd;
+    const char *hostname;
 } ProfWiFi;
 
 typedef struct {
-    bool        enabled;
-    unsigned    mac_addr[6];
-    const char  *spi;
-    const char  *irq;
-} ProfEthernet;
+    ProfI2C     i2c[PROF_OW_MAX];
+    ProfExt     ext[PROF_EXT_MAX];
+    ProfGpio    gpio[PROF_GPIO_MAX];
+    ProfSPI     spi[PROF_SPI_MAX];
+    ProfOneWire ow[PROF_I2C_MAX];
+    ProfUART    uart[PROF_UART_MAX];
+} ProfIf;
 
 typedef struct {
-    const char  *uart;
-} ProfGSM;
-
-typedef struct {
-    const char      *hostname;
-    const char      *led;
-    ProfWiFi        wifi;
-    ProfEthernet    ethernet;
-    ProfGSM         gsm;
-} ProfNetwork;
-
-typedef struct {
-    const char  *status;
-    const char  *alarm;
-    const char  *buzzer;
-} ProfPLC;
-
-typedef struct {
-    const char      *name;
-    unsigned        serial_rate;
-    ProfExtender    extenders[8];
-    ProfInterfaces  interfaces;
-    ProfNetwork     net;
-    ProfPLC         plc;
+    const char  *name;
+    unsigned    serial_rate;
+    ProfIf      interfaces;
+    ProfWiFi    wifi;
 } BoardProfile;
 
 #endif /* __PROFILE_HPP__ */

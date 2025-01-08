@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -86,34 +86,18 @@ void CLIInformerClass::showWiFiStatus()
 
 void CLIInformerClass::showInterfaces()
 {
+    std::vector<GpioPin *> pins;
+
+    Gpio.getPins(pins);
+
     Serial.println("");
     Serial.println(F("\tName         Type       Pin           Mode      Pull    Ext"));
     Serial.println(F("\t----------   --------   -----------   -------   -----   ----"));
 
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_GPIO) {
-            continue;
-        }
-
-        auto gpio = static_cast<IfGPIO *>(iface);
-
+    for (auto pin : pins) {
         String sType, sMode, sPull;
 
-        switch (gpio->getPinType()) {
-            case GPIO_TYPE_DINPUT:
-                sType = F("DInput");
-                break;
-
-            case GPIO_TYPE_RELAY:
-                sType = F("Relay");
-                break;
-
-            case GPIO_TYPE_GEN:
-                sType = F("General");
-                break;
-        }
-
-        switch (gpio->getMode()) {
+        switch (pin->mode) {
             case GPIO_MOD_INPUT:
                 sMode = "Input";
                 break;
@@ -123,7 +107,7 @@ void CLIInformerClass::showInterfaces()
                 break;
         }
 
-        switch (gpio->getPull()) {
+        switch (pin->pull) {
             case GPIO_PULL_NONE:
                 sPull = "None";
                 break;
@@ -137,119 +121,46 @@ void CLIInformerClass::showInterfaces()
                 break;
         }
 
-        Serial.printf("\t%-10s   %-8s   %-11d   %-7s   %-5s   %-8s\n",
-            gpio->getName().c_str(), sType.c_str(), gpio->getPin(), sMode.c_str(),
+        Serial.printf("\t%-10d   %-8s   %-11d   %-7s   %-5s   %-8s\n",
+            pin->id, sType.c_str(), pin->pin, sMode.c_str(),
             sPull.c_str(),
-            (gpio->getExtId() == EXT_NOT_USED) ? "CPU" : String(gpio->getExtId()).c_str());
-    }
-
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_OW) {
-            continue;
-        }
-
-        auto ow = static_cast<IfOneWire *>(iface);
-
-        Serial.printf("\t%-10s   %-8s   %-11d   %-7s   %-5s   %-8s\n",
-            ow->getName().c_str(), F("OneWire"), ow->getPin(), F("N/S"),
-            F("N/S"), F("CPU"));
-    }
-
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_I2C) {
-            continue;
-        }
-
-        auto i2c = static_cast<IfI2C *>(iface);
-
-        String sPins = String(i2c->getPin(I2C_PIN_SDA)) + "," +
-                        String(i2c->getPin(I2C_PIN_SCL));
-
-        Serial.printf("\t%-10s   %-8s   %-11s   %-7s   %-5s   %-8s\n",
-            i2c->getName().c_str(), F("I2C"), sPins.c_str(), F("N/S"),
-            F("N/S"), F("CPU"));
-    }
-
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_UART) {
-            continue;
-        }
-
-        auto uart = static_cast<IfUART *>(iface);
-
-        String sPins = String(uart->getPin(UART_PIN_RX)) + "," +
-                        String(uart->getPin(UART_PIN_TX));
-
-        Serial.printf("\t%-10s   %-8s   %-11s   %-7s   %-5s   %-8s\n",
-            uart->getName().c_str(), F("UART"), sPins.c_str(), F("N/S"),
-            F("N/S"), F("CPU"));
-    }
-
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_SPI) {
-            continue;
-        }
-
-        auto spi = static_cast<IfSPI *>(iface);
-
-        String sPins = String(spi->getPin(SPI_PIN_MISO)) + "," +
-                        String(spi->getPin(SPI_PIN_MOSI))  + "," +
-                        String(spi->getPin(SPI_PIN_SCK))  + "," +
-                        String(spi->getPin(SPI_PIN_SS));
-
-        Serial.printf("\t%-10s   %-8s   %-11s   %-7s   %-5s   %-8s\n",
-            spi->getName().c_str(), F("SPI"), sPins.c_str(), F("N/S"),
-            F("N/S"), F("CPU"));
+            (pin->ext == nullptr) ? "CPU" : ("Ext" + String(pin->ext->id)));
     }
     Serial.println("");
 }
 
 void CLIInformerClass::showInterfacesStatus()
 {
+    std::vector<GpioPin *> pins;
+
+    Gpio.getPins(pins);
+
     Serial.println("");
     Serial.println(F("\tName         State"));
     Serial.println(F("\t----------   -----"));
 
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_GPIO) {
-            continue;
-        }
-
-        auto gpio = static_cast<IfGPIO *>(iface);
-
-        Serial.printf("\t%-20s   %-5s\n",
-            gpio->getName().c_str(),
-            (gpio->getState() == true) ? "High" : "Low");
+    for (auto pin : pins) {
+        Serial.printf("\t%-20d   %-5s\n",
+            pin->id,
+            (pin->state == true) ? "High" : "Low");
     }
     Serial.println("");
 }
 
 void CLIInformerClass::showExtenders()
 {
+    std::vector<Extender *> exts;
+
+    Extenders.getExtenders(exts);
+
     Serial.println("");
     Serial.println(F("\tId    Address"));
     Serial.println(F("\t---   -------"));
 
-    for (auto ext : Extenders.getExtenders()) {
-        Serial.printf("\t%-3d   0x%-X\n", ext->getID(), ext->getAddr());
+    for (auto ext : exts) {
+        Serial.printf("\t%-3d   0x%-X\n", ext->id, ext->addr);
     }
     Serial.println("");
-}
-
-void CLIInformerClass::showTankStatus()
-{
-    Serial.println("");
-    Serial.println(F("\tId   Name                     Status   Pump   Valve   Level"));
-    Serial.println(F("\t--   ----------------------   ------   ----   -----   -----"));
-
-    /*int  id = 1;
-    for (auto tank : _tankCtrl->getTanks()) {
-        Serial.printf("\t%2d   %22s   %6s   %4d   %5d   %5d\n",
-            id, tank.getName().c_str(), tank.getStatus() ? "On" : "Off",
-            tank.getPumpPin(), tank.getValvePin(), tank.getLevels().size());
-        id++;
-    }
-    Serial.println("");*/
 }
 
 void CLIInformerClass::showControllers()
@@ -258,7 +169,7 @@ void CLIInformerClass::showControllers()
     Serial.println(F("\tName           Type       Status "));
     Serial.println(F("\t------------   --------   ---------"));
 
-    for (auto *ctrl : Controllers.getControllers()) {
+    /*for (auto *ctrl : Controllers.getControllers()) {
         String sType;
 
         switch (ctrl->getType()) {
@@ -284,12 +195,12 @@ void CLIInformerClass::showControllers()
             sType, ctrl->getEnabled() ? F("Enabled") : F("Disabled"));
     }
 
-    Serial.println("");
+    Serial.println("");*/
 }
 
 void CLIInformerClass::showMeteo()
 {
-    Serial.println("");
+    /*Serial.println("");
     Serial.println(F("\tName           OneWire   Sensors   Status  "));
     Serial.println(F("\t------------   -------   -------   --------"));
 
@@ -302,7 +213,7 @@ void CLIInformerClass::showMeteo()
         String sOw;
         
         if (meteo->getOneWire() != nullptr) {
-            sOw = meteo->getOneWire()->getName();
+            //sOw = meteo->getOneWire()->getName();
         } else {
             sOw = F("None");
         }
@@ -312,12 +223,12 @@ void CLIInformerClass::showMeteo()
             meteo->getEnabled() ? F("Enabled") : F("Disabled"));
     }
 
-    Serial.println("");
+    Serial.println("");*/
 }
 
 void CLIInformerClass::showMeteoStatus()
 {
-    for (auto *ctrl : Controllers.getControllers()) {
+    /*for (auto *ctrl : Controllers.getControllers()) {
         if (ctrl->getType() != CTRL_TYPE_METEO)
             continue;
 
@@ -349,66 +260,63 @@ void CLIInformerClass::showMeteoStatus()
         }
     }
 
-    Serial.println("");
+    Serial.println("");*/
 }
 
 void CLIInformerClass::showOneWire()
 {
-    unsigned i = 0;
+    unsigned                    i = 0;
+    std::vector<OneWireBus *>   buses;
+
+    OneWireIf.getOWBuses(buses);
 
     Serial.println("");
+    Serial.println(F("\tBus   Num   Serial"));
+    Serial.println(F("\t---   ---   ------------------"));
 
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_OW) {
-            continue;
-        }
-
-        Serial.println(iface->getName() + ":\n");
-        Serial.println(F("\tNum   Id"));
-        Serial.println(F("\t---   ------------------"));
-
-        auto ow = static_cast<IfOneWire *>(iface);
+    for (auto ow : buses) {
         std::vector<String> addrs;
-        ow->findAddresses(addrs);
+        OneWireIf.findDevices(ow, addrs);
 
-        i = 0;
+        i = 1;
         for (auto addr : addrs) {
+            addr.toUpperCase();
+            Serial.printf("\t%-3d   %-3d   %-18s\n", ow->id, i, addr.c_str());
             i++;
-            Serial.printf("\t%-3d   %-18s\n", i, addr);
         }
-        Serial.println("");
     }
+    Serial.println("");
 }
 
 void CLIInformerClass::showI2C()
 {
-    unsigned i = 0;
+    unsigned                i = 0;
+    std::vector<I2cBus *>   buses;
+
+    I2C.getI2cBuses(buses);
 
     Serial.println("");
-    for (auto iface : Interfaces.getInterfaces()) {
-        if (iface->getType() != IF_TYPE_I2C) {
-            continue;
-        }
-
-        Serial.println(iface->getName() + ":\n");
-        Serial.println(F("\tNum   Address   Hex"));
-        Serial.println(F("\t---   -------   -----"));
-
-        auto i2c = static_cast<IfI2C *>(iface);
-        std::vector<unsigned> devs;
-        i2c->findDevices(devs);
+    Serial.println(F("\tBus   Num   Address"));
+    Serial.println(F("\t---   ---   -------"));
+    
+    for (auto *i2c : buses) {    
+        std::vector<byte> devs;
+        I2C.findDevices(i2c, devs);
 
         i = 0;
         for (auto dev : devs) {
             i++;
-            Serial.printf("\t%-3d   %-18s   %-5s\n", i, dev, String(dev, HEX));
+            Serial.printf("\t%-3d   %-3d   %-18s\n", i2c->id, i, ("0x" + String(dev, HEX)).c_str());
         }
-        Serial.println("");
     }
+    Serial.println("");
 }
 
 void CLIInformerClass::showTgBot()
 {
+    unsigned                i = 1;
+    std::vector<TgUser *>   users;
+
     Serial.println("");
     Serial.println("Telegram bot configurations:");
     Serial.printf("\tStatus : %s\n", TgBot.getEnabled() ? F("Enabled") : F("Disabled"));
@@ -431,8 +339,9 @@ void CLIInformerClass::showTgBot()
     Serial.println(F("\nUsers:\n"));
     Serial.println(F("\tId    Name           ChatId      Notify   Admin"));
     Serial.println(F("\t---   ------------   ---------   ------   -----"));
-    unsigned i = 1;
-    for (auto *user : TgBot.getUsers()) {
+    
+    TgBot.getEnabledUsers(users);
+    for (auto *user : users) {
         Serial.printf("\t%-3d   %-12s   %-9d   %-6s   %-5s\n", i, user->name.c_str(), user->chatId,
                     user->notify ? F("On") : F("Off"), user->admin ? F("True") : F("False"));
         i++;

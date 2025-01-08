@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -11,58 +11,68 @@
 
 #include "core/ifaces/i2c.hpp"
 #include <Wire.h>
+#include "boards/boards.hpp"
+#include "utils/log.hpp"
 
-IfI2C::IfI2C(const String &name, uint8_t sda, uint8_t scl, bool extended)
+bool I2cClass::begin()
 {
-    _name = name;
-    _extended = extended;
-    _pins[I2C_PIN_SDA] = sda;
-    _pins[I2C_PIN_SCL] = scl;
+    for (uint8_t i = 0; i < PROF_I2C_MAX; i++) {
+        auto bus = ActiveBoard.interfaces.i2c[i];
+
+        _i2c[i].enabled = true;
+        _i2c[i].sda = bus.sda;
+        _i2c[i].scl = bus.scl;
+        _i2c[i].id = bus.id;
+        
+        if (i == 0) {
+            if (!Wire.begin(_i2c[i].sda, _i2c[i].scl, I2C_DEFAULT_SPEED)) {
+                Log.error(F("I2C"), "I2C id: " +String(bus.id)+ " init failed.");
+                return false;
+            }
+            _i2c[i].wire = &Wire;
+        } else {
+            if (!Wire1.begin(_i2c[i].sda, _i2c[i].scl, I2C_DEFAULT_SPEED)) {
+                Log.error(F("I2C"), "I2C id: " +String(bus.id)+ " init failed.");
+                return false;
+            }
+            _i2c[i].wire = &Wire1;
+        }
+        Log.info(F("I2C"), "I2C id: " + String(_i2c[i].id) + " init at sda: " + String(_i2c[i].sda) + " scl: " + String(_i2c[i].scl));
+    }
+    return true;
 }
 
-void IfI2C::setPin(I2cPin pin, uint8_t gpio)
+bool I2cClass::getI2cBusById(uint8_t id, I2cBus **bus)
 {
-    _pins[pin] = gpio;
+    for (uint8_t i = 0; i < _i2c.size(); i++) {
+        if (_i2c[i].id == id && _i2c[i].enabled) {
+            *bus = &_i2c[i];
+            return true;
+        }
+    }
+    return false;
 }
 
-uint8_t IfI2C::getPin(I2cPin pin) const
+void I2cClass::getI2cBuses(std::vector<I2cBus *> &buses)
 {
-    return _pins[pin];
-}
-
-const String &IfI2C::getName() const
-{
-    return _name;
-}
-
-void IfI2C::findDevices(std::vector<unsigned> &devices)
-{
-    Wire.begin(_pins[I2C_PIN_SDA], _pins[I2C_PIN_SCL]);
-    for (auto addr = I2C_MIN_ADDR; addr < I2C_MAX_ADDR; addr++) {
-        Wire.beginTransmission(addr);
-        auto error = Wire.endTransmission();
-        if (error == 0) {
-            devices.push_back(addr);
+    for (uint8_t i = 0; i < _i2c.size(); i++) {
+        if (_i2c[i].enabled) {
+            buses.push_back(&_i2c[i]);
         }
     }
 }
 
-bool IfI2C::getExtended() const
+void I2cClass::findDevices(I2cBus *bus, std::vector<byte> &devs)
 {
-    return _extended;
+    byte    address, error;
+
+    for (address = I2C_SCAN_ADDR_FIRST; address < I2C_SCAN_ADDR_LAST; address++) {
+        bus->wire->beginTransmission(address);
+        error = bus->wire->endTransmission();
+        if (error == 0) {
+            devs.push_back(address);
+        }
+    }
 }
 
-void IfI2C::setExtended(bool state)
-{
-    _extended = state;
-}
-
-IfType IfI2C::getType() const
-{
-    return IF_TYPE_I2C;
-}
-
-void IfI2C::setName(const String &name)
-{
-    _name = name;
-}
+I2cClass I2C;

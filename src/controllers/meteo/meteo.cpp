@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -33,13 +33,13 @@ bool MeteoCtrl::getEnabled() const
     return _enabled;
 }
 
-void MeteoCtrl::setOneWire(IfOneWire *ow)
+void MeteoCtrl::setOneWire(OneWireClass *ow)
 {
     _ow = ow;
-    _ds.setPin(ow->getPin());
+ 
 }
 
-IfOneWire *MeteoCtrl::getOneWire()
+OneWireClass *MeteoCtrl::getOneWire()
 {
     return _ow;
 }
@@ -50,7 +50,7 @@ void MeteoCtrl::addSensor(MeteoSensor *sensor)
         auto *s = static_cast<Ds18b20 *>(sensor);
         s->setDSBus(&_ds);
         _sensors.push_back(s);
-        Log.info(LOG_MOD_METEO, String(F("Add sensor name: ")) +
+        Log.info(F("METEO"), String(F("Add sensor name: ")) +
                                 sensor->getName() +
                                 String(F(" type: DS18B20")));
         _dsCount++;
@@ -75,7 +75,7 @@ MeteoSensor *MeteoCtrl::getSensor(const String &name)
 void MeteoCtrl::begin()
 {
     if (!_enabled || !_sensors.size()) return;
-    Log.info(LOG_MOD_METEO, String(F("Starting Meteo controller ")) + _name +
+    Log.info(F("METEO"), String(F("Starting Meteo controller ")) + _name +
                             String(F(" with ")) + 
                             String(_sensors.size()) +
                             String(F(" sensors")));

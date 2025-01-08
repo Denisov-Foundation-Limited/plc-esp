@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -31,16 +31,16 @@ class WirelessClass
 public:
     WirelessClass();
     void setCreds(const String &ssid, const String &passwd);
-    const String &getSSID() const;
-    const String &getPasswd() const;
-    IfGPIO *getStatusLed() const;
-    void setStatusLed(IfGPIO *gpio);
+    String &getSSID();
+    String &getPasswd();
+    GpioPin *getStatusLed() const;
+    void setStatusLed(GpioPin *gpio);
     void setEnabled(bool status);
-    bool getEnabled() const;
+    bool &getEnabled();
     void setAP(bool status);
-    bool getAP() const;
+    bool &getAP();
     wl_status_t getStatus() const;
-    String getIP() const;
+    String getIP();
     void begin();
     void loop();
     void setHostname(const String &name);
@@ -49,7 +49,7 @@ public:
 private:
     String      _ssid;
     String      _passwd;
-    IfGPIO  *_statusLed = nullptr;
+    GpioPin  *_statusLed = nullptr;
     bool        _enabled = false;
     bool        _ap = true;
     wl_status_t _status = WL_NO_SHIELD;

@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -14,8 +14,9 @@
 
 #include <Arduino.h>
 #include <vector>
+#include "gpio.hpp"
 
-#include "core/ifaces/iface.hpp"
+#define UART_BUS_COUNT   PROF_UART_MAX
 
 typedef enum {
     UART_PIN_RX,
@@ -23,25 +24,20 @@ typedef enum {
     UART_PIN_MAX
 } UARTPin;
 
-class IfUART : public Interface
+class UARTClass
 {
 public:
-    IfUART(const String &name, uint8_t rx, uint8_t tx, unsigned rate, bool extended=false);
-    void setPin(UARTPin pin, uint8_t gpio);
-    uint8_t getPin(UARTPin pin) const;
+    void setPin(UARTPin pin, GpioPin *gpio);
+    GpioPin *getPin(UARTPin pin) const;
     const String &getName() const;
     unsigned getRate() const;
     void setRate(unsigned rate);
-    IfType getType() const;
     void setName(const String &name);
-    bool getExtended() const;
-    void setExtended(bool state);
 
 private:
-    uint8_t     _pins[UART_PIN_MAX] = { 0 };
+    GpioPin     *_pins[UART_PIN_MAX] = { nullptr };
     String      _name;
     unsigned    _rate;
-    bool        _extended = false;
 };
 
 #endif /* __UART_HPP__ */

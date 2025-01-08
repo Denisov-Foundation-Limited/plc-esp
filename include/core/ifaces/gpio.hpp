@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -13,11 +13,12 @@
 #define __GPIO_HPP__
 
 #include <Arduino.h>
-#include <vector>
+#include <array>
 
-#include "core/ext.hpp"
+#include <core/ext.hpp>
 #include "utils/log.hpp"
-#include "core/ifaces/iface.hpp"
+
+#define GPIO_PINS_COUNT (128 * 2 + 16)
 
 typedef enum {
     GPIO_MOD_INPUT,
@@ -31,43 +32,41 @@ typedef enum {
 } GpioPull;
 
 typedef enum {
-    GPIO_TYPE_GEN,
+    GPIO_TYPE_GENERIC,
+    GPIO_TYPE_INPUT,
     GPIO_TYPE_RELAY,
-    GPIO_TYPE_DINPUT
+    GPIO_TYPE_SENSOR,
+    GPIO_TYPE_BUZZER
 } GpioType;
 
-class IfGPIO : public Interface
+typedef struct {
+    uint16_t    id;
+    uint8_t     pin;
+    GpioType    type;
+    GpioMode    mode;
+    GpioPull    pull;
+    Extender    *ext;
+    bool        state;
+    bool        enabled;
+} GpioPin;
+
+class GpioClass
 {
 public:
-    IfGPIO(const String &name, GpioType type, uint8_t pin, GpioMode mode, GpioPull pull, ExtenderId extId, bool extended=false);
-    void setPinType(GpioType type);
-    GpioType getPinType() const;
-    void setPin(uint8_t pin);
-    void setPull(GpioPull pull);
-    void setMode(GpioMode mode);
-    void setExtId(ExtenderId id);
-    uint8_t getPin() const;
-    GpioMode getMode() const;
-    GpioPull getPull() const;
-    ExtenderId getExtId() const;
-    void write(bool val);
-    bool read();
-    bool getState();
-    const String &getName() const ;
-    IfType getType() const;
-    void setName(const String &name);
-    bool getExtended() const;
-    void setExtended(bool state);
+    bool begin();
+    void write(GpioPin *pin, bool val);
+    bool read(GpioPin *pin);
+    bool getState(GpioPin *pin);
+    bool getPinById(uint16_t id, GpioPin **pin);
+    void getPins(std::vector<GpioPin *> &pins);
+    void getPinsByType(GpioType type, std::vector<GpioPin *> &pins);
+    void setMode(GpioPin *pin, GpioMode mode, GpioPull pull);
 
 private:
-    String      _name;
-    uint8_t     _pin;
-    GpioMode    _mode = GPIO_MOD_INPUT;
-    GpioPull    _pull = GPIO_PULL_NONE;
-    ExtenderId  _extId;
-    GpioType    _type;
-    bool        _state = false;
-    bool        _extended = false;
+    std::array<GpioPin, GPIO_PINS_COUNT> _pins;
+    void _beginPin(GpioPin *pin);
 };
+
+extern GpioClass Gpio;
 
 #endif /* __GPIO_HPP__ */

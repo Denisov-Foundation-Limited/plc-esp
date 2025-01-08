@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -14,36 +14,33 @@
 
 #include <Arduino.h>
 #include <vector>
+#include <Wire.h>
 
-#include "core/ifaces/iface.hpp"
+#define I2C_BUS_COUNT       2
+#define I2C_DEFAULT_SPEED   400000
+#define I2C_SCAN_ADDR_FIRST 0x01
+#define I2C_SCAN_ADDR_LAST  0x7f
 
-#define I2C_MIN_ADDR    0x8
-#define I2C_MAX_ADDR    127
+typedef struct {
+    uint8_t id;
+    uint8_t sda;
+    uint8_t scl;
+    TwoWire *wire;
+    bool    enabled;
+} I2cBus;
 
-typedef enum {
-    I2C_PIN_SDA,
-    I2C_PIN_SCL,
-    I2C_PIN_MAX
-} I2cPin;
-
-
-class IfI2C : public Interface
+class I2cClass
 {
 public:
-    IfI2C(const String &name, uint8_t sda, uint8_t scl, bool extended=false);
-    void setPin(I2cPin pin, uint8_t gpio);
-    uint8_t getPin(I2cPin pin) const;
-    const String &getName() const;
-    void findDevices(std::vector<unsigned> &devices);
-    IfType getType() const;
-    void setName(const String &name);
-    bool getExtended() const;
-    void setExtended(bool state);
+    bool begin();
+    void getI2cBuses(std::vector<I2cBus *> &bus);
+    bool getI2cBusById(uint8_t id, I2cBus **bus);
+    void findDevices(I2cBus *bus, std::vector<byte> &devs);
 
 private:
-    uint8_t _pins[I2C_PIN_MAX] = { 0 };
-    String  _name;
-    bool    _extended = false;
+    std::array<I2cBus, I2C_BUS_COUNT> _i2c;
 };
+
+extern I2cClass I2C;
 
 #endif /* __I2C_HPP__ */

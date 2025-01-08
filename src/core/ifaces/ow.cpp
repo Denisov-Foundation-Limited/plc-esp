@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -10,50 +10,48 @@
 /**********************************************************************/
 
 #include "core/ifaces/ow.hpp"
+#include "boards/boards.hpp"
 
-IfOneWire::IfOneWire(const String &name, uint8_t pin, bool extended)
+bool OneWireClass::begin()
 {
-    _name = name;
-    _pin = pin;
-    _extended = extended;
+    for (uint8_t i = 0; i < PROF_OW_MAX; i++) {
+        auto bus = ActiveBoard.interfaces.ow[i];
+
+        _ow[i].enabled = true;
+        _ow[i].pin = bus.pin;
+        _ow[i].ow.begin(bus.pin);
+        _ow[i].id = bus.id;
+
+        Log.info(F("OneWire"), "OneWire id: " + String(_ow[i].id) + " inited at pin: " + String(_ow[i].pin));
+    }
+    return true;
 }
 
-void IfOneWire::setPin(uint8_t gpio)
+void OneWireClass::getOWBuses(std::vector<OneWireBus *> &buses)
 {
-    _pin = gpio;
-    _bus.begin(gpio);
+    for (uint8_t i = 0; i < _ow.size(); i++) {
+        if (_ow[i].enabled) {
+            buses.push_back(&_ow[i]);
+        }
+    }
 }
 
-uint8_t IfOneWire::getPin() const
+bool OneWireClass::getOWBusById(uint8_t id, OneWireBus **bus)
 {
-    return _pin;
+    for (uint8_t i = 0; i < _ow.size(); i++) {
+        if (_ow[i].id == id && _ow[i].enabled) {
+            *bus = &_ow[i];
+            return true;
+        }
+    }
+    return false;
 }
 
-const String &IfOneWire::getName() const
-{
-    return _name;
-}
-
-void IfOneWire::setName(const String &name)
-{
-    _name = name;
-}
-
-bool IfOneWire::getExtended() const
-{
-    return _extended;
-}
-
-void IfOneWire::setExtended(bool state)
-{
-    _extended = state;
-}
-
-void IfOneWire::findAddresses(std::vector<String> &addrs)
+void OneWireClass::findDevices(OneWireBus *bus, std::vector<String> &addrs)
 {
     uint8_t addr[8];
 
-    if (_bus.search(addr))
+    if (bus->ow.search(addr))
     {
         do
         {
@@ -67,11 +65,8 @@ void IfOneWire::findAddresses(std::vector<String> &addrs)
             }
             sOut.toUpperCase();
             addrs.push_back(sOut);
-        } while (_bus.search(addr));
+        } while (bus->ow.search(addr));
     }
 }
 
-IfType IfOneWire::getType() const
-{
-    return IF_TYPE_OW;
-}
+OneWireClass OneWireIf;

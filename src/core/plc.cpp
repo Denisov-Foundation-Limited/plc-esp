@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -32,7 +32,7 @@ void PlcClass::setAlarm(PlcMod mod, bool status)
 
     if (_alarm == 0) {
         _lastAlarm = false;
-        if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(false); }
+        if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { Gpio.write(_pins[PLC_GPIO_ALARM_LED], false); }
     }
 }
 
@@ -46,7 +46,7 @@ void PlcClass::setBuzzer(PlcMod mod, bool status)
 
     if (_buzzer == 0) {
         _lastBuzzer = false;
-        if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(false); }
+        if (_pins[PLC_GPIO_BUZZER] != nullptr) { Gpio.write(_pins[PLC_GPIO_BUZZER], false); }
     }
 }
 
@@ -59,18 +59,18 @@ void PlcClass::setStatus(PlcMod mod, bool status)
     }
 
     if (_status == 0) {
-        if (_pins[PLC_GPIO_STATUS_LED] != nullptr) { _pins[PLC_GPIO_STATUS_LED]->write(false); }
+        if (_pins[PLC_GPIO_STATUS_LED] != nullptr) { Gpio.write(_pins[PLC_GPIO_STATUS_LED], false); }
     } else {
-        if (_pins[PLC_GPIO_STATUS_LED] != nullptr) { _pins[PLC_GPIO_STATUS_LED]->write(true); }
+        if (_pins[PLC_GPIO_STATUS_LED] != nullptr) { Gpio.write(_pins[PLC_GPIO_STATUS_LED], true); }
     }
 }
 
-IfGPIO *PlcClass::getPin(PlcGpioType type) const
+GpioPin *PlcClass::getPin(PlcGpioType type) const
 {
     return _pins[type];
 }
 
-void PlcClass::setPin(PlcGpioType type, IfGPIO *pin)
+void PlcClass::setPin(PlcGpioType type, GpioPin *pin)
 {
     _pins[type] = pin;
 }
@@ -87,8 +87,8 @@ void PlcClass::setName(const String &name)
 
 void PlcClass::begin()
 {
-    if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(false); }
-    if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(false); }
+    if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { Gpio.write(_pins[PLC_GPIO_ALARM_LED], false); }
+    if (_pins[PLC_GPIO_BUZZER] != nullptr) { Gpio.write(_pins[PLC_GPIO_BUZZER], false); }
 }
 
 void PlcClass::loop()
@@ -110,19 +110,19 @@ void PlcClass::_alarmBuzzerTask()
     if (_alarm > 0) {
         if (!_lastAlarm) {
             _lastAlarm = true;
-            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(true); }
+            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { Gpio.write(_pins[PLC_GPIO_ALARM_LED], true); }
         } else {
             _lastAlarm = false;
-            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { _pins[PLC_GPIO_ALARM_LED]->write(false); }
+            if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { Gpio.write(_pins[PLC_GPIO_ALARM_LED], false); }
         }
     }
     if (_buzzer > 0) {
         if (!_lastBuzzer) {
             _lastBuzzer = true;
-            if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(true); }
+            if (_pins[PLC_GPIO_BUZZER] != nullptr) { Gpio.write(_pins[PLC_GPIO_BUZZER], true); }
         } else {
             _lastBuzzer = false;
-            if (_pins[PLC_GPIO_BUZZER] != nullptr) { _pins[PLC_GPIO_BUZZER]->write(false); }
+            if (_pins[PLC_GPIO_BUZZER] != nullptr) { Gpio.write(_pins[PLC_GPIO_BUZZER], false); }
         }
     }
 }

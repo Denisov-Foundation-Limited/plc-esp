@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -15,7 +15,6 @@
 #include <Arduino.h>
 
 #include "net/core/wifi.hpp"
-#include "core/ifaces/ifaces.hpp"
 #include "core/ext.hpp"
 
 class CLIInformerClass

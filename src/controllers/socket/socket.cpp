@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -13,151 +13,102 @@
 #include "db/socketdb.hpp"
 #include "StringUtils.h"
 
-Socket::Socket(const String &name)
+/*********************************************************************/
+/*                                                                   */
+/*                          PUBLIC FUNCTIONS                         */
+/*                                                                   */
+/*********************************************************************/
+
+SocketCtrlClass::SocketCtrlClass()
 {
-    _name = name;
-}
-
-void Socket::setStatus(bool status, bool save)
-{
-    if (_status != status) {
-        Log.info(LOG_MOD_SOCKET, String(F("Socket ")) + _name + String(" changed status to ") + (_status ? "ON" : "OFF"));
-    }
-
-    _status = status;
-
-    if (_gpio[SOCK_IF_RELAY] != nullptr) {
-        _gpio[SOCK_IF_RELAY]->write(status);
-    }
-
-    if (save) {
-        SocketDB    db;
-        db.loadFromFile(String(su::SH(_ctrl->getName().c_str()), HEX) + ".json");
-        db.close();
-        db.setStatus(getName(), status);
-        db.saveToFile();
-        db.close();
-        db.clear();
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        memset(&_sockets[i], 0x0, sizeof(Socket));
     }
 }
 
-bool Socket::getStatus() const
+void SocketCtrlClass::getEnabledSockets(std::vector<Socket *> &socks)
 {
-    return _status;
-}
-
-void Socket::setName(const String &name)
-{
-    _name = name;
-}
-
-const String &Socket::getName() const
-{
-    return _name;
-}
-
-void Socket::begin()
-{
-    if (_gpio[SOCK_IF_RELAY] != nullptr) {
-        _gpio[SOCK_IF_RELAY]->setMode(GPIO_MOD_OUTPUT);
-        _gpio[SOCK_IF_RELAY]->write(false);
-    }
-    if (_gpio[SOCK_IF_BUTTON] != nullptr) {
-        _gpio[SOCK_IF_BUTTON]->setMode(GPIO_MOD_INPUT);
-    }
-}
-
-void Socket::loop()
-{
-    if (_reading) {
-        if ((millis() - _timer) >= SOCKET_BUTTON_WAIT_MS) {
-            _reading = false;
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        if (_sockets[i].enabled) {
+            socks.push_back(&_sockets[i]);
         }
     }
 }
 
-void Socket::readButton()
+std::array<Socket, SOCKET_COUNT> *SocketCtrlClass::getSockets()
 {
-    if (_gpio[SOCK_IF_BUTTON] != nullptr) {
-        if (!_gpio[SOCK_IF_BUTTON]->read() && !_reading) {
-            Log.info(LOG_MOD_SOCKET, String(F("Socket ")) + _name + String(F(" button pressed")));
-            setStatus(!getStatus(), true);
-            _reading = true;
-            _timer = millis();
-        }
+    return &_sockets;
+}
+
+bool SocketCtrlClass::setSocket(uint8_t index, Socket *sock)
+{
+    if (index > (_sockets.size() - 1)) {
+        return false;
     }
+
+    memcpy(&_sockets[index], sock, sizeof(Socket));
+
+    return true;
 }
 
-void Socket::setController(SocketCtrl *ctrl)
+bool SocketCtrlClass::isExists(const String &name)
 {
-    _ctrl = ctrl;
-}
-
-void Socket::setInterface(SockIfType type, Interface *iface)
-{
-    _gpio[type] = static_cast<IfGPIO *>(iface);
-}
-
-Interface *Socket::getInterface(SockIfType type) const
-{
-    return _gpio[type];
-}
-
-SocketCtrl::SocketCtrl(const String &name)
-{
-    _name = name;
-}
-
-void SocketCtrl::addSocket(Socket *sock)
-{
-    Log.info(LOG_MOD_SOCKET, String(F("Add socket: ")) + sock->getName());
-    _sockets.push_back(sock);
-}
-
-const std::vector<Socket *> &SocketCtrl::getSockets()
-{
-    return _sockets;
-}
-
-bool SocketCtrl::isExists(const String &name)
-{
-    for (auto sock : _sockets) {
-        if (sock->getName() == name) {
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        if (_sockets[i].name == name) {
             return true;
         }
     }
     return false;
 }
 
-Socket *SocketCtrl::getSocket(const String &name)
+bool SocketCtrlClass::getSocket(const String &name, Socket **sock)
 {
-    for (auto sock : _sockets) {
-        if (sock->getName() == name) {
-            return sock;
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        if (_sockets[i].name == name) {
+            *sock = &_sockets[i];
+            return true;
         }
     }
-    return nullptr;
+    return false;
 }
 
-void SocketCtrl::begin()
+bool SocketCtrlClass::getSocket(size_t index, Socket **sock)
 {
-    if (!_enabled) return;
-    for (auto s : _sockets) {
-        s->begin();
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        if (index == i) {
+            *sock = &_sockets[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+void SocketCtrlClass::begin()
+{
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        if (!_sockets[i].enabled) {
+            continue;
+        }
+        if (_sockets[i].relay != nullptr) {
+            Gpio.setMode(_sockets[i].relay, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+        }
+        if (_sockets[i].button != nullptr) {
+            Gpio.setMode(_sockets[i].button, GPIO_MOD_INPUT, GPIO_PULL_UP);
+        }
     }
 }
 
-void SocketCtrl::loop()
+void SocketCtrlClass::loop()
 {
     if (!_enabled) return;
     if (_sockets.size() == 0) return;
 
-    for (auto s : _sockets) {
-        s->loop();
+    for (size_t i = 0; i < _sockets.size(); i++) {
+        _loopSocket(&_sockets[i]);
     }
 
     if (_reading) {
-        _sockets[_curSocket]->readButton();
+        _readButton(&_sockets[_curSocket]);
         if (_curSocket == _sockets.size() - 1) {
             _reading = false;
             _timer = millis();
@@ -172,33 +123,59 @@ void SocketCtrl::loop()
     }
 }
 
-void SocketCtrl::remove(size_t idx)
+void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
 {
-    delete _sockets[idx];
-    _sockets.erase(_sockets.cbegin() + idx);
+    if (sock->status != status) {
+        Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" changed status to ")) + (sock->status ? "ON" : "OFF"));
+    }
+
+    sock->status = status;
+
+    if (sock->relay != nullptr) {
+        Gpio.write(sock->relay, status);
+    }
+
+    if (save) {
+        SocketDB    db;
+        db.loadFromFile(F("socket.json"));
+        db.close();
+        db.setStatus(sock->name, status);
+        db.saveToFile();
+        db.close();
+        db.clear();
+    }
 }
 
-bool SocketCtrl::getEnabled() const
+bool &SocketCtrlClass::getStatus(Socket *sock)
 {
-    return _enabled;
+    return sock->status;
 }
 
-void SocketCtrl::setEnabled(bool enabled)
+/*********************************************************************/
+/*                                                                   */
+/*                         PRIVATE FUNCTIONS                         */
+/*                                                                   */
+/*********************************************************************/
+
+void SocketCtrlClass::_loopSocket(Socket *sock)
 {
-    _enabled = enabled;
+    if (sock->reading) {
+        if ((millis() - sock->timer) >= SOCKET_BUTTON_WAIT_MS) {
+            sock->reading = false;
+        }
+    }
 }
 
-CtrlType SocketCtrl::getType() const
+void SocketCtrlClass::_readButton(Socket *sock)
 {
-    return CTRL_TYPE_SOCKET;
+    if (sock->button != nullptr) {
+        if (!Gpio.read(sock->button) && !sock->reading) {
+            Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" button pressed")));
+            setStatus(sock, !getStatus(sock), true);
+            sock->reading = true;
+            sock->timer = millis();
+        }
+    }
 }
 
-void SocketCtrl::setName(const String &name)
-{
-    _name = name;
-}
-
-const String &SocketCtrl::getName() const
-{
-    return _name;
-}
+SocketCtrlClass SocketCtrl;

@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -26,7 +26,7 @@ class GsmModemClass
 {
 private:
     bool        _enabled = false;
-    IfUART   *_uart;
+    UARTClass   *_uart;
 
     UART        _gsmUart;
     TinyGsm     *_modem;
@@ -35,8 +35,8 @@ private:
     String getSigLevel(int level) const;
 public:
     GsmModemClass();
-    void setUart(IfUART *uart);
-    IfUART *getUart() const;
+    void setUart(UARTClass *uart);
+    UARTClass *getUart() const;
     void setEnabled(bool status);
     bool getEnabled() const;
     void begin();

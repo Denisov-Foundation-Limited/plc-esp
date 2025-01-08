@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -22,6 +22,8 @@
 #include <GyverHTTP.h>
 
 #include "utils/log.hpp"
+
+#define TG_USERS_COUNT  10
 
 typedef enum {
     TG_MENU_MAIN,
@@ -51,27 +53,29 @@ typedef struct {
     TgMenuLevel level;
     String      ctrl;
     String      item;
+    bool        enabled;
 } TgUser;
 
 class TgBotClass : public FastBot2
 {
 public:
     void setEnabled(bool status);
-    bool getEnabled() const;
-    void addUser(TgUser *user);
-    TgUser *getUser(const String &name);
-    TgUser *getUser(unsigned chatId);
-    void removeUser(size_t idx);
-    const std::vector<TgUser *> &getUsers();
+    bool &getEnabled();
+    bool setUser(size_t index, TgUser *user);
+    bool getUser(const String &name, TgUser **user);
+    bool getUser(size_t index, TgUser **user);
+    bool getUserByChatId(unsigned chatId, TgUser **user);
+    std::array<TgUser, TG_USERS_COUNT> *getUsers();
+    void getEnabledUsers(std::vector<TgUser *> &users);
     unsigned getLastID() const;
     bool isUserExists(const String &name) const;
     void begin();
     void loop();
 
 private:
-    std::vector<TgUser *>   _users;
-    bool                    _enabled = false;
-    unsigned                _lastID = 0;
+    std::array<TgUser, TG_USERS_COUNT>  _users;
+    bool                                _enabled = false;
+    unsigned                            _lastID = 0;
 
     void _backMenu(TgUser *user);
     bool _processLevel(TgUser *user, const String &msg);

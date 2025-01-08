@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -10,6 +10,8 @@
 /**********************************************************************/
 
 #include "core/ext.hpp"
+#include "boards/boards.hpp"
+#include "core/ifaces/i2c.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -17,118 +19,59 @@
 /*                                                                   */
 /*********************************************************************/
 
-Extender::Extender(ExtenderId id, uint8_t addr, bool extended)
+bool ExtendersClass::begin()
 {
-    _id = id;
-    _addr = addr;
-    _extended = extended;
-}
+    for (uint8_t i = 0; i < PROF_EXT_MAX; i++) {
+        auto bus = ActiveBoard.interfaces.ext[i];
 
-uint8_t Extender::getAddr() const
-{
-    return _addr;
-}
+        _ext[i].id = bus.id;
+        _ext[i].addr = bus.addr;
+        _ext[i].enabled = true;
 
-ExtenderId Extender::getID() const
-{
-    return _id;
-}
-
-bool Extender::begin()
-{
-    return _mcp.begin_I2C(_addr);
-}
-
-void Extender::setExtended(bool state)
-{
-    _extended = state;
-}
-
-bool Extender::getExtended() const
-{
-    return _extended;
-}
-
-void Extender::setPinMode(uint8_t pin, uint8_t mode)
-{
-    _mcp.pinMode(pin, mode);
-}
-
-void Extender::write(uint8_t pin, bool state)
-{
-    _mcp.digitalWrite(pin, (state == true) ? HIGH : LOW);
-}
-
-bool Extender::read(uint8_t pin)
-{
-    return (_mcp.digitalRead(pin) == HIGH) ? true : false;
-}
-
-void Extender::setID(ExtenderId id)
-{
-    _id = id;
-}
-
-void Extender::setAddr(unsigned addr)
-{
-    _addr = addr;
-}
-
-void ExtendersClass::addExtender(Extender *ext)
-{
-    if (ext->begin()) {
-        Log.info(LOG_MOD_GPIO, "Add Extender " + String(ext->getID()) +
-            " addr: " + String(ext->getAddr()));
-    } else {
-        Log.warning(LOG_MOD_GPIO, "Extender " + String(ext->getID()) +
-            " addr: " + String(ext->getAddr()) + " is not connected");
-    }
-    _exts.push_back(ext);
-}
-
-Extender *ExtendersClass::getById(ExtenderId id) const
-{
-    for (auto *e : _exts) {
-        if (e->getID() == id) {
-            return e;
+        if (!I2C.getI2cBusById(bus.i2c, &_ext[i].i2c)) {
+            Log.error(F("EXT"), "I2C id: " +String(bus.i2c)+ " not found.");
+            return false;
+        }
+        if (_ext[i].mcp.begin_I2C(_ext[i].addr, _ext[i].i2c->wire)) {
+            _ext[i].active = true;
         }
     }
-    return nullptr;
+    return true;
 }
 
-std::vector<Extender*> &ExtendersClass::getExtenders()
+bool ExtendersClass::getExtenderById(uint8_t id, Extender **ext)
 {
-    return _exts;
-}
-
-bool ExtendersClass::isExists(ExtenderId id)
-{
-    for (auto *e : _exts) {
-        if (e->getID() == id) {
+    for (size_t i = 0; i < _ext.size(); i++) {
+        if (_ext[i].enabled && _ext[i].id == id) {
+            *ext = &_ext[i];
             return true;
         }
     }
     return false;
 }
 
-unsigned ExtendersClass::getLastFreeAddr() const
+void ExtendersClass::write(Extender *ext, uint16_t pin, bool state)
 {
-    bool found = false;
+    ext->mcp.digitalWrite(pin, state);
+}
 
-    for (auto addr : _addrs) {
-        found = false;
-        for (auto *e : _exts) {
-            if (e->getAddr() == addr) {
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            return addr;
+bool ExtendersClass::read(Extender *ext, uint16_t pin)
+{
+    return ext->mcp.digitalRead(pin);
+}
+
+void ExtendersClass::setPinMode(Extender *ext, uint16_t pin, uint8_t mode)
+{
+    ext->mcp.pinMode(pin, mode);
+}
+
+void ExtendersClass::getExtenders(std::vector<Extender *> &ext)
+{
+    for (uint8_t i ; i < EXT_COUNT; i++) {
+        if (_ext[i].enabled) {
+            ext.push_back(&_ext[i]);
         }
     }
-
-    return 0;
 }
 
 ExtendersClass Extenders;

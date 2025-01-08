@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -17,71 +17,38 @@
 #include <Wire.h>
 #include <Adafruit_BusIO_Register.h>
 #include <Adafruit_MCP23X17.h>
-#include <Adafruit_MCP23X08.h>
 
 #include "utils/log.hpp"
+#include <core/ifaces/i2c.hpp>
 
-#define EXT_ADDR_COUNT  8
-
-typedef enum {
-    EXT_NOT_USED,
-    EXT_ID_1,
-    EXT_ID_2,
-    EXT_ID_3,
-    EXT_ID_4,
-    EXT_ID_5,
-    EXT_ID_6,
-    EXT_ID_7,
-    EXT_ID_8
-} ExtenderId;
+#define EXT_COUNT  16
 
 typedef enum {
-    EXT_ADDR_1 = 0x20,
-    EXT_ADDR_2 = 0x21,
-    EXT_ADDR_3 = 0x22,
-    EXT_ADDR_4 = 0x23,
-    EXT_ADDR_5 = 0x24,
-    EXT_ADDR_6 = 0x25,
-    EXT_ADDR_7 = 0x26,
-    EXT_ADDR_8 = 0x27
-} ExtenderAddr;
+    EXT_TYPE_MCP_16,
+    EXT_TYPE_MCP_8
+} ExtenderType;
 
-class Extender
-{
-public:
-    Extender(ExtenderId id, uint8_t addr, bool extended=false);
-    uint8_t getAddr() const;
-    ExtenderId getID() const;
-    bool begin();
-    void write(uint8_t pin, bool state);
-    bool read(uint8_t pin);
-    void setID(ExtenderId id);
-    void setAddr(unsigned addr);
-    void setPinMode(uint8_t pin, uint8_t mode);
-    void setExtended(bool state);
-    bool getExtended() const;
-
-private:
-    ExtenderId          _id;
-    uint8_t             _addr;
-    Adafruit_MCP23X17   _mcp;
-    bool                _extended = false;
-};
+typedef struct {
+    uint8_t             id;
+    I2cBus              *i2c;
+    uint16_t            addr;
+    Adafruit_MCP23X17   mcp;
+    bool                enabled;
+    bool                active;
+} Extender;
 
 class ExtendersClass
 {
 public:
-    void addExtender(Extender *ext);
-    Extender *getById(ExtenderId id) const;
-    std::vector<Extender*> &getExtenders();
-    bool isExists(ExtenderId id);
-    unsigned getLastFreeAddr() const;
+    bool begin();
+    void write(Extender *ext, uint16_t pin, bool state);
+    bool read(Extender *ext, uint16_t pin);
+    void setPinMode(Extender *ext, uint16_t pin, uint8_t mode);
+    void getExtenders(std::vector<Extender *> &ext);
+    bool getExtenderById(uint8_t id, Extender **ext);
 
 private:
-    std::vector<Extender*>   _exts;
-    unsigned                _addrs[EXT_ADDR_COUNT] = { EXT_ADDR_1, EXT_ADDR_2, EXT_ADDR_3,
-                                                        EXT_ADDR_4, EXT_ADDR_5, EXT_ADDR_6,
-                                                        EXT_ADDR_7, EXT_ADDR_8 };
+    std::array<Extender, EXT_COUNT>   _ext;
 };
 
 extern ExtendersClass Extenders;

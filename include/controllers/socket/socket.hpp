@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -20,63 +20,46 @@
 
 #define SOCKET_BUTTON_WAIT_MS   1000
 #define SOCKET_BUTTON_READ_MS   100
+#define SOCKET_COUNT            32
 
-typedef enum {
-    SOCK_IF_RELAY,
-    SOCK_IF_BUTTON,
-    SOCK_IF_MAX
-} SockIfType;
+typedef struct {
+    String      name;
+    bool        status;
+    bool        reading;
+    unsigned    timer;
+    GpioPin     *button;
+    GpioPin     *relay;
+    bool        enabled;
+} Socket;
 
-class SocketCtrl;
-
-class Socket
+class SocketCtrlClass
 {
 public:
-    Socket(const String &name);
-    void setStatus(bool status, bool save=false);
-    bool getStatus() const;
-    void setName(const String &name);
-    const String &getName() const;
-    void begin();
-    void loop();
-    void readButton();
-    void setInterface(SockIfType type, Interface *iface);
-    Interface *getInterface(SockIfType type) const;
-    void setController(SocketCtrl *ctrl);
-
-private:
-    String      _name;
-    bool        _status = false;
-    bool        _reading = false;
-    unsigned    _timer;
-    IfGPIO      *_gpio[SOCK_IF_MAX] = { nullptr, nullptr };
-    SocketCtrl  *_ctrl = nullptr;
-};
-
-class SocketCtrl : public Controller
-{
-public:
-    SocketCtrl(const String &name);
-    void addSocket(Socket *sock);
-    const std::vector<Socket *> &getSockets();
+    SocketCtrlClass();
+    bool setSocket(uint8_t id, Socket *sock);
+    void getEnabledSockets(std::vector<Socket *> &socks);
+    std::array<Socket, SOCKET_COUNT> *getSockets();
     bool isExists(const String &name);
-    Socket *getSocket(const String &name);
+    bool getSocket(const String &name, Socket **sock);
+    bool getSocket(size_t index, Socket **sock);
+    void setStatus(Socket *sock, bool status, bool save);
+    bool &getStatus(Socket *sock);
     void begin();
     void loop();
-    bool getEnabled() const;
-    void setEnabled(bool enabled);
-    CtrlType getType() const;
-    void setName(const String &name);
-    const String &getName() const;
-    void remove(size_t idx);
 
 private:
-    std::vector<Socket *>   _sockets;
-    bool                    _reading = false;
-    unsigned                _timer;
-    unsigned                _curSocket = 0;
-    bool                    _enabled;
-    String                  _name;
+    std::array<Socket, SOCKET_COUNT>    _sockets;
+    bool                                _reading = false;
+    unsigned                            _timer;
+    unsigned                            _curSocket = 0;
+    bool                                _enabled;
+    String                              _name;
+
+    void _beginSocket(Socket *sock);
+    void _loopSocket(Socket *sock);
+    void _readButton(Socket *sock);
 };
+
+extern SocketCtrlClass SocketCtrl;
 
 #endif /* __SOCKET_HPP__ */

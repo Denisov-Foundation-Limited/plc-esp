@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -22,7 +22,7 @@ GsmModemClass::GsmModemClass()
     _modem = new TinyGsm(_gsmUart);
 }
 
-void GsmModemClass::setUart(IfUART *uart)
+void GsmModemClass::setUart(UARTClass *uart)
 {
     _uart = uart;
 }
@@ -37,7 +37,7 @@ bool GsmModemClass::getEnabled() const
     return _enabled;
 }
 
-IfUART *GsmModemClass::getUart() const
+UARTClass *GsmModemClass::getUart() const
 {
     return _uart;
 }
@@ -46,32 +46,32 @@ void GsmModemClass::begin()
 {
     if (!_enabled) return;
 
-    Log.info(LOG_MOD_GSM, F("Starting GSM modem"));
-    _gsmUart.begin(_uart->getRate(), SWSERIAL_8N1, _uart->getPin(UART_PIN_RX), _uart->getPin(UART_PIN_TX));
+    Log.info(F("GSM"), F("Starting GSM modem"));
+    //_gsmUart.begin(_uart->getRate(), SWSERIAL_8N1, _uart->getPin(UART_PIN_RX), _uart->getPin(UART_PIN_TX));
     _modem->restart();
 
-    Log.info(LOG_MOD_GSM, String(F("Modem Info: ")) + _modem->getModemInfo());
+    Log.info(F("GSM"), String(F("Modem Info: ")) + _modem->getModemInfo());
 
     if (_modem->getSimStatus() != SIM_READY) {
-        Log.error(LOG_MOD_GSM, F("SIM not ready"));
+        Log.error(F("GSM"), F("SIM not ready"));
         return;
     } else {
-        Log.info(LOG_MOD_GSM, F("SIM is ready"));
+        Log.info(F("GSM"), F("SIM is ready"));
     }
     
     if (!_modem->waitForNetwork()) 
     {
-        Log.error(LOG_MOD_GSM, F("Failed to connect to network"));
+        Log.error(F("GSM"), F("Failed to connect to network"));
         return;
     }
     else
     {
         auto regStatus = _modem->getRegistrationStatus();
-        Log.info(LOG_MOD_GSM, String(F("Registration : ")) + getRegStatus(regStatus));
-        Log.info(LOG_MOD_GSM, String(F("CCID         : ")) + _modem->getSimCCID());
-        Log.info(LOG_MOD_GSM, String(F("IMEI         : ")) + _modem->getIMEI());
-        Log.info(LOG_MOD_GSM, String(F("Operator     : ")) + _modem->getOperator());
-        Log.info(LOG_MOD_GSM, String(F("Signal       : ")) + getSigLevel(_modem->getSignalQuality()));
+        Log.info(F("GSM"), String(F("Registration : ")) + getRegStatus(regStatus));
+        Log.info(F("GSM"), String(F("CCID         : ")) + _modem->getSimCCID());
+        Log.info(F("GSM"), String(F("IMEI         : ")) + _modem->getIMEI());
+        Log.info(F("GSM"), String(F("Operator     : ")) + _modem->getOperator());
+        Log.info(F("GSM"), String(F("Signal       : ")) + getSigLevel(_modem->getSignalQuality()));
     }
 }
 

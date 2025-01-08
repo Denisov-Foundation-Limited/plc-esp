@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -13,6 +13,7 @@
 #include "net/tgbot.hpp"
 #include "controllers/ctrls.hpp"
 #include "controllers/meteo/meteo.hpp"
+#include "ftest.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -39,63 +40,19 @@ bool CLIProcessorClass::parse(const String &cmd)
             isOk = CLIConfigurator.configWiFi(cmd);
             break;
 
-        case CON_LEVEL_TANKS:
-            isOk = CLIConfigurator.configTanks(cmd);
-            if (!isOk && (cmd.indexOf("tank ") >= 0)) {
-                String value(cmd);
-
-                value.remove(0, 5);
-                /*if (_tankCtrl.isExists(value)) {
-                    _objName = value;
-                    _level = CON_LEVEL_TANK;
-                } else {
-                    Log.error(LOG_MOD_CLI, "Tank " + value + " not found.");
-                }*/
-                isOk = true;
-            }
-            break;
-
-        case CON_LEVEL_TANK:
-            isOk = CLIConfigurator.configTank(_objName, cmd);
-            break;
-
-        case CON_LEVEL_IFACES:
-            isOk = CLIConfigurator.configInterfaces(cmd);
-            if (!isOk && (cmd.indexOf("if ") >= 0)) {
-                String value(cmd);
-
-                value.remove(0, 3);
-
-                if (Interfaces.getInterface(value) != nullptr) {
-                    _objName = value;
-                    _level = CON_LEVEL_IFACE;
-                } else {
-                    Log.error(LOG_MOD_CLI, String(F("Interface ")) + value + String(F(" not found.")));
-                }
-                isOk = true;
-            }
-            break;
-
-        case CON_LEVEL_IFACE:
-            isOk = CLIConfigurator.configInterface(_objName, cmd);
-            break;
-
-        case CON_LEVEL_WEB:
-            isOk = CLIConfigurator.configWebSrv(cmd);
-            break;
-
         case CON_LEVEL_TG:
             isOk = CLIConfigurator.configTgBot(cmd);
             if (!isOk && (cmd.indexOf(F("user ")) >= 0)) {
-                String value(cmd);
+                String  value(cmd);
+                TgUser  *user;
 
                 value.remove(0, 5);
 
-                if (TgBot.getUser(value) != nullptr) {
+                if (!TgBot.getUser(value, &user)) {
                     _objName = value;
                     _level = CON_LEVEL_TG_USR;
                 } else {
-                    Log.error(LOG_MOD_CLI, String(F("TgBot user ")) + value + String(F(" not found.")));
+                    Log.error(F("CLI"), String(F("TgBot user ")) + value + String(F(" not found.")));
                 }
                 isOk = true;
             }
@@ -103,74 +60,6 @@ bool CLIProcessorClass::parse(const String &cmd)
 
         case CON_LEVEL_TG_USR:
             isOk = CLIConfigurator.configTgBotUser(_objName, cmd);
-            break;
-
-        case CON_LEVEL_CTRLS:
-            isOk = CLIConfigurator.configControllers(cmd);
-            if (!isOk && (cmd.indexOf(F("ctrl ")) >= 0)) {
-                String value(cmd);
-
-                value.remove(0, 5);
-                auto ctrl = Controllers.getController(value);
-                if (ctrl != nullptr) {
-                    if (ctrl->getType() == CTRL_TYPE_METEO) {
-                        _objName = value;
-                        switch (ctrl->getType()) {
-                            case CTRL_TYPE_METEO:
-                                _level = CON_LEVEL_METEO;
-                                break;
-                        }
-                    } else {
-                        Log.error(LOG_MOD_CLI, String(F("Meteo controller ")) + value + String(F(" not found.")));
-                    }
-                } else {
-                    Log.error(LOG_MOD_CLI, String(F("Controller ")) + value + String(F(" not found.")));
-                }
-                isOk = true;
-            }
-            break;
-
-        case CON_LEVEL_METEO:
-            isOk = CLIConfigurator.configMeteoCtrl(_objName, cmd);
-            if (!isOk && (cmd.indexOf(F("sensor ")) >= 0)) {
-                String value(cmd);
-
-                value.remove(0, 7);
-                auto meteo = static_cast<MeteoCtrl *>(Controllers.getController(_objName));
-
-                if (meteo->getSensor(value) != nullptr) {
-                    _objName2 = value;
-                    _level = CON_LEVEL_METEO_SENS;
-                } else {
-                    Log.error(LOG_MOD_CLI, String(F("Sensor ")) + value + String(F(" not found.")));
-                }
-                isOk = true;
-            }
-            break;
-
-        case CON_LEVEL_METEO_SENS:
-            isOk = CLIConfigurator.configMeteoSensor(_objName, _objName2, cmd);
-            break;
-
-        case CON_LEVEL_EXTS:
-            isOk = CLIConfigurator.configExts(cmd);
-            if (!isOk && (cmd.indexOf(F("ext ")) >= 0)) {
-                String value(cmd);
-
-                value.remove(0, 4);
-
-                if (Extenders.getById(static_cast<ExtenderId>(value.toInt())) != nullptr) {
-                    _objName = value;
-                    _level = CON_LEVEL_EXT;
-                } else {
-                    Log.error(LOG_MOD_CLI, String(F("Extender ")) + value + String(F(" not found.")));
-                }
-                isOk = true;
-            }
-            break;
-
-        case CON_LEVEL_EXT:
-            isOk = CLIConfigurator.configExt(static_cast<ExtenderId>(_objName.toInt()), cmd);
             break;
 
         case CON_LEVEL_ENABLE:
@@ -213,12 +102,8 @@ bool CLIProcessorClass::_parseEnableCmd(const String &cmd)
         CLIInformer.showInterfacesStatus();
     } else if (cmd == "show ext") {
         CLIInformer.showExtenders();
-    } else if (cmd == "show ctrl") {
-        CLIInformer.showControllers();
     } else if (cmd == "show wifi") {
         CLIInformer.showWiFi();
-    } else if (cmd == "show meteo") {
-        CLIInformer.showMeteo();
     } else if (cmd == "show ow") {
         CLIInformer.showOneWire();
     } else if (cmd == "show tgbot") {
@@ -227,27 +112,27 @@ bool CLIProcessorClass::_parseEnableCmd(const String &cmd)
         CLIInformer.showI2C();
     } else if (cmd == "show meteo status") {
         CLIInformer.showMeteoStatus();
+    } else if (cmd == "ftest") {
+        Ftest.start();
     } else if ((cmd == "show start") || (cmd == "show startup")) {
         if (!Configs.showStartup()) {
-            Log.error(LOG_MOD_CLI, F("Startup configs not found"));
+            Log.error(F("CLI"), F("Startup configs not found"));
         }
     } else if ((cmd == "show run") || (cmd == "show running")) {
         Configs.showRunning();
     } else if (cmd == "show wifi status") {
         CLIInformer.showWiFiStatus();
-    } else if (cmd == "show tank status") {
-        CLIInformer.showTankStatus();
     } else if (cmd == "write") {
         if (Configs.writeAll()) {
-            Log.info(LOG_MOD_CLI, F("Configs was saved"));
+            Log.info(F("CLI"), F("Configs was saved"));
         } else {
-            Log.error(LOG_MOD_CLI, F("Failed to save configs"));
+            Log.error(F("CLI"), F("Failed to save configs"));
         }
     } else if (cmd == "erase") {
         if (Configs.eraseAll()) {
-            Log.info(LOG_MOD_CLI, F("Configs was erased"));
+            Log.info(F("CLI"), F("Configs was erased"));
         } else {
-            Log.error(LOG_MOD_CLI, F("Failed to erase configs"));
+            Log.error(F("CLI"), F("Failed to erase configs"));
         }
     } else if (cmd == "config" || cmd == "con") {
         _level = CON_LEVEL_CONFIG;

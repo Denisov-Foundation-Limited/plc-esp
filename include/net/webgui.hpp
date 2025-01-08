@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -28,6 +28,42 @@ typedef enum {
     WEB_PAGE_SYSTEM
 } WebGuiPage;
 
+typedef enum {
+    WEB_GUI_MENU_BTN_NET = 1,
+    WEB_GUI_MENU_BTN_TG,
+    WEB_GUI_MENU_BTN_CTRL,
+    WEB_GUI_MENU_BTN_CFG,
+    WEB_GUI_SYS_SAVE,
+    WEB_GUI_SYS_RESTART,
+    WEB_GUI_SYS_DEL,
+    WEB_GUI_MAIN_WIFI_EN,
+    WEB_GUI_MAIN_WIFI_SSID,
+    WEB_GUI_MAIN_WIFI_PWD,
+    WEB_GUI_MAIN_WIFI_AP,
+    WEB_GUI_MAIN_WIFI_IP,
+    WEB_GUI_MAIN_WIFI_STATUS,
+    WEB_GUI_CTRL_SOCKET,
+    WEB_GUI_CTRL_BACK,
+    WEB_GUI_CTRL_SOCKET_ON_ALL,
+    WEB_GUI_CTRL_SOCKET_OFF_ALL,
+    WEB_GUI_CTRL_SOCKET_BACK,
+    WEB_GUI_CTRL_SOCKET_SEL,
+    WEB_GUI_CTRL_SOCKET_NAME,
+    WEB_GUI_CTRL_SOCKET_ENABLE,
+    WEB_GUI_CTRL_SOCKET_RLY,
+    WEB_GUI_CTRL_SOCKET_BTN,
+    WEB_GUI_TG_EN,
+    WEB_GUI_TG_PERIOD,
+    WEB_GUI_TG_POLL,
+    WEB_GUI_TG_TOKEN,
+    WEB_GUI_TG_LAST_ID,
+    WEB_GUI_TG_USER_NAME,
+    WEB_GUI_TG_USER_EN,
+    WEB_GUI_TG_USER_ADMIN,
+    WEB_GUI_TG_USER_NTF,
+    WEB_GUI_TG_USER_CHATID
+} WebGUIElem;
+
 class WebGUIClass : public SettingsAsync
 {
 public:
@@ -42,20 +78,16 @@ private:
 
     struct {
         String      Name;
-        String      Error;
         unsigned    curUser;
+        bool        Enabled;
+        bool        Admin;
+        bool        Notify;
+        unsigned    ChatID;
     } _tgUser;
 
     struct {
-        String      Name;
-        CtrlType    Type = CTRL_TYPE_SOCKET;
-        String      Error;
-        unsigned    curCtrl = 0;
-    } _ctrl;
-
-    struct {
         String  Name;
-        String  Error;
+        bool    Enabled;
         size_t  curRly = 0;
         size_t  curBtn = 0;
         size_t  curSock = 0;

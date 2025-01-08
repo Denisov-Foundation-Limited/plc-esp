@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -32,8 +32,8 @@ public:
     bool getEnabled() const;
     const String &getName() const;
     void setName(const String &name);
-    void setOneWire(IfOneWire *ow);
-    IfOneWire *getOneWire();
+    void setOneWire(OneWireClass *ow);
+    OneWireClass *getOneWire();
     void addSensor(MeteoSensor *sensor);
     const std::vector<MeteoSensor *> &getSensors();
     MeteoSensor *getSensor(const String &name);
@@ -48,7 +48,7 @@ private:
     bool                        _ready = false;
     bool                        _enabled = false;
     String                      _name;
-    IfOneWire                *_ow = nullptr;
+    OneWireClass                *_ow = nullptr;
     GyverDS18                   _ds;
     std::vector<MeteoSensor *>  _sensors;
     

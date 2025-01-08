@@ -2,7 +2,7 @@
 /*                                                                    */
 /* Programmable Logic Controller for ESP microcontrollers             */
 /*                                                                    */
-/* Copyright (C) 2024 Denisov Foundation Limited                      */
+/* Copyright (C) 2024-2025 Denisov Foundation Limited                 */
 /* License: GPLv3                                                     */
 /* Written by Sergey Denisov aka LittleBuster                         */
 /* Email: DenisovFoundationLtd@gmail.com                              */
@@ -17,26 +17,29 @@
 #include <GyverDS18.h>
 #include <OneWire.h>
 
-#include "core/ifaces/iface.hpp"
+#include "gpio.hpp"
 
-class IfOneWire : public Interface
+#define OW_BUS_COUNT   2
+
+typedef struct {
+    uint8_t id;
+    OneWire ow;
+    uint8_t pin;
+    bool    enabled;
+} OneWireBus;
+
+class OneWireClass
 {
 public:
-    IfOneWire(const String &name, uint8_t pin, bool extended=false);
-    void setPin(uint8_t gpio);
-    uint8_t getPin() const;
-    const String &getName() const;
-    void setName(const String &name);
-    void findAddresses(std::vector<String> &addrs);
-    IfType getType() const;
-    bool getExtended() const;
-    void setExtended(bool state);
+    bool begin();
+    void getOWBuses(std::vector<OneWireBus *> &buses);
+    bool getOWBusById(uint8_t id, OneWireBus **bus);
+    void findDevices(OneWireBus *bus, std::vector<String> &addrs);
 
 private:
-    uint8_t _pin;
-    String  _name;
-    OneWire _bus;
-    bool    _extended = false;
+    std::array<OneWireBus, OW_BUS_COUNT> _ow;
 };
+
+extern OneWireClass OneWireIf;
 
 #endif /* __OW_HPP__ */
