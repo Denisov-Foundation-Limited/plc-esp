@@ -58,10 +58,11 @@ void WebGUIClass::begin()
             case WEB_PAGE_CONTROLLERS:
                 _updateCtrlsPage(upd);
                 break;
-            case WEB_PAGE_SETTINGS:
-                break;
             case WEB_PAGE_SOCKETS:
                 _updateSocketsPage(upd);
+                break;
+            case WEB_PAGE_SETTINGS:
+                _updateSettingsPage(upd);
                 break;
         }
     });
@@ -524,6 +525,15 @@ void WebGUIClass::_buildSettingsPage(sets::Builder& b)
         b.endGroup();
     }
 
+    if (b.beginGroup(F("Охлаждение"))) {
+        b.Number(WEB_GUI_SYS_TEMP, F("Температура"), &Plc.getBoardTemp());
+        if (b.Switch(WEB_GUI_SYS_FAN_EN, F("Мониторинг"), &Plc.getFanEnabled())) {
+            Plc.setFanEnabled(b.build.value.toBool());
+        }
+        b.LED(WEB_GUI_SYS_FAN_STATUS, F("Вентилятор"), &Plc.getFanStatus());
+        b.endGroup();
+    }
+
     if (b.beginGroup(F("Система"))) {
         b.beginButtons();
         if (b.Button(WEB_GUI_SYS_RESTART, F("Рестарт"))) {
@@ -532,6 +542,13 @@ void WebGUIClass::_buildSettingsPage(sets::Builder& b)
         b.endButtons();
         b.endGroup();
     }
+}
+
+void WebGUIClass::_updateSettingsPage(sets::Updater& upd)
+{
+    upd.update(WEB_GUI_SYS_TEMP, Plc.getBoardTemp());
+    upd.update(WEB_GUI_SYS_FAN_EN, Plc.getFanEnabled());
+    upd.update(WEB_GUI_SYS_FAN_STATUS, Plc.getFanStatus());
 }
 
 WebGUIClass WebGUI;

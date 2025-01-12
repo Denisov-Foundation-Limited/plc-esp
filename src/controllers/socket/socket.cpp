@@ -125,11 +125,9 @@ void SocketCtrlClass::loop()
 
 void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
 {
-    if (sock->status != status) {
-        Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" changed status to ")) + (sock->status ? "ON" : "OFF"));
-    }
-
     sock->status = status;
+
+    Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" changed status to ")) + (sock->status ? "ON" : "OFF"));
 
     if (sock->relay != nullptr) {
         Gpio.write(sock->relay, status);

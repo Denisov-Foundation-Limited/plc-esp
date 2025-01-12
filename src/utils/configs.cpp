@@ -216,6 +216,14 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     Wireless.setEnabled(jwifi[F("enabled")]);
 
     /*
+     * PLC configurations
+     */
+
+    auto jplc = doc[F("plc")];
+    Plc.setFanEnabled(jplc[F("fan")]);
+    Plc.setName(jplc[F("name")]);
+
+    /*
      * Telegram configurations
      */
 
@@ -294,6 +302,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
     auto jplc = doc[F("plc")];
     jplc[F("name")] = Plc.getName();
+    jplc[F("fan")] = Plc.getFanEnabled();
 
     /*
      * Network configurations

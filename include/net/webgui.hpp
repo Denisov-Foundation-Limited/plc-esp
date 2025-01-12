@@ -36,6 +36,9 @@ typedef enum {
     WEB_GUI_SYS_SAVE,
     WEB_GUI_SYS_RESTART,
     WEB_GUI_SYS_DEL,
+    WEB_GUI_SYS_TEMP,
+    WEB_GUI_SYS_FAN_STATUS,
+    WEB_GUI_SYS_FAN_EN,
     WEB_GUI_MAIN_WIFI_EN,
     WEB_GUI_MAIN_WIFI_SSID,
     WEB_GUI_MAIN_WIFI_PWD,
@@ -101,6 +104,7 @@ private:
     void _buildCtrlsPage(sets::Builder& b);
     void _updateCtrlsPage(sets::Updater& upd);
     void _buildSettingsPage(sets::Builder& b);
+    void _updateSettingsPage(sets::Updater& upd);
 
     void _buildSocketsPage(sets::Builder& b);
     void _updateSocketsPage(sets::Updater& upd);

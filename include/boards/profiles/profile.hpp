@@ -20,6 +20,7 @@
 #define PROF_EXT_MAX    10
 #define PROF_OW_MAX     2
 #define PROF_UART_MAX   1
+#define PROF_RELAYS_MAX 8
 
 typedef enum {
     PROF_GPIO_SENSOR,
@@ -73,6 +74,9 @@ typedef struct {
     const char *ssid;
     const char *passwd;
     const char *hostname;
+    struct {
+        uint16_t    net;
+    } gpio;
 } ProfWiFi;
 
 typedef struct {
@@ -85,9 +89,31 @@ typedef struct {
 } ProfIf;
 
 typedef struct {
+    uint16_t    fan;
+    uint16_t    status;
+    uint16_t    alarm;
+    uint16_t    relays[PROF_RELAYS_MAX];
+    uint16_t    up;
+    uint16_t    middle;
+    uint16_t    down;
+} ProfPlcGpio;
+
+typedef struct {
+    uint16_t    i2c;
+    uint16_t    addr;
+} ProfPlcTemp;
+
+typedef struct {
+    ProfPlcGpio gpio;
+    ProfPlcTemp temp;
+    bool        fan;
+} ProfPlc;
+
+typedef struct {
     const char  *name;
     unsigned    serial_rate;
     ProfIf      interfaces;
+    ProfPlc     plc;
     ProfWiFi    wifi;
 } BoardProfile;
 

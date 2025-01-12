@@ -344,11 +344,7 @@ bool TgBotClass::_socketsHandler(TgUser *user, const String &msg)
     }
 
     for (auto *socket : socks) {
-        resp.text.concat("<b>");
-        resp.text.concat(socket->name);
-        resp.text.concat(":</b> ");
-        resp.text.concat((socket->status ? F("Включен") : F("Отключен")));
-        resp.text.concat("\n");
+        resp.text += "<b>" + socket->name + ":</b> " + (socket->status ? F("Включен") : F("Отключен")) + "\n";
         menu.addButton(socket->name);
         menu.newRow();
     }

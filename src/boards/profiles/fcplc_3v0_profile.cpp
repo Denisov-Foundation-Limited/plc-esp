@@ -92,21 +92,33 @@ BoardProfile PROGMEM ActiveBoard = {
         }
     },
 
+    .plc = {
+        .gpio = {
+            .fan = 26,
+            .status = 31,
+            .alarm = 30,
+            .relays = {
+                40, 39, 38, 37, 36, 35, 34, 33
+            },
+            .up = 29,
+            .middle = 28,
+            .down = 27
+        },
+        .temp = {
+            .i2c = 1,
+            .addr = 0x48
+        }
+    },
+
    /* .plc = {
         .gpio = {
             .buttons = {
-                .up = 29,
-                .middle = 28,
-                .down = 27
+                
             },
             .fan = 26,
             .led = {
-                .net = 32,
-                .status = 31,
-                .alarm = 30,
-                .relays = {
-                    40, 39, 38, 37, 36, 35, 34, 33
-                }
+                
+                
             },
             .lcd = {
                 .light = 25
@@ -126,6 +138,9 @@ BoardProfile PROGMEM ActiveBoard = {
         .enabled = true,
         .ssid = "FCPLC-3v0",
         .passwd = "",
-        .hostname = "FCPLC"
+        .hostname = "FCPLC",
+        .gpio = {
+            .net = 32
+        }
     }
 };

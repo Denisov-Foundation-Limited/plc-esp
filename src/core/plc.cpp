@@ -10,6 +10,7 @@
 /**********************************************************************/
 
 #include "core/plc.hpp"
+#include "boards/boards.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -85,18 +86,73 @@ void PlcClass::setName(const String &name)
     _name = name;
 }
 
+void PlcClass::setTempAddr(uint8_t addr, TwoWire *bus)
+{
+    _tempSensor.begin(addr, bus);
+}
+
 void PlcClass::begin()
 {
+    I2cBus *bus = nullptr;
+
+    if (!Gpio.getPinById(ActiveBoard.plc.gpio.fan, &_pins[PLC_GPIO_FAN])) {
+        Log.error(F("PLC"), F("GPIO FAN not found"));
+    }
+
+    if (!Gpio.getPinById(ActiveBoard.plc.gpio.alarm, &_pins[PLC_GPIO_ALARM_LED])) {
+        Log.error(F("PLC"), F("GPIO Alarm not found"));
+    }
+
+    if (!Gpio.getPinById(ActiveBoard.plc.gpio.status, &_pins[PLC_GPIO_STATUS_LED])) {
+        Log.error(F("PLC"), F("GPIO Status not found"));
+    }
+
+    if (!I2C.getI2cBusById(ActiveBoard.plc.temp.i2c, &bus)) {
+        Log.error(F("PLC"), F("I2C bus temp not found"));
+    } else {
+        setTempAddr(ActiveBoard.plc.temp.addr, bus->wire);
+        Log.info(F("PLC"), "Board temp sensor inited at bus: " + String(bus->id) + " addr: 0x" + String(ActiveBoard.plc.temp.addr, HEX));
+    }
+
     if (_pins[PLC_GPIO_ALARM_LED] != nullptr) { Gpio.write(_pins[PLC_GPIO_ALARM_LED], false); }
     if (_pins[PLC_GPIO_BUZZER] != nullptr) { Gpio.write(_pins[PLC_GPIO_BUZZER], false); }
 }
 
 void PlcClass::loop()
 {
-    if (millis() - _timer >= PLC_TIMER_MS) {
-        _timer = millis();
-        _alarmBuzzerTask();
+    if (millis() - _timerAlrm >= PLC_ALARM_TIMER_MS) {
+        _timerAlrm = millis();
+        _taskAlarmBuzzer();
     }
+    if (millis() - _timerFan >= PLC_FAN_TIMER_MS) {
+        _timerFan = millis();
+        _taskFan();
+    }
+}
+
+void PlcClass::setFanEnabled(bool en)
+{
+    _fanEnabled = en;
+    if (!en) {
+        if (_pins[PLC_GPIO_FAN] != nullptr) { Gpio.write(_pins[PLC_GPIO_FAN], false); }
+        Log.info(F("PLC"), "FAN status changed to OFF");
+        _fanStatus = false;
+    }
+}
+
+bool &PlcClass::getFanEnabled()
+{
+    return _fanEnabled;
+}
+
+bool &PlcClass::getFanStatus()
+{
+    return _fanStatus;
+}
+
+float &PlcClass::getBoardTemp()
+{
+    return _brdTemp;
 }
 
 /*********************************************************************/
@@ -105,7 +161,7 @@ void PlcClass::loop()
 /*                                                                   */
 /*********************************************************************/
 
-void PlcClass::_alarmBuzzerTask()
+void PlcClass::_taskAlarmBuzzer()
 {
     if (_alarm > 0) {
         if (!_lastAlarm) {
@@ -123,6 +179,34 @@ void PlcClass::_alarmBuzzerTask()
         } else {
             _lastBuzzer = false;
             if (_pins[PLC_GPIO_BUZZER] != nullptr) { Gpio.write(_pins[PLC_GPIO_BUZZER], false); }
+        }
+    }
+}
+
+void PlcClass::_taskFan()
+{
+    _brdTemp = _tempSensor.getTemperature();
+
+    if (!_fanEnabled) {
+        return;
+    }
+
+    if (_brdTemp > PLC_BRD_TEMP_MAX && !_fanStatus) {
+        if (_pins[PLC_GPIO_FAN] != nullptr) { 
+            Gpio.setMode(_pins[PLC_GPIO_FAN], GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+            Gpio.write(_pins[PLC_GPIO_FAN], true);
+            _fanStatus = true;
+            Log.info(F("PLC"), String(F("FAN status changed to ON. Temp: ")) +
+                    String(_brdTemp) + String(F(" > MaxTemp: ")) +
+                    String(PLC_BRD_TEMP_MAX));
+        }
+    } else if (_brdTemp < PLC_BRD_TEMP_MIN && _fanStatus) {
+        if (_pins[PLC_GPIO_FAN] != nullptr) {
+            Gpio.write(_pins[PLC_GPIO_FAN], false);
+            _fanStatus = false;
+            Log.info(F("PLC"), String(F("FAN status changed to OFF. Temp: ")) +
+                    String(_brdTemp) + String(F(" < MinTemp: ")) +
+                    String(PLC_BRD_TEMP_MIN));
         }
     }
 }
