@@ -11,6 +11,7 @@
 
 #include "net/core/wifi.hpp"
 #include "core/plc.hpp"
+#include "boards/boards.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -41,16 +42,6 @@ wl_status_t WirelessClass::getStatus() const
 String &WirelessClass::getPasswd()
 {
     return _passwd;
-}
-
-GpioPin *WirelessClass::getStatusLed() const
-{
-    return _statusLed;
-}
-
-void WirelessClass::setStatusLed(GpioPin *gpio)
-{
-    _statusLed = gpio;
 }
 
 void WirelessClass::setEnabled(bool status)
@@ -94,6 +85,15 @@ String WirelessClass::getHostname()
 void WirelessClass::begin()
 {
     if (!_enabled) return;
+
+    if (!Gpio.getPinById(ActiveBoard.wifi.gpio.net, &_statusLed)) {
+        Log.error(F("WIFI"), F("GPIO Status led not found"));
+    }
+
+    if (_statusLed != nullptr) {
+        Gpio.setMode(_statusLed, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+        Gpio.write(_statusLed, false);
+    }
 
     if (!_ap) {
         WiFi.mode(WIFI_STA);

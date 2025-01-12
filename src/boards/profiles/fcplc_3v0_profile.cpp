@@ -97,42 +97,24 @@ BoardProfile PROGMEM ActiveBoard = {
             .fan = 26,
             .status = 31,
             .alarm = 30,
+            .buzzer = 7,
+            .up = 29,
+            .middle = 28,
+            .down = 27,
+            .lcd = 25,
             .relays = {
                 40, 39, 38, 37, 36, 35, 34, 33
             },
-            .up = 29,
-            .middle = 28,
-            .down = 27
         },
         .temp = {
             .i2c = 1,
             .addr = 0x48
-        }
-    },
-
-   /* .plc = {
-        .gpio = {
-            .buttons = {
-                
-            },
-            .fan = 26,
-            .led = {
-                
-                
-            },
-            .lcd = {
-                .light = 25
-            }
         },
         .lcd = {
             .i2c = 1,
             .addr = 0x22
-        },
-        .temp = {
-            .i2c = 1,
-            .addr = 0x48
-        },
-    },*/
+        }
+    },
 
     .wifi = {
         .enabled = true,

@@ -92,10 +92,12 @@ typedef struct {
     uint16_t    fan;
     uint16_t    status;
     uint16_t    alarm;
-    uint16_t    relays[PROF_RELAYS_MAX];
+    uint16_t    buzzer;
     uint16_t    up;
     uint16_t    middle;
     uint16_t    down;
+    uint16_t    lcd;
+    uint16_t    relays[PROF_RELAYS_MAX];
 } ProfPlcGpio;
 
 typedef struct {
@@ -104,9 +106,14 @@ typedef struct {
 } ProfPlcTemp;
 
 typedef struct {
+    uint16_t    i2c;
+    uint16_t    addr;
+} ProfPlcLCD;
+
+typedef struct {
     ProfPlcGpio gpio;
     ProfPlcTemp temp;
-    bool        fan;
+    ProfPlcLCD  lcd;
 } ProfPlc;
 
 typedef struct {

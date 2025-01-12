@@ -33,8 +33,6 @@ public:
     void setCreds(const String &ssid, const String &passwd);
     String &getSSID();
     String &getPasswd();
-    GpioPin *getStatusLed() const;
-    void setStatusLed(GpioPin *gpio);
     void setEnabled(bool status);
     bool &getEnabled();
     void setAP(bool status);
