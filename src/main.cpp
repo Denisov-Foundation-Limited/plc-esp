@@ -25,6 +25,7 @@
 #include "net/webgui.hpp"
 #include "core/ifaces/ow.hpp"
 #include "ftest.hpp"
+#include "db/eedb.h"
 
 void setup()
 {
@@ -37,6 +38,7 @@ void setup()
     Extenders.begin();
     Gpio.begin();
     if (!Configs.begin()) return;
+    EeDb.begin();
     Plc.begin();
     Wireless.begin();
     TgBot.begin();
@@ -45,7 +47,6 @@ void setup()
     Controllers.begin();
     CLIProcessor.begin();
     WebGUI.begin();
-    Configs.loadStates();
 }
 
 void loop()

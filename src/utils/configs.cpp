@@ -263,11 +263,12 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     for (size_t i = 0; i < jsocks.size(); i++) {
         Socket sock;
         memset(&sock, 0x0, sizeof(Socket));
+        sock.id = jsocks[i][F("id")].as<unsigned>();
         sock.name = jsocks[i][F("name")].as<String>();
         sock.enabled = true;
         Gpio.getPinById(jsocks[i][F("relay")].as<unsigned>(), &sock.relay);
         Gpio.getPinById(jsocks[i][F("button")].as<unsigned>(), &sock.button);
-        SocketCtrl.setSocket(i, &sock);
+        SocketCtrl.setSocket(jsocks[i][F("id")].as<unsigned>() - 1, &sock);
     }
 
     doc.clear();
@@ -276,21 +277,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
 
 bool ConfigsClass::loadStates()
 {
-    SocketDB    db;
-
-    db.loadFromFile(F("socket.json"));
-    if (db.isLoad()) {
-        std::vector<Socket *> socks;
-        SocketCtrl.getEnabledSockets(socks);
-        for (auto *socket : socks) {
-            bool status = false;
-            if (db.getStatus(socket->name, status)) {
-                SocketCtrl.setStatus(socket, status, false);
-            }
-        }
-        db.clear();
-        db.close();
-    }
+    
     return true;
 }
 
@@ -366,6 +353,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     SocketCtrl.getEnabledSockets(socks);
 
     for (size_t i = 0; i < socks.size(); i++) {
+        jsocks[i][F("id")] = socks[i]->id;
         jsocks[i][F("name")] = socks[i]->name;
         (socks[i]->button == nullptr) ? jsocks[i][F("button")] = 0 : jsocks[i][F("button")] = socks[i]->button->id;
         (socks[i]->relay == nullptr) ? jsocks[i][F("relay")] = 0 : jsocks[i][F("relay")] = socks[i]->relay->id;

@@ -108,12 +108,12 @@ typedef struct {
 typedef struct {
     uint16_t    i2c;
     uint16_t    addr;
-} ProfPlcLCD;
+} ProfI2CDev;
 
 typedef struct {
     ProfPlcGpio gpio;
     ProfPlcTemp temp;
-    ProfPlcLCD  lcd;
+    ProfI2CDev  lcd;
 } ProfPlc;
 
 typedef struct {
@@ -121,6 +121,7 @@ typedef struct {
     unsigned    serial_rate;
     ProfIf      interfaces;
     ProfPlc     plc;
+    ProfI2CDev  eeprom;
     ProfWiFi    wifi;
 } BoardProfile;
 

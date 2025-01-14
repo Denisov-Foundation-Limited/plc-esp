@@ -12,6 +12,7 @@
 #include "controllers/socket/socket.hpp"
 #include "db/socketdb.hpp"
 #include "StringUtils.h"
+#include "db/eedb.h"
 
 /*********************************************************************/
 /*                                                                   */
@@ -23,6 +24,7 @@ SocketCtrlClass::SocketCtrlClass()
 {
     for (size_t i = 0; i < _sockets.size(); i++) {
         memset(&_sockets[i], 0x0, sizeof(Socket));
+        _sockets[i].id = i + 1;
     }
 }
 
@@ -96,6 +98,7 @@ void SocketCtrlClass::begin()
             Gpio.setMode(_sockets[i].button, GPIO_MOD_INPUT, GPIO_PULL_UP);
         }
     }
+    loadStates();
 }
 
 void SocketCtrlClass::loop()
@@ -134,14 +137,73 @@ void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
     }
 
     if (save) {
-        SocketDB    db;
-        db.loadFromFile(F("socket.json"));
-        db.close();
-        db.setStatus(sock->name, status);
-        db.saveToFile();
-        db.close();
-        db.clear();
+        if (EeDb.getEnabled()) {
+            EeDbSocket  db;
+            if (EeDb.loadSocketDb(db)) {
+                if (EeDb.setSocketStatus(db, sock->id, status)) {
+                    if (EeDb.saveSocketDb(db)) {
+                        Log.info(F("SOCKET"), String(F("Socket status saved to EEPROM. Id: ")) + String(sock->id));
+                    } else {
+                        Log.error(F("SOCKET"), String(F("Failed to save socket status to EEPROM. Id: ")) + String(sock->id));
+                    }
+                } else {
+                    Log.error(F("SOCKET"), String(F("Failed to set socket status to EEPROM. Id: ")) + String(sock->id));
+                }
+            } else {
+                Log.error(F("SOCKET"), String(F("Failed to load socket status from EEPROM. Id: ")) + String(sock->id));
+            }
+        } else {
+            SocketDB    db;
+            db.loadFromFile(F("socket.json"));
+            db.close();
+            db.setStatus(sock->name, status);
+            db.saveToFile();
+            db.close();
+            db.clear();
+        }
     }
+}
+
+bool SocketCtrlClass::loadStates()
+{
+    if (EeDb.getEnabled()) {
+        EeDbSocket  db;
+        bool        status;
+
+        if (EeDb.loadSocketDb(db)) {
+            for (size_t i = 0; i < _sockets.size(); i++) {
+                if (!_sockets[i].enabled) {
+                    continue;
+                }
+                if (EeDb.getSocketStatus(db, _sockets[i].id, status)) {
+                    Log.info(F("SOCKET"), String(F("Load socket status from EEPROM. Id: ")) + String(_sockets[i].id));
+                    setStatus(&_sockets[i], status, false);
+                } else {
+                    Log.error(F("SOCKET"), String(F("Failed to set socket status to EEPROM. Id: ")) + String(_sockets[i].id));
+                }
+            }
+        } else {
+            Log.error(F("SOCKET"), String(F("Failed to load socket DB from EEPROM.")));
+        }
+    } else {
+        SocketDB    db;
+        bool        status;
+
+        db.loadFromFile(F("socket.json"));
+        if (db.isLoad()) {
+            for (size_t i = 0; i < _sockets.size(); i++) {
+                if (!_sockets[i].enabled) {
+                    continue;
+                }
+                if (db.getStatus(_sockets[i].name, status)) {
+                    setStatus(&_sockets[i], status, false);
+                }
+            }
+            db.clear();
+            db.close();
+        }
+    }
+    return true;
 }
 
 bool &SocketCtrlClass::getStatus(Socket *sock)

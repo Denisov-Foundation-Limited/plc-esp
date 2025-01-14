@@ -23,6 +23,7 @@
 #define SOCKET_COUNT            32
 
 typedef struct {
+    size_t      id;
     String      name;
     bool        status;
     bool        reading;
@@ -46,6 +47,7 @@ public:
     bool &getStatus(Socket *sock);
     void begin();
     void loop();
+    bool loadStates();
 
 private:
     std::array<Socket, SOCKET_COUNT>    _sockets;
