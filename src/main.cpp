@@ -26,6 +26,7 @@
 #include "core/ifaces/ow.hpp"
 #include "ftest.hpp"
 #include "db/eedb.h"
+#include "core/clock.hpp"
 
 void setup()
 {
@@ -47,6 +48,7 @@ void setup()
     Controllers.begin();
     CLIProcessor.begin();
     WebGUI.begin();
+    Clock.begin();
 }
 
 void loop()

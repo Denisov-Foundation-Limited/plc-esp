@@ -24,6 +24,7 @@
 #include "controllers/ctrls.hpp"
 #include "controllers/socket/socket.hpp"
 #include "db/socketdb.hpp"
+#include "core/clock.hpp"
 
 #include <LittleFS.h>
 #include <SD.h>
@@ -223,6 +224,9 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     Plc.setFanEnabled(jplc[F("fan")]);
     Plc.setName(jplc[F("name")]);
 
+    auto jclock = doc[F("clock")];
+    Clock.setUTC(jclock[F("utc")]);
+
     /*
      * Telegram configurations
      */
@@ -290,6 +294,9 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     auto jplc = doc[F("plc")];
     jplc[F("name")] = Plc.getName();
     jplc[F("fan")] = Plc.getFanEnabled();
+
+    auto jclock = doc[F("clock")];
+    jclock[F("utc")] = Clock.getUTC();
 
     /*
      * Network configurations

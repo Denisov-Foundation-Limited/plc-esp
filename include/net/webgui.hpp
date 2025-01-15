@@ -39,6 +39,12 @@ typedef enum {
     WEB_GUI_SYS_TEMP,
     WEB_GUI_SYS_FAN_STATUS,
     WEB_GUI_SYS_FAN_EN,
+    WEB_GUI_SYS_DATE,
+    WEB_GUI_SYS_TIME,
+    WEB_GUI_SYS_UTC,
+    WEB_GUI_SYS_UTC_SET,
+    WEB_GUI_SYS_UTC_APPLY,
+    WEB_GUI_SYS_DTIME,
     WEB_GUI_MAIN_WIFI_EN,
     WEB_GUI_MAIN_WIFI_SSID,
     WEB_GUI_MAIN_WIFI_PWD,
@@ -78,6 +84,8 @@ public:
 private:
     String      _password = "";
     WebGuiPage  _curPage = WEB_PAGE_MAIN;
+
+    unsigned _time;
 
     struct {
         String      Name;

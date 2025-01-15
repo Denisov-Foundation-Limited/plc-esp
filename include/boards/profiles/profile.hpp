@@ -122,6 +122,7 @@ typedef struct {
     ProfIf      interfaces;
     ProfPlc     plc;
     ProfI2CDev  eeprom;
+    ProfI2CDev  clock;
     ProfWiFi    wifi;
 } BoardProfile;
 

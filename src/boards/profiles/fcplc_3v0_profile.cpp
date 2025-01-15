@@ -121,6 +121,11 @@ BoardProfile PROGMEM ActiveBoard = {
         .addr = 0x50
     },
 
+    .clock = {
+        .i2c = 1,
+        .addr = 0x68
+    },
+
     .wifi = {
         .enabled = true,
         .ssid = "FCPLC-3v0",
