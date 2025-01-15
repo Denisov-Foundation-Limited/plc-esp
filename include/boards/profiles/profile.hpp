@@ -20,12 +20,12 @@
 #define PROF_EXT_MAX    10
 #define PROF_OW_MAX     2
 #define PROF_UART_MAX   1
-#define PROF_RELAYS_MAX 8
 
 typedef enum {
     PROF_GPIO_SENSOR,
     PROF_GPIO_RELAY,
     PROF_GPIO_INPUT,
+    PROF_GPIO_LED,
     PROF_GPIO_GENERIC,
     PROF_GPIO_BUZZER
 } ProfGpioType;
@@ -97,7 +97,6 @@ typedef struct {
     uint16_t    middle;
     uint16_t    down;
     uint16_t    lcd;
-    uint16_t    relays[PROF_RELAYS_MAX];
 } ProfPlcGpio;
 
 typedef struct {

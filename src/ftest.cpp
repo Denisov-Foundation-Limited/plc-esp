@@ -25,7 +25,7 @@ void FtestClass::start()
     I2C.getI2cBuses(i2cs);
 
     for (auto *pin : pins) {
-        if (pin->type == GPIO_TYPE_RELAY || pin->type == GPIO_TYPE_GENERIC || pin->type == GPIO_TYPE_BUZZER) {
+        if (pin->type == GPIO_TYPE_RELAY || pin->type == GPIO_TYPE_GENERIC || pin->type == GPIO_TYPE_BUZZER || pin->type == GPIO_TYPE_LED) {
             Gpio.setMode(pin, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
         } else if (pin->type == GPIO_TYPE_INPUT) {
             Gpio.setMode(pin, GPIO_MOD_INPUT, GPIO_PULL_UP);
@@ -36,13 +36,13 @@ void FtestClass::start()
         Serial.println(F("[FTEST] ===================================================="));
         size_t i = 1;
         for (auto *pin : pins) {
-            if (pin->type == GPIO_TYPE_RELAY || pin->type == GPIO_TYPE_GENERIC) {
+            if (pin->type == GPIO_TYPE_RELAY || pin->type == GPIO_TYPE_GENERIC || pin->type == GPIO_TYPE_LED) {
                 if (!last) {
                     Gpio.write(pin, true);
-                    Serial.println("[FTEST] Relay #" + String(i) + " GPIO id #" + String(pin->id) + " status: HIGH"); 
+                    Serial.println("[FTEST] Pin #" + String(i) + " GPIO id #" + String(pin->id) + " status: HIGH"); 
                 } else {
                     Gpio.write(pin, false);
-                    Serial.println("[FTEST] Relay #" + String(i) + " GPIO id #" + String(pin->id) + " status: LOW"); 
+                    Serial.println("[FTEST] Pin #" + String(i) + " GPIO id #" + String(pin->id) + " status: LOW"); 
                 }
                 i++;
             }

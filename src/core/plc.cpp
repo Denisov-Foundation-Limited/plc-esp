@@ -151,13 +151,6 @@ void PlcClass::begin()
         Gpio.setMode(_pins[PLC_GPIO_LCD_LIGHT], GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
         Gpio.write(_pins[PLC_GPIO_LCD_LIGHT], true);
     }
-    for (size_t i = 0; i < PLC_RLY_MAX; i++) {
-        if (!Gpio.getPinById(ActiveBoard.plc.gpio.relays[i], &_rlyLed[i])) {
-            Log.error(F("PLC"), String(F("GPIO Relay LED #")) + String(i+1) +  String(F(" not found")));
-        }
-        if (_rlyLed[i] != nullptr) { Gpio.setMode(_rlyLed[i], GPIO_MOD_OUTPUT, GPIO_PULL_NONE); }
-    }
-
     _taskLCD();
 }
 

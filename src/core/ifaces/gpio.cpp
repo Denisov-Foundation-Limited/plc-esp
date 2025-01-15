@@ -48,6 +48,10 @@ bool GpioClass::begin()
                 _pins[i].type = GPIO_TYPE_SENSOR;
                 break;
 
+            case PROF_GPIO_LED:
+                _pins[i].type = GPIO_TYPE_LED;
+                break;
+
             case PROF_GPIO_BUZZER:
                 _pins[i].type = GPIO_TYPE_BUZZER;
                 break;

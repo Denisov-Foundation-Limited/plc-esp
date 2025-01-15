@@ -30,6 +30,7 @@ typedef struct {
     unsigned    timer;
     GpioPin     *button;
     GpioPin     *relay;
+    GpioPin     *led;
     bool        enabled;
 } Socket;
 

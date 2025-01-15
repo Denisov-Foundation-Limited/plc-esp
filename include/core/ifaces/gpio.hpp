@@ -36,6 +36,7 @@ typedef enum {
     GPIO_TYPE_INPUT,
     GPIO_TYPE_RELAY,
     GPIO_TYPE_SENSOR,
+    GPIO_TYPE_LED,
     GPIO_TYPE_BUZZER
 } GpioType;
 

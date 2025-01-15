@@ -61,6 +61,7 @@ typedef enum {
     WEB_GUI_CTRL_SOCKET_ENABLE,
     WEB_GUI_CTRL_SOCKET_RLY,
     WEB_GUI_CTRL_SOCKET_BTN,
+    WEB_GUI_CTRL_SOCKET_LED,
     WEB_GUI_TG_EN,
     WEB_GUI_TG_PERIOD,
     WEB_GUI_TG_POLL,
@@ -102,6 +103,7 @@ private:
         size_t  curRly = 0;
         size_t  curBtn = 0;
         size_t  curSock = 0;
+        size_t  curLED = 0;
     } _socket;
 
     void _buildMenu(sets::Builder& b);

@@ -272,6 +272,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         sock.enabled = true;
         Gpio.getPinById(jsocks[i][F("relay")].as<unsigned>(), &sock.relay);
         Gpio.getPinById(jsocks[i][F("button")].as<unsigned>(), &sock.button);
+        Gpio.getPinById(jsocks[i][F("led")].as<unsigned>(), &sock.led);
         SocketCtrl.setSocket(jsocks[i][F("id")].as<unsigned>() - 1, &sock);
     }
 
@@ -364,6 +365,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         jsocks[i][F("name")] = socks[i]->name;
         (socks[i]->button == nullptr) ? jsocks[i][F("button")] = 0 : jsocks[i][F("button")] = socks[i]->button->id;
         (socks[i]->relay == nullptr) ? jsocks[i][F("relay")] = 0 : jsocks[i][F("relay")] = socks[i]->relay->id;
+        (socks[i]->led == nullptr) ? jsocks[i][F("led")] = 0 : jsocks[i][F("led")] = socks[i]->led->id;
     }
 
     return true;

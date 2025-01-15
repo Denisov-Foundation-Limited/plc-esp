@@ -367,9 +367,9 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
         b.endButtons();
         if (b.beginMenu(F("Настройки"))) {
             if (b.beginGroup(F("Редактировать"))) {
-                String                  sSocks = "", sBtns = F("N/U;"), sRlys = F("N/U;");
+                String                  sSocks = "", sBtns = F("N/U;"), sRlys = F("N/U;"), sLeds = F("N/U;");
                 std::vector<GpioPin *>  pins;
-                size_t                  bt = 1, rl = 1;
+                size_t                  bt = 1, rl = 1, ld = 1;
 
                 Gpio.getPins(pins);
 
@@ -390,38 +390,62 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
                     }
                     if (pin->type == GPIO_TYPE_RELAY) {
                         if (pin->ext == nullptr) {
-                            sRlys += "in-1/0/" + String(rl) + ";";
+                            sRlys += "rly-1/0/" + String(rl) + ";";
                         } else {
                             sRlys += "rly-" + String(pin->ext->i2c->id) + "/" + String(pin->ext->id) + "/" + String(rl) + ";";
                         }
                         rl++;
                     }
+                    if (pin->type == GPIO_TYPE_LED) {
+                        if (pin->ext == nullptr) {
+                            sLeds += "led-1/0/" + String(ld) + ";";
+                        } else {
+                            sLeds += "led-" + String(pin->ext->i2c->id) + "/" + String(pin->ext->id) + "/" + String(ld) + ";";
+                        }
+                        ld++;
+                    }
                 }
                 sBtns.remove(sBtns.length() - 1);
                 sRlys.remove(sRlys.length() - 1);
+                sLeds.remove(sLeds.length() - 1);
 
                 if (b.Select(WEB_GUI_CTRL_SOCKET_SEL, F("Выбрать"), sSocks, (uint8_t *)&_socket.curSock)) {
                     Socket *sock;
                     SocketCtrl.getSocket(_socket.curSock, &sock);
                     _socket.Name = sock->name;
                     _socket.Enabled = sock->enabled;
-                    bt = 1; rl = 1;
+                    bt = 1; rl = 1; ld = 1;
                     for (auto pin : pins) {
                         if (pin->type == GPIO_TYPE_INPUT) {
                             if (sock->button != nullptr && pin->id == sock->button->id) {
                                 _socket.curBtn = bt;
+                                break;
                             } else {
                                 _socket.curBtn = 0;
                             }
                             bt++;
                         }
+                    }
+                    for (auto pin : pins) {
                         if (pin->type == GPIO_TYPE_RELAY) {
                             if (sock->relay != nullptr && pin->id == sock->relay->id) {
                                 _socket.curRly = rl;
+                                break;
                             } else {
-                                 _socket.curRly = 0;
+                                _socket.curRly = 0;
                             }
                             rl++;
+                        }
+                    }
+                    for (auto pin : pins) {
+                        if (pin->type == GPIO_TYPE_LED) {
+                            if (sock->led != nullptr && pin->id == sock->led->id) {
+                                _socket.curLED = ld;
+                                break;
+                            } else {
+                                _socket.curLED = 0;
+                            }
+                            ld++;
                         }
                     }
                 }
@@ -430,13 +454,14 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
                 b.Switch(WEB_GUI_CTRL_SOCKET_ENABLE, F("Включен"), &_socket.Enabled);
                 b.Select(WEB_GUI_CTRL_SOCKET_RLY, F("Реле"), sRlys, (uint8_t *)&_socket.curRly);
                 b.Select(WEB_GUI_CTRL_SOCKET_BTN, F("Кнопка"), sBtns, (uint8_t *)&_socket.curBtn);
+                b.Select(WEB_GUI_CTRL_SOCKET_LED, F("Индикатор"), sLeds, (uint8_t *)&_socket.curLED);
 
                 if (b.Button(F("Применить"))) {
                     Socket *sock;
                     if (SocketCtrl.getSocket(_socket.curSock, &sock)) {
                         sock->name = _socket.Name;
                         sock->enabled = _socket.Enabled;
-                        bt = 1; rl = 1;
+                        bt = 1; rl = 1; ld = 1;
                         for (auto pin : pins) {
                             if (pin->type == GPIO_TYPE_INPUT) {
                                 if (_socket.curBtn == bt) {
@@ -450,8 +475,15 @@ void WebGUIClass::_buildSocketsPage(sets::Builder& b)
                                 }
                                 rl++;
                             }
+                            if (pin->type == GPIO_TYPE_LED) {
+                                if (_socket.curLED == ld) {
+                                    Gpio.getPinById(pin->id, &sock->led);
+                                }
+                                ld++;
+                            }
                         }
                     }
+                    SocketCtrl.begin();
                     b.reload();
                 }
                 b.endGroup();
@@ -494,6 +526,7 @@ void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
     upd.update(WEB_GUI_CTRL_SOCKET_ENABLE, _socket.Enabled);
     upd.update(WEB_GUI_CTRL_SOCKET_RLY, _socket.curRly);
     upd.update(WEB_GUI_CTRL_SOCKET_BTN, _socket.curBtn);
+    upd.update(WEB_GUI_CTRL_SOCKET_LED, _socket.curLED);
 
     size_t i = 1;
     for (auto sock : *SocketCtrl.getSockets()) {

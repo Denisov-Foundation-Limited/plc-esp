@@ -94,6 +94,9 @@ void SocketCtrlClass::begin()
         if (_sockets[i].relay != nullptr) {
             Gpio.setMode(_sockets[i].relay, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
         }
+        if (_sockets[i].led != nullptr) {
+            Gpio.setMode(_sockets[i].led, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+        }
         if (_sockets[i].button != nullptr) {
             Gpio.setMode(_sockets[i].button, GPIO_MOD_INPUT, GPIO_PULL_UP);
         }
@@ -134,6 +137,10 @@ void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
 
     if (sock->relay != nullptr) {
         Gpio.write(sock->relay, status);
+    }
+
+    if (sock->led != nullptr) {
+        Gpio.write(sock->led, status);
     }
 
     if (save) {

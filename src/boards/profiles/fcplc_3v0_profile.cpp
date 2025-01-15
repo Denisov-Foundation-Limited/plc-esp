@@ -68,14 +68,14 @@ BoardProfile PROGMEM ActiveBoard = {
             { .id = 30, .pin = 5,  .type = PROF_GPIO_GENERIC, .ext = 2 },
             { .id = 31, .pin = 6,  .type = PROF_GPIO_GENERIC, .ext = 2 },
             { .id = 32, .pin = 7,  .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 33, .pin = 8,  .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 34, .pin = 9,  .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 35, .pin = 10, .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 36, .pin = 11, .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 37, .pin = 12, .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 38, .pin = 13, .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 39, .pin = 14, .type = PROF_GPIO_GENERIC, .ext = 2 },
-            { .id = 40, .pin = 15, .type = PROF_GPIO_GENERIC, .ext = 2 },
+            { .id = 33, .pin = 8,  .type = PROF_GPIO_LED,     .ext = 2 },
+            { .id = 34, .pin = 9,  .type = PROF_GPIO_LED,     .ext = 2 },
+            { .id = 35, .pin = 10, .type = PROF_GPIO_LED,     .ext = 2 },
+            { .id = 36, .pin = 11, .type = PROF_GPIO_LED,     .ext = 2 },
+            { .id = 37, .pin = 12, .type = PROF_GPIO_LED,     .ext = 2 },
+            { .id = 38, .pin = 13, .type = PROF_GPIO_LED,     .ext = 2 },
+            { .id = 39, .pin = 14, .type = PROF_GPIO_LED,     .ext = 2 },
+            { .id = 40, .pin = 15, .type = PROF_GPIO_LED,     .ext = 2 },
         },
 
         .spi = {
@@ -102,9 +102,6 @@ BoardProfile PROGMEM ActiveBoard = {
             .middle = 28,
             .down = 27,
             .lcd = 25,
-            .relays = {
-                40, 39, 38, 37, 36, 35, 34, 33
-            },
         },
         .temp = {
             .i2c = 1,
