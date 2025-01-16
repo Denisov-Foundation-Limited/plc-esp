@@ -60,8 +60,7 @@ public:
 private:
     bool                                        _ready = false;
     bool                                        _enabled = false;
-    unsigned                                    _timer;
-    unsigned                                    _timerDs;
+    unsigned                                    _timer = 0;
     unsigned                                    _curSensor = 0;
     std::array<MeteoSensor, METEO_SENSOR_COUNT> _sensors;
 

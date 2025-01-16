@@ -42,7 +42,7 @@ std::array<Socket, SOCKET_COUNT> *SocketCtrlClass::getSockets()
     return &_sockets;
 }
 
-bool SocketCtrlClass::setSocket(uint8_t index, Socket *sock)
+bool SocketCtrlClass::setSocket(size_t index, Socket *sock)
 {
     if (index > (_sockets.size() - 1)) {
         return false;
@@ -87,18 +87,22 @@ bool SocketCtrlClass::getSocket(size_t index, Socket **sock)
 
 void SocketCtrlClass::begin()
 {
-    for (size_t i = 0; i < _sockets.size(); i++) {
-        if (!_sockets[i].enabled) {
+    std::vector<Socket *> sockets;
+
+    getEnabledSockets(sockets);
+
+    for (size_t i = 0; i < sockets.size(); i++) {
+        if (!sockets[i]->enabled) {
             continue;
         }
-        if (_sockets[i].relay != nullptr) {
-            Gpio.setMode(_sockets[i].relay, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+        if (sockets[i]->relay != nullptr) {
+            Gpio.setMode(sockets[i]->relay, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
         }
-        if (_sockets[i].led != nullptr) {
-            Gpio.setMode(_sockets[i].led, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+        if (sockets[i]->led != nullptr) {
+            Gpio.setMode(sockets[i]->led, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
         }
-        if (_sockets[i].button != nullptr) {
-            Gpio.setMode(_sockets[i].button, GPIO_MOD_INPUT, GPIO_PULL_UP);
+        if (sockets[i]->button != nullptr) {
+            Gpio.setMode(sockets[i]->button, GPIO_MOD_INPUT, GPIO_PULL_UP);
         }
     }
     loadStates();
@@ -107,24 +111,24 @@ void SocketCtrlClass::begin()
 void SocketCtrlClass::loop()
 {
     if (!_enabled) return;
-    if (_sockets.size() == 0) return;
 
-    for (size_t i = 0; i < _sockets.size(); i++) {
-        _loopSocket(&_sockets[i]);
-    }
-
-    if (_reading) {
-        _readButton(&_sockets[_curSocket]);
-        if (_curSocket == _sockets.size() - 1) {
-            _reading = false;
-            _timer = millis();
-            _curSocket = 0;
-        } else {
-            _curSocket++;
-        }
-    } else {
+    if (!_reading) {
         if ((millis() - _timer) >= SOCKET_BUTTON_READ_MS) {
             _reading = true;
+            _timer = millis();
+        }
+    } else {
+        std::vector<Socket *> sockets;
+
+        getEnabledSockets(sockets);
+        _readButton(&_sockets[_curSocket]);
+
+        if (_curSocket < (sockets.size() - 1)) {
+            _curSocket++;
+        } else {
+            _curSocket = 0;
+            _reading = false;
+            _timer = millis();
         }
     }
 }
@@ -173,20 +177,21 @@ void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
 
 bool SocketCtrlClass::loadStates()
 {
+    std::vector<Socket *> sockets;
+
+    getEnabledSockets(sockets);
+
     if (EeDb.getEnabled()) {
         EeDbSocket  db;
         bool        status;
 
         if (EeDb.loadSocketDb(db)) {
-            for (size_t i = 0; i < _sockets.size(); i++) {
-                if (!_sockets[i].enabled) {
-                    continue;
-                }
-                if (EeDb.getSocketStatus(db, _sockets[i].id, status)) {
-                    Log.info(F("SOCKET"), String(F("Load socket status from EEPROM. Id: ")) + String(_sockets[i].id));
-                    setStatus(&_sockets[i], status, false);
+            for (size_t i = 0; i < sockets.size(); i++) {
+                if (EeDb.getSocketStatus(db, sockets[i]->id, status)) {
+                    Log.info(F("SOCKET"), String(F("Load socket status from EEPROM. Id: ")) + String(sockets[i]->id));
+                    setStatus(sockets[i], status, false);
                 } else {
-                    Log.error(F("SOCKET"), String(F("Failed to set socket status to EEPROM. Id: ")) + String(_sockets[i].id));
+                    Log.error(F("SOCKET"), String(F("Failed to set socket status to EEPROM. Id: ")) + String(sockets[i]->id));
                 }
             }
         } else {
@@ -198,12 +203,9 @@ bool SocketCtrlClass::loadStates()
 
         db.loadFromFile(F("socket.json"));
         if (db.isLoad()) {
-            for (size_t i = 0; i < _sockets.size(); i++) {
-                if (!_sockets[i].enabled) {
-                    continue;
-                }
-                if (db.getStatus(_sockets[i].name, status)) {
-                    setStatus(&_sockets[i], status, false);
+            for (size_t i = 0; i < sockets.size(); i++) {
+                if (db.getStatus(sockets[i]->name, status)) {
+                    setStatus(sockets[i], status, false);
                 }
             }
             db.clear();
@@ -224,23 +226,20 @@ bool &SocketCtrlClass::getStatus(Socket *sock)
 /*                                                                   */
 /*********************************************************************/
 
-void SocketCtrlClass::_loopSocket(Socket *sock)
-{
-    if (sock->reading) {
-        if ((millis() - sock->timer) >= SOCKET_BUTTON_WAIT_MS) {
-            sock->reading = false;
-        }
-    }
-}
-
 void SocketCtrlClass::_readButton(Socket *sock)
 {
     if (sock->button != nullptr) {
-        if (!Gpio.read(sock->button) && !sock->reading) {
-            Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" button pressed")));
-            setStatus(sock, !getStatus(sock), true);
-            sock->reading = true;
-            sock->timer = millis();
+        if (!sock->reading) {
+            if (Gpio.read(sock->button)) {
+                Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" button pressed")));
+                setStatus(sock, !getStatus(sock), true);
+                sock->reading = true;
+                sock->timer = millis();
+            }
+        } else {
+            if ((millis() - sock->timer) >= SOCKET_BUTTON_WAIT_MS) {
+                sock->reading = false;
+            }
         }
     }
 }
