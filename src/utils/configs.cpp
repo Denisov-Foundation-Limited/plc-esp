@@ -19,8 +19,6 @@
 #include "net/tgbot.hpp"
 #include "net/apiserver.hpp"
 #include "controllers/meteo/meteo.hpp"
-#include "controllers/meteo/sensors/msensor.hpp"
-#include "controllers/meteo/sensors/ds18b20.hpp"
 #include "controllers/ctrls.hpp"
 #include "controllers/socket/socket.hpp"
 #include "db/socketdb.hpp"

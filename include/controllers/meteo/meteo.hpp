@@ -15,45 +15,59 @@
 #include <Arduino.h>
 #include <vector>
 #include <GyverDS18.h>
+#include <DHTesp.h>
 
-#include "sensors/msensor.hpp"
 #include "core/ifaces/ow.hpp"
-#include "controllers/ctrl.hpp"
 
-#define METEO_SENS_TIMER_MS 5000
-#define METEO_DS_TIMER_MS   3000
+#define METEO_SENS_TIMER_MS     5000
+#define METEO_SENSOR_ERROR_MAX  10
 
-class MeteoCtrl : public Controller
+#define METEO_SENSOR_COUNT  64
+
+typedef enum {
+    METEO_SENSOR_BME280,
+    METEO_SENSOR_DHT22,
+    METEO_SENSOR_DS18B20,
+    METEO_SENSOR_AM2302
+} MeteoSensorType;
+
+typedef struct {
+    float temp;
+    float hum;
+    float pres;
+} MeteoData;
+
+typedef struct {
+    size_t          id;
+    String          name;
+    MeteoSensorType type;
+    MeteoData       data;
+    unsigned        error;
+    GpioPin         *pin;
+    DHTesp          dht;
+    bool            enabled;
+} MeteoSensor;
+
+class MeteoCtrlClass
 {
 public:
-    MeteoCtrl(const String &name);
-    CtrlType getType() const;
-    void setEnabled(bool status);
-    bool getEnabled() const;
-    const String &getName() const;
-    void setName(const String &name);
-    void setOneWire(OneWireClass *ow);
-    OneWireClass *getOneWire();
-    void addSensor(MeteoSensor *sensor);
-    const std::vector<MeteoSensor *> &getSensors();
-    MeteoSensor *getSensor(const String &name);
+    MeteoCtrlClass();
+    void setSensor(size_t index, MeteoSensor &sensor);
+    void getEnabledSensors(std::vector<MeteoSensor *> &sensors);
     void begin();
     void loop();
 
 private:
-    unsigned                    _timer;
-    unsigned                    _timerDs;
-    unsigned                    _curSensor = 0;
-    unsigned                    _dsCount = 0;
-    bool                        _ready = false;
-    bool                        _enabled = false;
-    String                      _name;
-    OneWireClass                *_ow = nullptr;
-    GyverDS18                   _ds;
-    std::vector<MeteoSensor *>  _sensors;
-    
-    void _sensorsTask();
-    void _ds18Task();
+    bool                                        _ready = false;
+    bool                                        _enabled = false;
+    unsigned                                    _timer;
+    unsigned                                    _timerDs;
+    unsigned                                    _curSensor = 0;
+    std::array<MeteoSensor, METEO_SENSOR_COUNT> _sensors;
+
+    void _readData(MeteoSensor *sensor);
 };
+
+extern MeteoCtrlClass MeteoCtrl;
 
 #endif /* __METEO_HPP__ */

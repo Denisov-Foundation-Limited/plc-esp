@@ -18,7 +18,6 @@
 #include "core/ifaces/uart.hpp"
 #include "controllers/ctrls.hpp"
 #include "controllers/meteo/meteo.hpp"
-#include "controllers/meteo/sensors/ds18b20.hpp"
 #include "net/tgbot.hpp"
 
 void CLIInformerClass::showWiFi()

@@ -10,7 +10,6 @@
 /**********************************************************************/
 
 #include "controllers/meteo/meteo.hpp"
-#include "controllers/meteo/sensors/ds18b20.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -18,109 +17,69 @@
 /*                                                                   */
 /*********************************************************************/
 
-MeteoCtrl::MeteoCtrl(const String &name)
+MeteoCtrlClass::MeteoCtrlClass()
 {
-    _name = name;
-}
-
-void MeteoCtrl::setEnabled(bool status)
-{
-    _enabled = status;
-}
-
-bool MeteoCtrl::getEnabled() const
-{
-    return _enabled;
-}
-
-void MeteoCtrl::setOneWire(OneWireClass *ow)
-{
-    _ow = ow;
- 
-}
-
-OneWireClass *MeteoCtrl::getOneWire()
-{
-    return _ow;
-}
-
-void MeteoCtrl::addSensor(MeteoSensor *sensor)
-{
-    if (sensor->getType() == METEO_SENSOR_DS18) {
-        auto *s = static_cast<Ds18b20 *>(sensor);
-        s->setDSBus(&_ds);
-        _sensors.push_back(s);
-        Log.info(F("METEO"), String(F("Add sensor name: ")) +
-                                sensor->getName() +
-                                String(F(" type: DS18B20")));
-        _dsCount++;
+    for (size_t i = 0; i < _sensors.size(); i++) {
+        _sensors[i].id = i + 1;
     }
 }
 
-const std::vector<MeteoSensor *> &MeteoCtrl::getSensors()
+void MeteoCtrlClass::setSensor(size_t index, MeteoSensor &sensor)
 {
-    return _sensors;
+
 }
 
-MeteoSensor *MeteoCtrl::getSensor(const String &name)
+void MeteoCtrlClass::begin()
 {
-    for (auto s : _sensors) {
-        if (s->getName() == name) {
-            return s;
+    std::vector<MeteoSensor *> sensors;
+
+    getEnabledSensors(sensors);
+    
+    for (auto sensor : sensors) {
+        switch (sensor->type) {
+            case METEO_SENSOR_AM2302:
+                sensor->dht.setup(sensor->pin->pin, DHTesp::AM2302);
+                break;
+
+            case METEO_SENSOR_DHT22:
+                sensor->dht.setup(sensor->pin->pin, DHTesp::DHT22);
+                break;
         }
     }
-    return nullptr;
 }
 
-void MeteoCtrl::begin()
+void MeteoCtrlClass::getEnabledSensors(std::vector<MeteoSensor *> &sensors)
 {
-    if (!_enabled || !_sensors.size()) return;
-    Log.info(F("METEO"), String(F("Starting Meteo controller ")) + _name +
-                            String(F(" with ")) + 
-                            String(_sensors.size()) +
-                            String(F(" sensors")));
+    for (size_t i = 0; i < _sensors.size(); i++) {
+        if (_sensors[i].enabled) {
+            sensors.push_back(&_sensors[i]);
+        }
+    }
 }
 
-void MeteoCtrl::loop()
+void MeteoCtrlClass::loop()
 {
-    if (!_enabled || !_sensors.size()) return;
+    if (!_enabled) return;
 
-    if ((millis() - _timerDs >= METEO_DS_TIMER_MS) && !_ready) {
-        _timerDs = millis();
-        _ds18Task();
-    }
+    if (!_ready) {
+        if ((millis() - _timer >= METEO_SENS_TIMER_MS)) {
+            _ready = true;
+            _timer = millis();
+        }
+    } else {
+        std::vector<MeteoSensor *> sensors;
 
-    if ((millis() - _timer >= METEO_SENS_TIMER_MS) && !_ready) {
-        _timer = millis();
-        _sensorsTask();
-    }
+        getEnabledSensors(sensors);
+        _readData(sensors[_curSensor]);
 
-    if (_ready) {
-        _sensors[_curSensor]->readData();
-        if (_curSensor < (_sensors.size() - 1)) {
+        if (_curSensor < (sensors.size() - 1)) {
             _curSensor++;
         } else {
             _curSensor = 0;
             _ready = false;
             _timer = millis();
-            _timerDs = millis();
         }
     }
-}
-
-CtrlType MeteoCtrl::getType() const
-{
-    return CTRL_TYPE_METEO;
-}
-
-const String &MeteoCtrl::getName() const
-{
-    return _name;
-}
-
-void MeteoCtrl::setName(const String &name)
-{
-    _name = name;
 }
 
 /*********************************************************************/
@@ -129,17 +88,24 @@ void MeteoCtrl::setName(const String &name)
 /*                                                                   */
 /*********************************************************************/
 
-void MeteoCtrl::_sensorsTask()
+void MeteoCtrlClass::_readData(MeteoSensor *sensor)
 {
-    _ready = true;
-}
-void MeteoCtrl::_ds18Task()
-{
-    if (_ow == nullptr) {
-        return;
-    }
+    if (!sensor->enabled) return;
 
-    if (_dsCount > 0) {
-        _ds.requestTemp();
+    if (sensor->type == METEO_SENSOR_AM2302) {
+        auto data = sensor->dht.getTempAndHumidity();
+        if (data.temperature != NAN && data.humidity != NAN) {
+            if (sensor->error != 0) {
+                Log.info(F("METEO"), String(F("Meteo sensor AM2302: ")) + sensor->name + " is online");
+                sensor->error = 0;
+            }
+        } else {
+            sensor->error++;
+            if (sensor->error == METEO_SENSOR_ERROR_MAX) {
+                Log.error(F("METEO"), String(F("Failed to read AM2302 sensor: ")) + sensor->name);
+            }
+        }
     }
 }
+
+MeteoCtrlClass MeteoCtrl;
