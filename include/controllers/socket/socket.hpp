@@ -58,8 +58,6 @@ private:
     bool                                _enabled = true;
     String                              _name;
 
-    void _beginSocket(Socket *sock);
-    void _loopSocket(Socket *sock);
     void _readButton(Socket *sock);
 };
 

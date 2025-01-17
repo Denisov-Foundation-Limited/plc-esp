@@ -10,6 +10,8 @@
 /**********************************************************************/
 
 #include "controllers/meteo/meteo.hpp"
+#include "core/ifaces/ow.hpp"
+#include "utils/log.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -20,18 +22,26 @@
 MeteoCtrlClass::MeteoCtrlClass()
 {
     for (size_t i = 0; i < _sensors.size(); i++) {
+        memset(&_sensors[i], 0x0, sizeof(MeteoSensor));
         _sensors[i].id = i + 1;
     }
 }
 
-void MeteoCtrlClass::setSensor(size_t index, MeteoSensor &sensor)
+bool MeteoCtrlClass::setSensor(size_t index, MeteoSensor *sensor)
 {
+    if (index > (_sensors.size() - 1)) {
+        return false;
+    }
 
+    memcpy(&_sensors[index], sensor, sizeof(MeteoSensor));
+
+    return true;
 }
 
 void MeteoCtrlClass::begin()
 {
-    std::vector<MeteoSensor *> sensors;
+    std::vector<MeteoSensor *>  sensors;
+    OneWireBus                  *bus;
 
     getEnabledSensors(sensors);
     
@@ -45,6 +55,12 @@ void MeteoCtrlClass::begin()
                 sensor->dht.setup(sensor->pin->pin, DHTesp::DHT22);
                 break;
         }
+    }
+
+    if (OneWireIf.getOWBusById(PROF_OW_TEMP, &bus)) {
+        _ds.setPin(bus->pin);
+    } else {
+        Log.error(F("METEO"), F("I2C bus OneWireTemp not found"));
     }
 }
 
@@ -60,6 +76,15 @@ void MeteoCtrlClass::getEnabledSensors(std::vector<MeteoSensor *> &sensors)
 void MeteoCtrlClass::loop()
 {
     if (!_enabled) return;
+
+    if (!_reqSend) {
+        if ((millis() - _timerDs >= METEO_SENS_TIMER_DS_MS)) {
+            _timerDs = millis();
+            if (_ds.requestTemp()) {
+                _reqSend = true;
+            }
+        }
+    }
 
     if (!_ready) {
         if ((millis() - _timer >= METEO_SENS_TIMER_MS)) {
@@ -78,6 +103,7 @@ void MeteoCtrlClass::loop()
             _curSensor = 0;
             _ready = false;
             _timer = millis();
+            _reqSend = false;
         }
     }
 }
@@ -103,6 +129,20 @@ void MeteoCtrlClass::_readData(MeteoSensor *sensor)
             sensor->error++;
             if (sensor->error == METEO_SENSOR_ERROR_MAX) {
                 Log.error(F("METEO"), String(F("Failed to read AM2302 sensor: ")) + sensor->name);
+            }
+        }
+    } else if (sensor->type == METEO_SENSOR_DS18B20) {
+        if (_ds.ready()) {
+            if (_ds.readTemp(sensor->addr)) {
+                if (sensor->error != 0) {
+                    Log.info(F("METEO"), String(F("Meteo sensor DS18B20: ")) + sensor->name + " is online");
+                    sensor->error = 0;
+                }
+            } else {
+                sensor->error++;
+                if (sensor->error == METEO_SENSOR_ERROR_MAX) {
+                    Log.error(F("METEO"), String(F("Failed to read DS18B20 sensor: ")) + sensor->name);
+                }
             }
         }
     }

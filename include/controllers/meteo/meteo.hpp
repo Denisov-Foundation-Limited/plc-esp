@@ -20,6 +20,7 @@
 #include "core/ifaces/ow.hpp"
 
 #define METEO_SENS_TIMER_MS     5000
+#define METEO_SENS_TIMER_DS_MS  1000
 #define METEO_SENSOR_ERROR_MAX  10
 
 #define METEO_SENSOR_COUNT  64
@@ -45,6 +46,7 @@ typedef struct {
     unsigned        error;
     GpioPin         *pin;
     DHTesp          dht;
+    uint64_t        addr;
     bool            enabled;
 } MeteoSensor;
 
@@ -52,16 +54,17 @@ class MeteoCtrlClass
 {
 public:
     MeteoCtrlClass();
-    void setSensor(size_t index, MeteoSensor &sensor);
+    bool setSensor(size_t index, MeteoSensor *sensor);
     void getEnabledSensors(std::vector<MeteoSensor *> &sensors);
     void begin();
     void loop();
 
 private:
-    bool                                        _ready = false;
+    bool                                        _ready = false, _reqSend = false;
     bool                                        _enabled = false;
-    unsigned                                    _timer = 0;
+    unsigned                                    _timer = 0, _timerDs = 0;
     unsigned                                    _curSensor = 0;
+    GyverDS18                                   _ds;
     std::array<MeteoSensor, METEO_SENSOR_COUNT> _sensors;
 
     void _readData(MeteoSensor *sensor);

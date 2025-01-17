@@ -21,6 +21,11 @@
 
 #define OW_BUS_COUNT   2
 
+typedef enum {
+    PROF_OW_TEMP = 1,
+    PROF_OW_SECURITY
+} OneWireBusType;
+
 typedef struct {
     uint8_t id;
     OneWire ow;
