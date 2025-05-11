@@ -50,21 +50,14 @@ bool OneWireClass::getOWBusById(uint8_t id, OneWireBus **bus)
 void OneWireClass::findDevices(OneWireBus *bus, std::vector<String> &addrs)
 {
     uint8_t addr[8];
+    uint64_t uAddr;
 
     if (bus->ow.search(addr))
     {
         do
         {
-            String sOut = "";
-            for (uint8_t i = 0; i < 8; i++)
-            {
-                if (addr[i] < 0x10) {
-                    sOut += "0";
-                }
-                sOut += String(addr[i], HEX);
-            }
-            sOut.toUpperCase();
-            addrs.push_back(sOut);
+            memcpy(&uAddr, addr, sizeof(uint64_t));
+            addrs.push_back(String(uAddr, 16));
         } while (bus->ow.search(addr));
     }
 }

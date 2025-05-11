@@ -112,15 +112,17 @@ void SocketCtrlClass::loop()
 {
     if (!_enabled) return;
 
+    std::vector<Socket *> sockets;
+    getEnabledSockets(sockets);
+
+    if (sockets.size() == 0) return;
+
     if (!_reading) {
         if ((millis() - _timer) >= SOCKET_BUTTON_READ_MS) {
             _reading = true;
             _timer = millis();
         }
     } else {
-        std::vector<Socket *> sockets;
-
-        getEnabledSockets(sockets);
         _readButton(&_sockets[_curSocket]);
 
         if (_curSocket < (sockets.size() - 1)) {
@@ -218,6 +220,16 @@ bool SocketCtrlClass::loadStates()
 bool &SocketCtrlClass::getStatus(Socket *sock)
 {
     return sock->status;
+}
+
+void SocketCtrlClass::setEnabled(bool enabled)
+{
+    _enabled = enabled;
+}
+
+bool &SocketCtrlClass::getEnabled()
+{
+    return _enabled;
 }
 
 /*********************************************************************/

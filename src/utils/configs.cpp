@@ -257,11 +257,19 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     TgBot.setEnabled(jtgbot[F("enabled")]);
 
     /*
-     * Socket configurations
+     * Controllers configurations
      */
 
     auto jctrls = doc[F("controllers")];
-    JsonArray jsocks = jctrls["socket"];
+
+    /*
+     * Socket configurations
+     */
+    
+    auto jsock = jctrls["socket"];
+    SocketCtrl.setEnabled(jsock["enabled"].as<bool>());
+
+    JsonArray jsocks = jsock["sockets"];
     for (size_t i = 0; i < jsocks.size(); i++) {
         Socket sock;
         memset(&sock, 0x0, sizeof(Socket));
@@ -272,6 +280,37 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         Gpio.getPinById(jsocks[i][F("button")].as<unsigned>(), &sock.button);
         Gpio.getPinById(jsocks[i][F("led")].as<unsigned>(), &sock.led);
         SocketCtrl.setSocket(jsocks[i][F("id")].as<unsigned>() - 1, &sock);
+    }
+
+    /*
+     * Meteo configurations
+     */
+
+    auto jmeteo = jctrls["meteo"];
+    MeteoCtrl.setEnabled(jmeteo["enabled"].as<bool>());
+
+    JsonArray jsensors = jmeteo["sensors"];
+    for (size_t i = 0; i < jsensors.size(); i++) {
+        MeteoSensor sensor;
+        memset(&sensor, 0x0, sizeof(MeteoSensor));
+        sensor.id = jsensors[i][F("id")].as<unsigned>();
+        sensor.name = jsensors[i][F("name")].as<String>();
+        sensor.enabled = true;
+
+        auto mtype = jsensors[i][F("type")].as<String>();
+        if (mtype == "ds18b20") {
+            sensor.type = METEO_SENSOR_DS18B20;
+            sensor.addr = strtoull(jsensors[i][F("addr")].as<String>().c_str(), NULL, 16);
+        } else if (mtype == "dht22") {
+            sensor.type = METEO_SENSOR_DHT22;
+        } else if (mtype == "am2302") {
+            sensor.type = METEO_SENSOR_AM2302;
+        } else if (mtype == "bme280") {
+            sensor.type = METEO_SENSOR_BME280;
+        }
+
+        Gpio.getPinById(jsensors[i][F("pin")].as<unsigned>(), &sensor.pin);
+        MeteoCtrl.setSensor(sensor.id - 1, &sensor);
     }
 
     doc.clear();
@@ -349,11 +388,19 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     }
 
     /*
-     * Socket controller
+     * Controllers configs
      */
 
     auto jctrls = doc[F("controllers")];
-    auto jsocks = jctrls[F("socket")];
+
+    /*
+     * Socket controller
+     */
+
+    auto jsock = jctrls[F("socket")];
+    jsock[F("enabled")] = SocketCtrl.getEnabled();
+
+    auto jsocks = jsock[F("sockets")];
     
     std::vector<Socket *> socks;
     SocketCtrl.getEnabledSockets(socks);
@@ -366,6 +413,42 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         (socks[i]->led == nullptr) ? jsocks[i][F("led")] = 0 : jsocks[i][F("led")] = socks[i]->led->id;
     }
 
+    /*
+     * Meteo controller
+     */
+
+    auto jmeteo = jctrls["meteo"];
+    jmeteo["enabled"] = MeteoCtrl.getEnabled();
+    auto jmsens = jmeteo["sensors"];
+    
+    std::vector<MeteoSensor *> sens;
+    MeteoCtrl.getEnabledSensors(sens);
+
+    for (size_t i = 0; i < sens.size(); i++) {
+        jmsens[i][F("id")] = sens[i]->id;
+        jmsens[i][F("name")] = sens[i]->name;
+
+        switch (sens[i]->type) {
+            case METEO_SENSOR_DS18B20:
+                jmsens[i][F("type")] = String("ds18b20");
+                jmsens[i][F("addr")] = String(sens[i]->addr, 16);
+                break;
+
+            case METEO_SENSOR_DHT22:
+                jmsens[i][F("type")] = String("dht22");
+                break;
+
+            case METEO_SENSOR_AM2302:
+                jmsens[i][F("type")] = String("am2302");
+                break;
+
+            case METEO_SENSOR_BME280:
+                jmsens[i][F("type")] = String("bme280");
+                break;
+        }
+
+        (sens[i]->pin == nullptr) ? jmsens[i][F("pin")] = 0 : jmsens[i][F("pin")] = sens[i]->pin->id;
+    }
     return true;
 }
 

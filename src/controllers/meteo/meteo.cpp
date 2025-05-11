@@ -27,6 +27,16 @@ MeteoCtrlClass::MeteoCtrlClass()
     }
 }
 
+void MeteoCtrlClass::setEnabled(bool enabled)
+{
+    _enabled = enabled;
+}
+
+bool& MeteoCtrlClass::getEnabled()
+{
+    return _enabled;
+}
+
 bool MeteoCtrlClass::setSensor(size_t index, MeteoSensor *sensor)
 {
     if (index > (_sensors.size() - 1)) {
@@ -36,6 +46,28 @@ bool MeteoCtrlClass::setSensor(size_t index, MeteoSensor *sensor)
     memcpy(&_sensors[index], sensor, sizeof(MeteoSensor));
 
     return true;
+}
+
+void MeteoCtrlClass::findDsSensors(std::vector<String> &sensors)
+{
+    OneWireBus  *bus;
+
+    if (OneWireIf.getOWBusById(PROF_OW_TEMP, &bus)) {
+        OneWireIf.findDevices(bus, sensors);
+    } else {
+        Log.error(F("METEO"), F("I2C bus OneWireTemp not found"));
+    }
+}
+
+bool MeteoCtrlClass::getSensor(size_t index, MeteoSensor **sens)
+{
+    for (size_t i = 0; i < _sensors.size(); i++) {
+        if (index == i) {
+            *sens = &_sensors[i];
+            return true;
+        }
+    }
+    return false;
 }
 
 void MeteoCtrlClass::begin()
@@ -73,15 +105,27 @@ void MeteoCtrlClass::getEnabledSensors(std::vector<MeteoSensor *> &sensors)
     }
 }
 
+std::array<MeteoSensor, METEO_SENSOR_COUNT> MeteoCtrlClass::getSensors()
+{
+    return _sensors;
+}
+
 void MeteoCtrlClass::loop()
 {
     if (!_enabled) return;
+
+    std::vector<MeteoSensor *> sensors;
+    getEnabledSensors(sensors);
+
+    if (sensors.size() == 0) return;
 
     if (!_reqSend) {
         if ((millis() - _timerDs >= METEO_SENS_TIMER_DS_MS)) {
             _timerDs = millis();
             if (_ds.requestTemp()) {
                 _reqSend = true;
+            } else {
+                Serial.println("FAIL REQUEST");
             }
         }
     }
@@ -92,9 +136,6 @@ void MeteoCtrlClass::loop()
             _timer = millis();
         }
     } else {
-        std::vector<MeteoSensor *> sensors;
-
-        getEnabledSensors(sensors);
         _readData(sensors[_curSensor]);
 
         if (_curSensor < (sensors.size() - 1)) {
@@ -138,6 +179,7 @@ void MeteoCtrlClass::_readData(MeteoSensor *sensor)
                     Log.info(F("METEO"), String(F("Meteo sensor DS18B20: ")) + sensor->name + " is online");
                     sensor->error = 0;
                 }
+                sensor->data.temp = _ds.getTemp();
             } else {
                 sensor->error++;
                 if (sensor->error == METEO_SENSOR_ERROR_MAX) {

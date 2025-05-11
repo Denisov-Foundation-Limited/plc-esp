@@ -22,8 +22,8 @@
 #define OW_BUS_COUNT   2
 
 typedef enum {
-    PROF_OW_TEMP = 1,
-    PROF_OW_SECURITY
+    PROF_OW_SECURITY = 1,
+    PROF_OW_TEMP = 2
 } OneWireBusType;
 
 typedef struct {

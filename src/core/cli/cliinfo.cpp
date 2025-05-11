@@ -279,7 +279,6 @@ void CLIInformerClass::showOneWire()
 
         i = 1;
         for (auto addr : addrs) {
-            addr.toUpperCase();
             Serial.printf("\t%-3d   %-3d   %-18s\n", ow->id, i, addr.c_str());
             i++;
         }

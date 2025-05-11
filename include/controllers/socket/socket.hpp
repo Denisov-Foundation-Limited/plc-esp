@@ -38,6 +38,8 @@ class SocketCtrlClass
 {
 public:
     SocketCtrlClass();
+    void setEnabled(bool enabled);
+    bool &getEnabled();
     bool setSocket(size_t id, Socket *sock);
     void getEnabledSockets(std::vector<Socket *> &socks);
     std::array<Socket, SOCKET_COUNT> *getSockets();
@@ -55,7 +57,7 @@ private:
     bool                                _reading = false;
     unsigned                            _timer;
     unsigned                            _curSocket = 0;
-    bool                                _enabled = true;
+    bool                                _enabled = false;
     String                              _name;
 
     void _readButton(Socket *sock);

@@ -25,7 +25,8 @@ typedef enum {
     WEB_PAGE_CONTROLLERS,
     WEB_PAGE_SOCKETS,
     WEB_PAGE_SETTINGS,
-    WEB_PAGE_SYSTEM
+    WEB_PAGE_SYSTEM,
+    WEB_PAGE_METEO
 } WebGuiPage;
 
 typedef enum {
@@ -52,6 +53,7 @@ typedef enum {
     WEB_GUI_MAIN_WIFI_IP,
     WEB_GUI_MAIN_WIFI_STATUS,
     WEB_GUI_CTRL_SOCKET,
+    WEB_GUI_CTRL_METEO,
     WEB_GUI_CTRL_BACK,
     WEB_GUI_CTRL_SOCKET_ON_ALL,
     WEB_GUI_CTRL_SOCKET_OFF_ALL,
@@ -59,6 +61,7 @@ typedef enum {
     WEB_GUI_CTRL_SOCKET_SEL,
     WEB_GUI_CTRL_SOCKET_NAME,
     WEB_GUI_CTRL_SOCKET_ENABLE,
+    WEB_GUI_CTRL_SOCKET_ENABLE_SOCK,
     WEB_GUI_CTRL_SOCKET_RLY,
     WEB_GUI_CTRL_SOCKET_BTN,
     WEB_GUI_CTRL_SOCKET_LED,
@@ -71,7 +74,13 @@ typedef enum {
     WEB_GUI_TG_USER_EN,
     WEB_GUI_TG_USER_ADMIN,
     WEB_GUI_TG_USER_NTF,
-    WEB_GUI_TG_USER_CHATID
+    WEB_GUI_TG_USER_CHATID,
+    WEB_GUI_CTRL_METEO_SEL,
+    WEB_GUI_CTRL_METEO_NAME,
+    WEB_GUI_CTRL_METEO_ENABLE,
+    WEB_GUI_CTRL_METEO_ENABLE_SENS,
+    WEB_GUI_CTRL_METEO_TYPE,
+    WEB_GUI_CTRL_METEO_ADDR
 } WebGUIElem;
 
 class WebGUIClass : public SettingsAsync
@@ -106,6 +115,14 @@ private:
         size_t  curLED = 0;
     } _socket;
 
+    struct {
+        String  Name;
+        bool    Enabled;
+        size_t  curSensor = 0;
+        size_t  curType = 0;
+        String  Addr;
+    } _meteo;
+
     void _buildMenu(sets::Builder& b);
     void _updateMainPage(sets::Updater& upd);
     void _buildMainPage(sets::Builder& b);
@@ -115,9 +132,10 @@ private:
     void _updateCtrlsPage(sets::Updater& upd);
     void _buildSettingsPage(sets::Builder& b);
     void _updateSettingsPage(sets::Updater& upd);
-
     void _buildSocketsPage(sets::Builder& b);
     void _updateSocketsPage(sets::Updater& upd);
+    void _buildMeteoPage(sets::Builder& b);
+    void _updateMeteoPage(sets::Updater& upd);
 };
 
 extern WebGUIClass WebGUI;

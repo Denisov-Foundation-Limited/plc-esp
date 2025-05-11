@@ -26,10 +26,10 @@
 #define METEO_SENSOR_COUNT  64
 
 typedef enum {
-    METEO_SENSOR_BME280,
-    METEO_SENSOR_DHT22,
+    METEO_SENSOR_AM2302,
     METEO_SENSOR_DS18B20,
-    METEO_SENSOR_AM2302
+    METEO_SENSOR_BME280,
+    METEO_SENSOR_DHT22    
 } MeteoSensorType;
 
 typedef struct {
@@ -56,6 +56,11 @@ public:
     MeteoCtrlClass();
     bool setSensor(size_t index, MeteoSensor *sensor);
     void getEnabledSensors(std::vector<MeteoSensor *> &sensors);
+    std::array<MeteoSensor, METEO_SENSOR_COUNT> getSensors();
+    bool getSensor(size_t index, MeteoSensor **sens);
+    void findDsSensors(std::vector<String> &sensors);
+    void setEnabled(bool enabled);
+    bool &getEnabled();
     void begin();
     void loop();
 
