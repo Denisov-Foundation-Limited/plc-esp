@@ -12,8 +12,8 @@
 #include "net/webgui.hpp"
 #include "utils/configs.hpp"
 #include "net/core/wifi.hpp"
-#include "controllers/meteo/meteo.hpp"
-#include "controllers/socket/socket.hpp"
+#include "controllers/meteo.hpp"
+#include "controllers/socket.hpp"
 #include "core/clock.hpp"
 
 #include <StringUtils.h>

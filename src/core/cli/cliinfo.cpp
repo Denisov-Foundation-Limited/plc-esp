@@ -17,7 +17,7 @@
 #include "core/ifaces/i2c.hpp"
 #include "core/ifaces/uart.hpp"
 #include "controllers/ctrls.hpp"
-#include "controllers/meteo/meteo.hpp"
+#include "controllers/meteo.hpp"
 #include "net/tgbot.hpp"
 
 void CLIInformerClass::showWiFi()

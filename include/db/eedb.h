@@ -18,12 +18,17 @@
 #define RR_DB_ID_MAX    64
 
 typedef enum {
-    EE_DB_OFFSET_SOCKET
+    EE_DB_OFFSET_SOCKET,
+    EE_DB_OFFSET_CLIMATE
 } EeDbOffset;
 
 typedef struct {
     uint64_t status;
 } EeDbSocket;
+
+typedef struct {
+    uint64_t status;
+} EeDbClimate;
 
 class EepromDbClass
 {
@@ -37,6 +42,11 @@ public:
     bool saveSocketDb(EeDbSocket &sockdb);
     bool getSocketStatus(EeDbSocket &sockdb, uint8_t id, bool &status);
     bool setSocketStatus(EeDbSocket &sockdb, uint8_t id, bool status);
+
+    bool loadClimateDb(EeDbClimate &climdb);
+    bool saveClimateDb(EeDbClimate &climdb);
+    bool getClimateStatus(EeDbClimate &climdb, uint8_t id, bool &status);
+    bool setClimateStatus(EeDbClimate &climdb, uint8_t id, bool status);
 
 private:
     bool _enabled = true;

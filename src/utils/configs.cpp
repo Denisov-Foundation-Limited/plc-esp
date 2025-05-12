@@ -18,9 +18,9 @@
 #include "core/ifaces/uart.hpp"
 #include "net/tgbot.hpp"
 #include "net/apiserver.hpp"
-#include "controllers/meteo/meteo.hpp"
+#include "controllers/meteo.hpp"
 #include "controllers/ctrls.hpp"
-#include "controllers/socket/socket.hpp"
+#include "controllers/socket.hpp"
 #include "db/socketdb.hpp"
 #include "core/clock.hpp"
 

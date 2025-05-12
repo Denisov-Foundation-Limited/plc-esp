@@ -11,8 +11,8 @@
 
 #include "controllers/ctrls.hpp"
 #include "utils/log.hpp"
-#include "controllers/socket/socket.hpp"
-#include "controllers/meteo/meteo.hpp"
+#include "controllers/socket.hpp"
+#include "controllers/meteo.hpp"
 
 /*********************************************************************/
 /*                                                                   */

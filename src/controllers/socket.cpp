@@ -9,7 +9,7 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "controllers/socket/socket.hpp"
+#include "controllers/socket.hpp"
 #include "db/socketdb.hpp"
 #include "StringUtils.h"
 #include "db/eedb.h"
@@ -231,6 +231,7 @@ bool &SocketCtrlClass::getEnabled()
 {
     return _enabled;
 }
+
 
 /*********************************************************************/
 /*                                                                   */

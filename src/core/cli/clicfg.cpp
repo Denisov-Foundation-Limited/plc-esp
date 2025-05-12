@@ -17,7 +17,7 @@
 #include "core/ifaces/uart.hpp"
 #include "net/tgbot.hpp"
 #include "controllers/ctrls.hpp"
-#include "controllers/meteo/meteo.hpp"
+#include "controllers/meteo.hpp"
 
 /*********************************************************************/
 /*                                                                   */

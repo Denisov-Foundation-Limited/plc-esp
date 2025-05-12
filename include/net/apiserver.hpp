@@ -13,7 +13,7 @@
 #define __API_SERVER_HPP__
 
 #include "utils/log.hpp"
-#include "controllers/socket/socket.hpp"
+#include "controllers/socket.hpp"
 
 #include <Arduino.h>
 #include <WiFi.h>

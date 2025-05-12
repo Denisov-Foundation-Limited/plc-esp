@@ -9,7 +9,7 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "controllers/meteo/meteo.hpp"
+#include "controllers/meteo.hpp"
 #include "core/ifaces/ow.hpp"
 #include "utils/log.hpp"
 

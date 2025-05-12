@@ -12,7 +12,7 @@
 #include "net/tgbot.hpp"
 #include "net/core/wifi.hpp"
 #include "controllers/ctrls.hpp"
-#include "controllers/socket/socket.hpp"
+#include "controllers/socket.hpp"
 
 /*********************************************************************/
 /*                                                                   */
