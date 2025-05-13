@@ -15,11 +15,16 @@
 #include <Arduino.h>
 #include "I2C_eeprom.h"
 
-#define RR_DB_ID_MAX    64
+#define EE_DB_ID_MAX        64
+#define EE_DB_MAGIC         0x4A5C
+#define EE_DB_FLASH_BLOCK   1024
+#define EE_DB_BLOCK_COUNT   512
 
 typedef enum {
+    EE_DB_OFFSET_MAGIC,
     EE_DB_OFFSET_SOCKET,
-    EE_DB_OFFSET_CLIMATE
+    EE_DB_OFFSET_CLIMATE,
+    EE_DB_OFFSET_MAX
 } EeDbOffset;
 
 typedef struct {
@@ -27,7 +32,13 @@ typedef struct {
 } EeDbSocket;
 
 typedef struct {
-    uint64_t status;
+    int8_t  temp;
+    uint8_t delta;
+} EeDbClimateTemp;
+
+typedef struct {
+    uint64_t        status;
+    EeDbClimateTemp tempCfg[EE_DB_ID_MAX];
 } EeDbClimate;
 
 class EepromDbClass
@@ -35,22 +46,22 @@ class EepromDbClass
 public:
     EepromDbClass();
     bool begin();
-    bool getEnabled() const;
+    bool &getEnabled();
     size_t getOffset(EeDbOffset offset);
 
-    bool loadSocketDb(EeDbSocket &sockdb);
-    bool saveSocketDb(EeDbSocket &sockdb);
-    bool getSocketStatus(EeDbSocket &sockdb, uint8_t id, bool &status);
-    bool setSocketStatus(EeDbSocket &sockdb, uint8_t id, bool status);
+    bool loadSocketDb(EeDbSocket &data);
+    bool saveSocketDb(EeDbSocket &data);
+    bool getSocketStatus(EeDbSocket &data, uint8_t id, bool &status);
+    bool setSocketStatus(EeDbSocket &data, uint8_t id, bool status);
 
-    bool loadClimateDb(EeDbClimate &climdb);
-    bool saveClimateDb(EeDbClimate &climdb);
-    bool getClimateStatus(EeDbClimate &climdb, uint8_t id, bool &status);
-    bool setClimateStatus(EeDbClimate &climdb, uint8_t id, bool status);
+    bool loadClimateDb(EeDbClimate &data);
+    bool saveClimateDb(EeDbClimate &data);
+    bool getClimateData(EeDbClimate &data, uint8_t id, bool &status, int8_t &temp, uint8_t &delta);
+    bool setClimateData(EeDbClimate &data, uint8_t id, bool status, int8_t temp, uint8_t delta);
 
 private:
-    bool _enabled = true;
-    I2C_eeprom _ee;
+    bool        _enabled = true;
+    I2C_eeprom  _ee;
 };
 
 extern EepromDbClass EeDb;

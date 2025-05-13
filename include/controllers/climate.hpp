@@ -48,6 +48,7 @@ typedef struct {
 class ClimateCtrlClass
 {
 public:
+    bool setZone(size_t id, ClimateZone *zone);
     void setEnabled(bool enabled);
     bool &getEnabled();
     void begin();
@@ -55,6 +56,10 @@ public:
     bool &getStatus(ClimateZone *zone);
     void setStatus(ClimateZone *zone, bool status, bool save);
     void getEnabledClimateZone(std::vector<ClimateZone*> &zones);
+    void setTemp(ClimateZone *zone, int temp, bool save);
+    int getTemp(ClimateZone *zone);
+    void setDelta(ClimateZone *zone, unsigned delta, bool save);
+    unsigned getDelta(ClimateZone *zone);
 
 private:
     std::array<ClimateZone, CLIMATE_ZONE_COUNT>  _zones;

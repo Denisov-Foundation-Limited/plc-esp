@@ -18,6 +18,17 @@
 /*                                                                   */
 /*********************************************************************/
 
+bool ClimateCtrlClass::setZone(size_t id, ClimateZone *zone)
+{
+    if (id > (_zones.size() - 1)) {
+        return false;
+    }
+
+    memcpy(&_zones[id], zone, sizeof(ClimateZone));
+
+    return true;
+}
+
 void ClimateCtrlClass::setEnabled(bool enabled)
 {
     _enabled = enabled;
@@ -86,7 +97,7 @@ void ClimateCtrlClass::loop()
     if ((millis() - _tmrTemp) >= CLIMATE_TEMP_PROC_MS) {
         _tmrTemp = millis();
 
-         _processTemp(&_zones[_curZone2]);
+        _processTemp(&_zones[_curZone2]);
 
         if (_curZone2 < (zones.size() - 1)) {
             _curZone2++;
@@ -95,6 +106,68 @@ void ClimateCtrlClass::loop()
             _tmrTemp = millis();
         }
     }
+}
+
+void ClimateCtrlClass::setTemp(ClimateZone *zone, int temp, bool save)
+{
+    zone->temp = temp;
+
+    Log.info(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" changed temperature to ")) + String(temp));
+
+    if (save) {
+        if (EeDb.getEnabled()) {
+            EeDbClimate  db;
+            if (EeDb.loadClimateDb(db)) {
+                if (EeDb.setClimateData(db, zone->id, zone->status, zone->temp, zone->delta)) {
+                    if (EeDb.saveClimateDb(db)) {
+                        Log.info(F("CLIMATE"), String(F("Climate temp saved to EEPROM. Id: ")) + String(zone->id));
+                    } else {
+                        Log.error(F("CLIMATE"), String(F("Failed to save climate temp to EEPROM. Id: ")) + String(zone->id));
+                    }
+                } else {
+                    Log.error(F("CLIMATE"), String(F("Failed to set climate temp to EEPROM. Id: ")) + String(zone->id));
+                }
+            } else {
+                Log.error(F("CLIMATE"), String(F("Failed to load climate temp from EEPROM. Id: ")) + String(zone->id));
+            }
+        }
+    }
+}
+
+int ClimateCtrlClass::getTemp(ClimateZone *zone)
+{
+    return zone->temp;
+}
+
+void ClimateCtrlClass::setDelta(ClimateZone *zone, unsigned delta, bool save)
+{
+    zone->delta = delta;
+
+    Log.info(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" changed delta to ")) + String(delta));
+
+    if (save) {
+        if (EeDb.getEnabled()) {
+            EeDbClimate  db;
+            if (EeDb.loadClimateDb(db)) {
+                if (EeDb.setClimateData(db, zone->id, zone->status, zone->temp, zone->delta)) {
+                    if (EeDb.saveClimateDb(db)) {
+                        Log.info(F("CLIMATE"), String(F("Climate delta saved to EEPROM. Id: ")) + String(zone->id));
+                    } else {
+                        Log.error(F("CLIMATE"), String(F("Failed to save climate delta to EEPROM. Id: ")) + String(zone->id));
+                    }
+                } else {
+                    Log.error(F("CLIMATE"), String(F("Failed to set climate delta to EEPROM. Id: ")) + String(zone->id));
+                }
+            } else {
+                Log.error(F("CLIMATE"), String(F("Failed to load climate delta from EEPROM. Id: ")) + String(zone->id));
+            }
+        }
+    }
+}
+
+unsigned ClimateCtrlClass::getDelta(ClimateZone *zone)
+{
+    return zone->delta;
 }
 
 void ClimateCtrlClass::setStatus(ClimateZone *zone, bool status, bool save)
@@ -109,7 +182,7 @@ void ClimateCtrlClass::setStatus(ClimateZone *zone, bool status, bool save)
         if (EeDb.getEnabled()) {
             EeDbClimate  db;
             if (EeDb.loadClimateDb(db)) {
-                if (EeDb.setClimateStatus(db, zone->id, status)) {
+                if (EeDb.setClimateData(db, zone->id, status, zone->temp, zone->delta)) {
                     if (EeDb.saveClimateDb(db)) {
                         Log.info(F("CLIMATE"), String(F("Climate status saved to EEPROM. Id: ")) + String(zone->id));
                     } else {
@@ -191,14 +264,18 @@ bool ClimateCtrlClass::_loadStates()
     if (EeDb.getEnabled()) {
         EeDbClimate db;
         bool        status;
+        int8_t      temp;
+        uint8_t     delta;
 
         if (EeDb.loadClimateDb(db)) {
             for (size_t i = 0; i < zones.size(); i++) {
-                if (EeDb.getClimateStatus(db, zones[i]->id, status)) {
-                    Log.info(F("CLIMATE"), String(F("Load climate status from EEPROM. Id: ")) + String(zones[i]->id));
+                if (EeDb.getClimateData(db, zones[i]->id, status, temp, delta)) {
+                    Log.info(F("CLIMATE"), String(F("Load climate data from EEPROM. Id: ")) + String(zones[i]->id));
                     setStatus(zones[i], status, false);
+                    setTemp(zones[i], temp, false);
+                    setDelta(zones[i], delta, false);
                 } else {
-                    Log.error(F("CLIMATE"), String(F("Failed to set climate status to EEPROM. Id: ")) + String(zones[i]->id));
+                    Log.error(F("CLIMATE"), String(F("Failed to set climate data to EEPROM. Id: ")) + String(zones[i]->id));
                 }
             }
         } else {

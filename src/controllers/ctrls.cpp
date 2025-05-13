@@ -13,6 +13,7 @@
 #include "utils/log.hpp"
 #include "controllers/socket.hpp"
 #include "controllers/meteo.hpp"
+#include "controllers/climate.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -24,12 +25,14 @@ void ControllersClass::begin()
 {
     SocketCtrl.begin();
     MeteoCtrl.begin();
+    ClimateCtrl.begin();
 }
 
 void ControllersClass::loop()
 {
     SocketCtrl.loop();
     MeteoCtrl.loop();
+    ClimateCtrl.loop();
 }
 
 ControllersClass Controllers;

@@ -36,7 +36,6 @@ public:
     bool eraseAll();
     bool showStartup();
     bool showRunning();
-    bool loadStates();
     ConfigsSource getSource() const;
 
 private:

@@ -21,6 +21,7 @@
 #include "controllers/meteo.hpp"
 #include "controllers/ctrls.hpp"
 #include "controllers/socket.hpp"
+#include "controllers/climate.hpp"
 #include "db/socketdb.hpp"
 #include "core/clock.hpp"
 
@@ -313,13 +314,34 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         MeteoCtrl.setSensor(sensor.id - 1, &sensor);
     }
 
-    doc.clear();
-    return true;
-}
+    /*
+     * Climate controller
+     */
 
-bool ConfigsClass::loadStates()
-{
-    
+    auto jclimate = jctrls["climate"];
+    ClimateCtrl.setEnabled(jclimate["enabled"].as<bool>());
+    JsonArray jzones = jclimate["zones"];
+
+    for (size_t i = 0; i < jzones.size(); i++) {
+        ClimateZone zone;
+        memset(&zone, 0x0, sizeof(ClimateZone));
+        zone.id = jzones[i][F("id")].as<unsigned>();
+        zone.name = jzones[i][F("name")].as<String>();
+        zone.enabled = true;
+
+        if (jzones[i][F("type")].as<String>() == "cool") {
+            zone.type = CLIMATE_TYPE_COOL;
+        } else if (jzones[i][F("type")].as<String>() == "heat") {
+            zone.type = CLIMATE_TYPE_HEAT;
+        }
+
+        Gpio.getPinById(jzones[i][F("relay")].as<unsigned>(), &zone.relay);
+        Gpio.getPinById(jzones[i][F("button")].as<unsigned>(), &zone.button);
+
+        ClimateCtrl.setZone(zone.id - 1, &zone);
+    }
+
+    doc.clear();
     return true;
 }
 
@@ -449,6 +471,36 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
         (sens[i]->pin == nullptr) ? jmsens[i][F("pin")] = 0 : jmsens[i][F("pin")] = sens[i]->pin->id;
     }
+
+    /*
+     * Climate controller
+     */
+
+    auto jclimate = jctrls["climate"];
+    jclimate["enabled"] = ClimateCtrl.getEnabled();
+    auto jzones = jclimate["zones"];
+    
+    std::vector<ClimateZone *> zones;
+    ClimateCtrl.getEnabledClimateZone(zones);
+
+    for (size_t i = 0; i < zones.size(); i++) {
+        jzones[i][F("id")] = zones[i]->id;
+        jzones[i][F("name")] = zones[i]->name;
+        
+        switch (zones[i]->type) {
+            case CLIMATE_TYPE_COOL:
+                jzones[i][F("type")] = "cool";
+                break;
+
+            case CLIMATE_TYPE_HEAT:
+                jzones[i][F("type")] = "heat";
+                break;
+        }
+
+        (zones[i]->relay == nullptr) ? jzones[i][F("relay")] = 0 : jzones[i][F("relay")] = zones[i]->relay->id;
+        (zones[i]->button == nullptr) ? jzones[i][F("button")] = 0 : jzones[i][F("button")] = zones[i]->button->id;
+    }
+
     return true;
 }
 
