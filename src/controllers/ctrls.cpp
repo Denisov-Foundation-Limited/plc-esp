@@ -14,6 +14,7 @@
 #include "controllers/socket.hpp"
 #include "controllers/meteo.hpp"
 #include "controllers/climate.hpp"
+#include "controllers/security.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -26,6 +27,7 @@ void ControllersClass::begin()
     SocketCtrl.begin();
     MeteoCtrl.begin();
     ClimateCtrl.begin();
+    SecurityCtrl.begin();
 }
 
 void ControllersClass::loop()
@@ -33,6 +35,7 @@ void ControllersClass::loop()
     SocketCtrl.loop();
     MeteoCtrl.loop();
     ClimateCtrl.loop();
+    SecurityCtrl.loop();
 }
 
 ControllersClass Controllers;

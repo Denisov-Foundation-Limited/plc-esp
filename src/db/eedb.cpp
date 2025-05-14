@@ -86,8 +86,11 @@ size_t EepromDbClass::getOffset(EeDbOffset offset)
         case EE_DB_OFFSET_CLIMATE:
             return getOffset(EE_DB_OFFSET_SOCKET) + sizeof(EeDbSocket);
 
-        case EE_DB_OFFSET_MAX:
+        case EE_DB_OFFSET_SECURITY:
             return getOffset(EE_DB_OFFSET_CLIMATE) + sizeof(EeDbClimate);
+
+        case EE_DB_OFFSET_MAX:
+            return getOffset(EE_DB_OFFSET_SECURITY) + sizeof(EeDbSecurity);
     }
     return out;
 }
@@ -205,6 +208,40 @@ bool EepromDbClass::setSocketStatus(EeDbSocket &data, uint8_t id, bool status)
     else
         data.status &= ~(1 << curId);
 
+    return true;
+}
+
+bool EepromDbClass::loadSecurityDb(EeDbSecurity &data)
+{
+    if (_ee.isConnected()) {
+        _ee.readBlock(getOffset(EE_DB_OFFSET_SECURITY), (uint8_t *)&data, sizeof(EeDbSecurity));
+        return true;
+    }
+    return false;
+}
+
+bool EepromDbClass::saveSecurityDb(EeDbSecurity &data)
+{
+    size_t offset = getOffset(EE_DB_OFFSET_SECURITY);
+
+    if (_ee.isConnected()) {
+        _ee.setBlock(offset, 0x0, sizeof(EeDbSecurity));
+        _ee.writeBlock(offset, (uint8_t *)&data, sizeof(EeDbSecurity));
+        return true;
+    }
+
+    return false;
+}
+
+bool EepromDbClass::getSecurityStatus(EeDbSecurity &data, bool &status)
+{
+    status = data.status;
+    return true;
+}
+
+bool EepromDbClass::setSecurityStatus(EeDbSecurity &data, bool status)
+{
+    data.status = status;
     return true;
 }
 

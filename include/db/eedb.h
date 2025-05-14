@@ -24,6 +24,7 @@ typedef enum {
     EE_DB_OFFSET_MAGIC,
     EE_DB_OFFSET_SOCKET,
     EE_DB_OFFSET_CLIMATE,
+    EE_DB_OFFSET_SECURITY,
     EE_DB_OFFSET_MAX
 } EeDbOffset;
 
@@ -40,6 +41,10 @@ typedef struct {
     uint64_t        status;
     EeDbClimateTemp tempCfg[EE_DB_ID_MAX];
 } EeDbClimate;
+
+typedef struct {
+    bool status;
+} EeDbSecurity;
 
 class EepromDbClass
 {
@@ -58,6 +63,11 @@ public:
     bool saveClimateDb(EeDbClimate &data);
     bool getClimateData(EeDbClimate &data, uint8_t id, bool &status, int8_t &temp, uint8_t &delta);
     bool setClimateData(EeDbClimate &data, uint8_t id, bool status, int8_t temp, uint8_t delta);
+
+    bool loadSecurityDb(EeDbSecurity &data);
+    bool saveSecurityDb(EeDbSecurity &data);
+    bool getSecurityStatus(EeDbSecurity &data, bool &status);
+    bool setSecurityStatus(EeDbSecurity &data, bool status);
 
 private:
     bool        _enabled = true;

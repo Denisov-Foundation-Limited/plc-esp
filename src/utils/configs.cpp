@@ -22,6 +22,7 @@
 #include "controllers/ctrls.hpp"
 #include "controllers/socket.hpp"
 #include "controllers/climate.hpp"
+#include "controllers/security.hpp"
 #include "db/socketdb.hpp"
 #include "core/clock.hpp"
 
@@ -341,6 +342,28 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         ClimateCtrl.setZone(zone.id - 1, &zone);
     }
 
+    /*
+     * Security controller
+     */
+
+    auto jsecurity = jctrls["security"];
+    SecurityCtrl.setEnabled(jsecurity["enabled"].as<bool>());
+    Gpio.getPinById(jsecurity[F("relay")].as<unsigned>(), SecurityCtrl.getRelay());
+    jsensors = jsecurity["sensors"];
+    
+    for (size_t i = 0; i < jsensors.size(); i++) {
+        SecuritySensor  sensor;
+        sensor.id = jsensors[i][F("id")].as<unsigned>();
+        sensor.name = jsensors[i][F("name")].as<String>();
+
+        if (jsensors[i][F("type")].as<String>() == "reed") {
+            sensor.type = SECURITY_SENSOR_REED;
+        } else if (jsensors[i][F("type")].as<String>() == "pir") {
+            sensor.type = SECURITY_SENSOR_PIR;
+        }
+        Gpio.getPinById(jsensors[i][F("pin")].as<unsigned>(), &sensor.pin);
+    }
+
     doc.clear();
     return true;
 }
@@ -499,6 +522,35 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
         (zones[i]->relay == nullptr) ? jzones[i][F("relay")] = 0 : jzones[i][F("relay")] = zones[i]->relay->id;
         (zones[i]->button == nullptr) ? jzones[i][F("button")] = 0 : jzones[i][F("button")] = zones[i]->button->id;
+    }
+
+    /*
+     * Security controller
+     */
+
+    auto jsecurity = jctrls["security"];
+    jsecurity["enabled"] = SecurityCtrl.getEnabled();
+    (SecurityCtrl.getRelay() == nullptr) ? jsecurity[F("relay")] = 0 : jsecurity[F("relay")] = (*SecurityCtrl.getRelay())->id;
+    auto jsensors = jsecurity["sensors"];
+    
+    std::vector<SecuritySensor *> sensors;
+    SecurityCtrl.getEnabledSensors(sensors);
+
+    for (size_t i = 0; i < zones.size(); i++) {
+        jsensors[i][F("id")] = zones[i]->id;
+        jsensors[i][F("name")] = zones[i]->name;
+        
+        switch (sensors[i]->type) {
+            case SECURITY_SENSOR_REED:
+                jsensors[i][F("type")] = "reed";
+                break;
+
+            case SECURITY_SENSOR_PIR:
+                jsensors[i][F("type")] = "pir";
+                break;
+        }
+
+        (sensors[i]->pin == nullptr) ? jsensors[i][F("pin")] = 0 : jsensors[i][F("pin")] = sensors[i]->pin->id;
     }
 
     return true;
