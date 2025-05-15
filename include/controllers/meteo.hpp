@@ -58,7 +58,7 @@ public:
     void getEnabledSensors(std::vector<MeteoSensor *> &sensors);
     std::array<MeteoSensor, METEO_SENSOR_COUNT> getSensors();
     bool getSensor(size_t index, MeteoSensor **sens);
-    void findDsSensors(std::vector<String> &sensors);
+    void findDsSensors(std::vector<uint64_t> &sensors);
     void setEnabled(bool enabled);
     bool &getEnabled();
     void begin();

@@ -57,11 +57,10 @@ void FtestClass::start()
         }
         Serial.println(F("[FTEST]"));
         for (auto *bus : ows) {
-            std::vector<String> addrs;
+            std::vector<uint64_t> addrs;
             OneWireIf.findDevices(bus, addrs);
             for (auto addr : addrs) {
-                addr.toUpperCase();
-                Serial.println("[FTEST] OneWire #" + String(bus->id) + " found address: " + String(addr));
+                Serial.println("[FTEST] OneWire #" + String(bus->id) + " found address: " + String(addr, 16));
             }
         }
         Serial.println(F("[FTEST]"));

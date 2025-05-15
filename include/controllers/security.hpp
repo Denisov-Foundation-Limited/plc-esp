@@ -19,9 +19,11 @@
 #include "controllers/ctrl.hpp"
 
 #define SECURITY_SENSORS_COUNT  64
-#define SENSOR_READ_MS          1000
+#define SECURITY_SENSOR_READ_MS 1000
 #define SECURITY_SENSOR_WAIT_MS 100
 #define SECURITY_KEYS_COUNT     10
+#define SECURITY_KEY_READ_MS    500
+#define SECURITY_KEY_WAIT_MS    1500
 
 typedef enum {
     SECURITY_SENSOR_REED,
@@ -68,16 +70,23 @@ private:
     std::array<SecuritySensor, SECURITY_SENSORS_COUNT>  _sensors;
     std::array<SecurityKey, SECURITY_KEYS_COUNT>        _keys;
     unsigned    _timer;
+    unsigned    _tmrKey;
+    unsigned    _tmrKeyWait;
     bool        _enabled;
     bool        _status = false;
     bool        _reading;
     bool        _alarm;
     unsigned    _curSensor = 0;
+    unsigned    _curKey = 0;
+    bool        _readingKey;
     GpioPin    *_relay;
+    bool        _waitKey;
 
     void _readSensor(SecuritySensor *sensor);
     void _processSensor(SecuritySensor *sensor);
     bool _loadStates();
+    bool _checkKey(uint64_t serial, SecurityKey **key);
+    void _readKeys();
 };
 
 extern SecurityCtrlClass SecurityCtrl;

@@ -693,13 +693,13 @@ void WebGUIClass::_buildMeteoPage(sets::Builder& b)
                 }
 
                 if (b.beginGroup(F("OneWire"))) {
-                    std::vector<String> owSens;
+                    std::vector<uint64_t> owSens;
                     MeteoCtrl.findDsSensors(owSens);
                     size_t i = 0;
 
                     for (auto s : owSens) {
                         i++;
-                        b.Label("#"+String(i), s);
+                        b.Label("#"+String(i), String(s, 16));
                     }
                     if (b.Button(F("Поиск"), sets::Colors::Aqua)) {
                         b.reload();

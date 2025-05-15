@@ -362,6 +362,21 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             sensor.type = SECURITY_SENSOR_PIR;
         }
         Gpio.getPinById(jsensors[i][F("pin")].as<unsigned>(), &sensor.pin);
+
+        SecurityCtrl.setSensor(sensor.id - 1, &sensor);
+    }
+
+    JsonArray jkeys = jsecurity["keys"];
+    
+    for (size_t i = 0; i < jkeys.size(); i++) {
+        SecurityKey  key;
+
+        key.id = jkeys[i][F("id")].as<unsigned>();
+        key.name = jkeys[i][F("name")].as<String>();
+        key.enabled = true;
+        key.serial = strtoull(jkeys[i][F("serial")].as<String>().c_str(), NULL, 16);
+
+        SecurityCtrl.setKey(key.id - 1, &key);
     }
 
     doc.clear();
@@ -551,6 +566,16 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         }
 
         (sensors[i]->pin == nullptr) ? jsensors[i][F("pin")] = 0 : jsensors[i][F("pin")] = sensors[i]->pin->id;
+    }
+
+    auto jkeys = jsecurity["keys"];
+    std::vector<SecurityKey *> keys;
+    SecurityCtrl.getEnabledKeys(keys);
+
+    for (size_t i = 0; i < keys.size(); i++) {
+        jkeys[i][F("id")] = keys[i]->id;
+        jkeys[i][F("name")] = keys[i]->name;
+        jkeys[i][F("serial")] = String(keys[i]->serial, 16);
     }
 
     return true;

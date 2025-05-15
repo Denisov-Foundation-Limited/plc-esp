@@ -50,7 +50,6 @@ public:
     bool &getStatus(Socket *sock);
     void begin();
     void loop();
-    bool loadStates();
 
 private:
     std::array<Socket, SOCKET_COUNT>    _sockets;
@@ -61,6 +60,7 @@ private:
     String                              _name;
 
     void _readButton(Socket *sock);
+    bool _loadStates();
 };
 
 extern SocketCtrlClass SocketCtrl;

@@ -48,7 +48,7 @@ bool MeteoCtrlClass::setSensor(size_t index, MeteoSensor *sensor)
     return true;
 }
 
-void MeteoCtrlClass::findDsSensors(std::vector<String> &sensors)
+void MeteoCtrlClass::findDsSensors(std::vector<uint64_t> &sensors)
 {
     OneWireBus  *bus;
 

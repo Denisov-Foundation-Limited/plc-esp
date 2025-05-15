@@ -47,7 +47,7 @@ bool OneWireClass::getOWBusById(uint8_t id, OneWireBus **bus)
     return false;
 }
 
-void OneWireClass::findDevices(OneWireBus *bus, std::vector<String> &addrs)
+void OneWireClass::findDevices(OneWireBus *bus, std::vector<uint64_t> &addrs)
 {
     uint8_t addr[8];
     uint64_t uAddr;
@@ -57,7 +57,7 @@ void OneWireClass::findDevices(OneWireBus *bus, std::vector<String> &addrs)
         do
         {
             memcpy(&uAddr, addr, sizeof(uint64_t));
-            addrs.push_back(String(uAddr, 16));
+            addrs.push_back(uAddr);
         } while (bus->ow.search(addr));
     }
 }

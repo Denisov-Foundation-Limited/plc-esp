@@ -11,6 +11,8 @@
 
 #include <controllers/security.hpp>
 #include <db/eedb.h>
+#include <core/ifaces/ow.hpp>
+#include <core/plc.hpp>
 
 /*********************************************************************/
 /*                                                                   */
@@ -61,6 +63,8 @@ void SecurityCtrlClass::getEnabledKeys(std::vector<SecurityKey *> &keys)
 void SecurityCtrlClass::setStatus(bool status, bool save)
 {
     _status = status;
+
+    Log.info(F("SECURITY"), String(F("Security status changed to ")) + String(status));
 
     if (!status) {
         setAlarm(false);
@@ -133,7 +137,7 @@ void SecurityCtrlClass::loop()
     if (sensors.size() == 0) return;
 
     if (!_reading) {
-        if ((millis() - _timer) >= SENSOR_READ_MS) {
+        if ((millis() - _timer) >= SECURITY_SENSOR_READ_MS) {
             _reading = true;
             _timer = millis();
         }
@@ -146,6 +150,18 @@ void SecurityCtrlClass::loop()
             _curSensor = 0;
             _reading = false;
             _timer = millis();
+        }
+    }
+
+    if (!_waitKey) {
+        if ((millis() - _tmrKey) >= SECURITY_KEY_READ_MS) {
+            _readKeys();
+            _tmrKey = millis();
+        }
+    } else {
+        if ((millis() - _tmrKeyWait) >= SECURITY_KEY_WAIT_MS) {
+            _waitKey = false;
+            _tmrKeyWait = millis();
         }
     }
 }
@@ -163,12 +179,12 @@ void SecurityCtrlClass::setAlarm(bool alarm)
         }
 
         if (_relay != nullptr) { Gpio.write(_relay, false); }
-        // unset buzzer
-        // unset alarm led
+        Plc.setBuzzer(PLC_MOD_SECURITY, false);
+        Plc.setAlarm(PLC_MOD_SECURITY, false);
     } else {
         if (_relay != nullptr) { Gpio.write(_relay, true); }
-        // set buzzer
-        // set alarm led
+        Plc.setBuzzer(PLC_MOD_SECURITY, true);
+        Plc.setAlarm(PLC_MOD_SECURITY, true);
     }
 }
 
@@ -255,6 +271,40 @@ bool SecurityCtrlClass::_loadStates()
         }
     }
     return true;
+}
+
+bool SecurityCtrlClass::_checkKey(uint64_t serial, SecurityKey **key)
+{
+    for (size_t i = 0; i < _keys.size(); i++) {
+        if (_keys[i].serial == serial) {
+            *key = &_keys[i];
+            return true;
+        }
+    }
+    return false;
+}
+
+void SecurityCtrlClass::_readKeys()
+{
+    OneWireBus              *bus;
+    std::vector<uint64_t>   serials;
+    SecurityKey             **foundKey;
+
+    if (OneWireIf.getOWBusById(PROF_OW_SECURITY, &bus)) {
+        OneWireIf.findDevices(bus, serials);
+    } else {
+        Log.error(F("SECURITY"), F("I2C bus OneWireSecurity not found"));
+    }
+
+    if (serials.size() != 0) {
+        for (auto s : serials) {
+            if (_checkKey(s, foundKey)) {
+                _waitKey = true;
+                Log.info(F("SECURITY"), String(F("Detected iButton key ")) + (*foundKey)->name);
+                setStatus(!getStatus(), true);
+            }
+        }
+    }
 }
 
 SecurityCtrlClass SecurityCtrl;

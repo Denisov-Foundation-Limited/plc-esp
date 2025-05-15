@@ -18,6 +18,14 @@
 /*                                                                   */
 /*********************************************************************/
 
+ClimateCtrlClass::ClimateCtrlClass()
+{
+    for (size_t i = 0; i < _zones.size(); i++) {
+        memset(&_zones[i], 0x0, sizeof(ClimateZone));
+        _zones[i].id = i + 1;
+    }
+}
+
 bool ClimateCtrlClass::setZone(size_t id, ClimateZone *zone)
 {
     if (id > (_zones.size() - 1)) {

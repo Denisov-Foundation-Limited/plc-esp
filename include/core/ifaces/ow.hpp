@@ -39,7 +39,7 @@ public:
     bool begin();
     void getOWBuses(std::vector<OneWireBus *> &buses);
     bool getOWBusById(uint8_t id, OneWireBus **bus);
-    void findDevices(OneWireBus *bus, std::vector<String> &addrs);
+    void findDevices(OneWireBus *bus, std::vector<uint64_t> &addrs);
 
 private:
     std::array<OneWireBus, OW_BUS_COUNT> _ow;

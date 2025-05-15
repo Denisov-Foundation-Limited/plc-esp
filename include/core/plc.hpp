@@ -36,7 +36,8 @@
 #define PLC_LCD_COLS    16
 
 typedef enum {
-    PLC_MOD_WIFI
+    PLC_MOD_WIFI,
+    PLC_MOD_SECURITY
 } PlcMod;
 
 typedef enum {

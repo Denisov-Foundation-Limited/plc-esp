@@ -274,12 +274,12 @@ void CLIInformerClass::showOneWire()
     Serial.println(F("\t---   ---   ------------------"));
 
     for (auto ow : buses) {
-        std::vector<String> addrs;
+        std::vector<uint64_t> addrs;
         OneWireIf.findDevices(ow, addrs);
 
         i = 1;
         for (auto addr : addrs) {
-            Serial.printf("\t%-3d   %-3d   %-18s\n", ow->id, i, addr.c_str());
+            Serial.printf("\t%-3d   %-3d   %-18s\n", ow->id, i, String(addr, 16).c_str());
             i++;
         }
     }

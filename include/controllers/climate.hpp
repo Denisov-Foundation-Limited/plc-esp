@@ -48,6 +48,7 @@ typedef struct {
 class ClimateCtrlClass
 {
 public:
+    ClimateCtrlClass();
     bool setZone(size_t id, ClimateZone *zone);
     void setEnabled(bool enabled);
     bool &getEnabled();
