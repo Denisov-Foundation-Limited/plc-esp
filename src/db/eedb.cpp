@@ -89,8 +89,11 @@ size_t EepromDbClass::getOffset(EeDbOffset offset)
         case EE_DB_OFFSET_SECURITY:
             return getOffset(EE_DB_OFFSET_CLIMATE) + sizeof(EeDbClimate);
 
-        case EE_DB_OFFSET_MAX:
+        case EE_DB_OFFSET_TANK:
             return getOffset(EE_DB_OFFSET_SECURITY) + sizeof(EeDbSecurity);
+
+        case EE_DB_OFFSET_MAX:
+            return getOffset(EE_DB_OFFSET_TANK) + sizeof(EeDbTank);
     }
     return out;
 }
@@ -242,6 +245,61 @@ bool EepromDbClass::getSecurityStatus(EeDbSecurity &data, bool &status)
 bool EepromDbClass::setSecurityStatus(EeDbSecurity &data, bool status)
 {
     data.status = status;
+    return true;
+}
+
+bool EepromDbClass::loadTankDb(EeDbTank &data)
+{
+    if (_ee.isConnected()) {
+        _ee.readBlock(getOffset(EE_DB_OFFSET_TANK), (uint8_t *)&data, sizeof(EeDbTank));
+        return true;
+    }
+    return false;
+}
+
+bool EepromDbClass::saveTankDb(EeDbTank &data)
+{
+    size_t offset = getOffset(EE_DB_OFFSET_TANK);
+
+    if (_ee.isConnected()) {
+        _ee.setBlock(offset, 0x0, sizeof(EeDbTank));
+        _ee.writeBlock(offset, (uint8_t *)&data, sizeof(EeDbTank));
+        return true;
+    }
+
+    return false;
+}
+
+bool EepromDbClass::getTankStatus(EeDbTank &data, uint8_t id, bool &status)
+{
+    uint8_t curId = id - 1;
+
+    if (id > EE_DB_ID_MAX) {
+        return false;
+    }
+
+    if (data.status & (1 << curId)) {
+        status = true;
+    } else {
+        status = false;
+    }
+
+    return true;
+}
+
+bool EepromDbClass::setTankStatus(EeDbTank &data, uint8_t id, bool status)
+{
+    uint8_t curId = id - 1;
+
+    if (id > EE_DB_ID_MAX) {
+        return false;
+    }
+
+    if (status)
+        data.status |= (1 << curId);
+    else
+        data.status &= ~(1 << curId);
+
     return true;
 }
 

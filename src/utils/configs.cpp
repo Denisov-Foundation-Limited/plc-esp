@@ -25,6 +25,7 @@
 #include "controllers/security.hpp"
 #include "db/socketdb.hpp"
 #include "core/clock.hpp"
+#include "controllers/tank.hpp"
 
 #include <LittleFS.h>
 #include <SD.h>
@@ -294,6 +295,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     JsonArray jsensors = jmeteo["sensors"];
     for (size_t i = 0; i < jsensors.size(); i++) {
         MeteoSensor sensor;
+
         memset(&sensor, 0x0, sizeof(MeteoSensor));
         sensor.id = jsensors[i][F("id")].as<unsigned>();
         sensor.name = jsensors[i][F("name")].as<String>();
@@ -325,6 +327,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
 
     for (size_t i = 0; i < jzones.size(); i++) {
         ClimateZone zone;
+
         memset(&zone, 0x0, sizeof(ClimateZone));
         zone.id = jzones[i][F("id")].as<unsigned>();
         zone.name = jzones[i][F("name")].as<String>();
@@ -353,6 +356,8 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     
     for (size_t i = 0; i < jsensors.size(); i++) {
         SecuritySensor  sensor;
+
+        memset(&sensor, 0x0, sizeof(SecuritySensor));
         sensor.id = jsensors[i][F("id")].as<unsigned>();
         sensor.name = jsensors[i][F("name")].as<String>();
 
@@ -377,6 +382,30 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         key.serial = strtoull(jkeys[i][F("serial")].as<String>().c_str(), NULL, 16);
 
         SecurityCtrl.setKey(key.id - 1, &key);
+    }
+
+    /*
+     * Tank configurations
+     */
+    
+    auto jtank = jctrls["tank"];
+    TankCtrl.setEnabled(jtank["enabled"].as<bool>());
+
+    JsonArray jtanks = jtank["tanks"];
+    for (size_t i = 0; i < jtanks.size(); i++) {
+        Tank tank;
+
+        memset(&tank, 0x0, sizeof(Tank));
+        tank.id = jtanks[i][F("id")].as<unsigned>();
+        tank.name = jtanks[i][F("name")].as<String>();
+        tank.enabled = true;
+        Gpio.getPinById(jtanks[i][F("pump")].as<unsigned>(), &tank.pump);
+        Gpio.getPinById(jtanks[i][F("valve")].as<unsigned>(), &tank.valve);
+        Gpio.getPinById(jtanks[i][F("levels")][0].as<unsigned>(), &tank.levels[0]);
+        Gpio.getPinById(jtanks[i][F("levels")][1].as<unsigned>(), &tank.levels[1]);
+        Gpio.getPinById(jtanks[i][F("levels")][2].as<unsigned>(), &tank.levels[2]);
+
+        TankCtrl.setTank(tank.id - 1, &tank);
     }
 
     doc.clear();
@@ -576,6 +605,29 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         jkeys[i][F("id")] = keys[i]->id;
         jkeys[i][F("name")] = keys[i]->name;
         jkeys[i][F("serial")] = String(keys[i]->serial, 16);
+    }
+
+    /*
+     * Tank controller
+     */
+
+    auto jtank = jctrls["tank"];
+    jtank["enabled"] = TankCtrl.getEnabled();
+    auto jtanks = jtank["tanks"];
+    
+    std::vector<Tank *> tanks;
+    TankCtrl.getEnabledTanks(tanks);
+
+    for (size_t i = 0; i < tanks.size(); i++) {
+        jtanks[i][F("id")] = tanks[i]->id;
+        jtanks[i][F("name")] = tanks[i]->name;
+
+        (tanks[i]->pump == nullptr) ? jtanks[i][F("pump")] = 0 : jtanks[i][F("pump")] = tanks[i]->pump->id;
+        (tanks[i]->valve == nullptr) ? jtanks[i][F("valve")] = 0 : jtanks[i][F("valve")] = tanks[i]->valve->id;
+        (tanks[i]->valve == nullptr) ? jtanks[i][F("valve")] = 0 : jtanks[i][F("valve")] = tanks[i]->valve->id;
+        (tanks[i]->levels[0] == nullptr) ? jtanks[i][F("levels")][0] = 0 : jtanks[i][F("levels")][0] = tanks[i]->levels[0]->id;
+        (tanks[i]->levels[1] == nullptr) ? jtanks[i][F("levels")][1] = 0 : jtanks[i][F("levels")][1] = tanks[i]->levels[1]->id;
+        (tanks[i]->levels[2] == nullptr) ? jtanks[i][F("levels")][2] = 0 : jtanks[i][F("levels")][2] = tanks[i]->levels[2]->id;
     }
 
     return true;

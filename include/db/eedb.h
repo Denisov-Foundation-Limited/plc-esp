@@ -25,6 +25,7 @@ typedef enum {
     EE_DB_OFFSET_SOCKET,
     EE_DB_OFFSET_CLIMATE,
     EE_DB_OFFSET_SECURITY,
+    EE_DB_OFFSET_TANK,
     EE_DB_OFFSET_MAX
 } EeDbOffset;
 
@@ -45,6 +46,10 @@ typedef struct {
 typedef struct {
     bool status;
 } EeDbSecurity;
+
+typedef struct {
+    uint64_t status;
+} EeDbTank;
 
 class EepromDbClass
 {
@@ -68,6 +73,11 @@ public:
     bool saveSecurityDb(EeDbSecurity &data);
     bool getSecurityStatus(EeDbSecurity &data, bool &status);
     bool setSecurityStatus(EeDbSecurity &data, bool status);
+
+    bool loadTankDb(EeDbTank &data);
+    bool saveTankDb(EeDbTank &data);
+    bool getTankStatus(EeDbTank &data, uint8_t id, bool &status);
+    bool setTankStatus(EeDbTank &data, uint8_t id, bool status);
 
 private:
     bool        _enabled = true;
