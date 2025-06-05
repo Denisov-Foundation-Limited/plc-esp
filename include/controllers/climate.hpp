@@ -52,7 +52,7 @@ public:
     bool setZone(size_t id, ClimateZone *zone);
     void setEnabled(bool enabled);
     bool &getEnabled();
-    void begin();
+    void begin(bool load);
     void loop();
     bool &getStatus(ClimateZone *zone);
     void setStatus(ClimateZone *zone, bool status, bool save);

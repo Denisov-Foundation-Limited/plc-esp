@@ -70,12 +70,23 @@ bool MeteoCtrlClass::getSensor(size_t index, MeteoSensor **sens)
     return false;
 }
 
+bool MeteoCtrlClass::getSensor(const String &name, MeteoSensor **sens)
+{
+    for (size_t i = 0; i < _sensors.size(); i++) {
+        if (_sensors[i].name == name) {
+            *sens = &_sensors[i];
+            return true;
+        }
+    }
+    return false;
+}
+
 void MeteoCtrlClass::begin()
 {
     std::vector<MeteoSensor *>  sensors;
     OneWireBus                  *bus;
 
-    getEnabledSensors(sensors);
+    getSensors(true, sensors);
     
     for (auto sensor : sensors) {
         switch (sensor->type) {
@@ -96,10 +107,14 @@ void MeteoCtrlClass::begin()
     }
 }
 
-void MeteoCtrlClass::getEnabledSensors(std::vector<MeteoSensor *> &sensors)
+void MeteoCtrlClass::getSensors(bool enabled, std::vector<MeteoSensor *> &sensors)
 {
     for (size_t i = 0; i < _sensors.size(); i++) {
-        if (_sensors[i].enabled) {
+        if (enabled) {
+            if (_sensors[i].enabled) {
+                sensors.push_back(&_sensors[i]);
+            }
+        } else {
             sensors.push_back(&_sensors[i]);
         }
     }
@@ -112,10 +127,11 @@ std::array<MeteoSensor, METEO_SENSOR_COUNT> MeteoCtrlClass::getSensors()
 
 void MeteoCtrlClass::loop()
 {
+    std::vector<MeteoSensor *> sensors;
+
     if (!_enabled) return;
 
-    std::vector<MeteoSensor *> sensors;
-    getEnabledSensors(sensors);
+    getSensors(true, sensors);
 
     if (sensors.size() == 0) return;
 
@@ -124,8 +140,6 @@ void MeteoCtrlClass::loop()
             _timerDs = millis();
             if (_ds.requestTemp()) {
                 _reqSend = true;
-            } else {
-                Serial.println("FAIL REQUEST");
             }
         }
     }

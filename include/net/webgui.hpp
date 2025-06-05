@@ -123,21 +123,8 @@ private:
     } _socket;
 
     struct {
-        String  Name;
-        bool    Enabled;
         size_t  curSensor = 0;
-        size_t  curType = 0;
-        String  Addr;
     } _meteo;
-
-    struct {
-        String  Name;
-        bool    Enabled;
-        size_t  curRly = 0;
-        size_t  curBtn = 0;
-        size_t  curSock = 0;
-        size_t  curSensor = 0;
-    } _climate;
 
     void _buildMenu(sets::Builder& b);
     void _updateMainPage(sets::Updater& upd);

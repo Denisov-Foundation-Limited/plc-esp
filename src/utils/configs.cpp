@@ -511,7 +511,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     auto jmsens = jmeteo["sensors"];
     
     std::vector<MeteoSensor *> sens;
-    MeteoCtrl.getEnabledSensors(sens);
+    MeteoCtrl.getSensors(true, sens);
 
     for (size_t i = 0; i < sens.size(); i++) {
         jmsens[i][F("id")] = sens[i]->id;

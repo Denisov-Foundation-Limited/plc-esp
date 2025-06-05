@@ -63,7 +63,7 @@ void ClimateCtrlClass::getZones(bool enabled, std::vector<ClimateZone*> &zones)
     }
 }
 
-void ClimateCtrlClass::begin()
+void ClimateCtrlClass::begin(bool load)
 {
     std::vector<ClimateZone *> zones;
 
@@ -77,7 +77,9 @@ void ClimateCtrlClass::begin()
             Gpio.setMode(zones[i]->button, GPIO_MOD_INPUT, GPIO_PULL_UP);
         }
     }
-    _loadStates();
+    if (load) {
+        _loadStates();
+    }
 }
 
 void ClimateCtrlClass::loop()
@@ -122,6 +124,9 @@ void ClimateCtrlClass::loop()
 
 void ClimateCtrlClass::setTemp(ClimateZone *zone, int temp, bool save)
 {
+    if (zone->temp == temp)
+        return;
+
     zone->temp = temp;
 
     Log.info(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" changed temperature to ")) + String(temp));
@@ -153,6 +158,9 @@ int ClimateCtrlClass::getTemp(ClimateZone *zone)
 
 void ClimateCtrlClass::setDelta(ClimateZone *zone, unsigned delta, bool save)
 {
+    if (zone->delta == delta)
+        return;
+
     zone->delta = delta;
 
     Log.info(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" changed delta to ")) + String(delta));

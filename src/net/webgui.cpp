@@ -688,76 +688,11 @@ void WebGUIClass::_buildMeteoPage(sets::Builder& b)
 {
     std::vector<MeteoSensor *>    sensors;
 
-    MeteoCtrl.getEnabledSensors(sensors);
+    MeteoCtrl.getSensors(false, sensors);
     
     if (b.beginGroup(F("Общее"))) {
         if (b.Switch(WEB_GUI_CTRL_METEO_ENABLE, F("Включен"), &MeteoCtrl.getEnabled())) {
             b.reload();
-        }
-
-        if (MeteoCtrl.getEnabled()) {
-            if (b.beginMenu(F("Настройка"))) {
-                if (b.beginGroup(F("Редактирование"))) {
-                    String sMeteo = "";
-
-                    for (size_t i = 0; i < METEO_SENSOR_COUNT; i++) {
-                        sMeteo += ("#"+String(i + 1));
-                        if (i < (METEO_SENSOR_COUNT - 1)) {
-                            sMeteo += ";";
-                        }
-                    }
-
-                    if (b.Select(WEB_GUI_CTRL_METEO_SEL, F("Выбрать"), sMeteo, (uint8_t *)&_meteo.curSensor)) {
-                        MeteoSensor *sens;
-                        MeteoCtrl.getSensor(_meteo.curSensor, &sens);
-                        _meteo.Name = sens->name;
-                        _meteo.Enabled = sens->enabled;
-                        _meteo.Addr = String(sens->addr, 16);
-                        _meteo.curType = sens->type;
-                    }
-
-                    b.Input(WEB_GUI_CTRL_METEO_NAME, F("Имя"), &_meteo.Name);
-                    b.Switch(WEB_GUI_CTRL_METEO_ENABLE_SENS, F("Включен"), &_meteo.Enabled);
-                    b.Select(WEB_GUI_CTRL_METEO_TYPE, F("Тип"), F("AM2302;DS18B20;BME280;DHT22"), (uint8_t *)&_meteo.curType);
-                    b.Input(WEB_GUI_CTRL_METEO_ADDR, F("Адрес"), &_meteo.Addr);
-
-                    if (b.Button(F("Применить"))) {
-                        MeteoSensor *sens;
-                        if (MeteoCtrl.getSensor(_meteo.curSensor, &sens)) {
-                            sens->name = _meteo.Name;
-                            sens->enabled = _meteo.Enabled;
-                            sens->type = static_cast<MeteoSensorType>(_meteo.curType);
-                            sens->addr = strtoull(_meteo.Addr.c_str(), NULL, 16);
-                        }
-                        b.reload();
-                    }
-                    b.endGroup();
-                }
-
-                if (b.beginGroup(F("OneWire"))) {
-                    std::vector<uint64_t> owSens;
-                    MeteoCtrl.findDsSensors(owSens);
-                    size_t i = 0;
-
-                    for (auto s : owSens) {
-                        i++;
-                        b.Label("#"+String(i), String(s, 16));
-                    }
-                    if (b.Button(F("Поиск"), sets::Colors::Aqua)) {
-                        b.reload();
-                    }
-                    b.endGroup();
-                }
-                if (b.beginGroup(F("Активные датчики"))) {
-                    size_t i = 0;
-                    for (auto sensor : MeteoCtrl.getSensors()) {
-                        i++;
-                        b.LED(su::SH(("meteo_sens_en" + String(sensor.id)).c_str()), "#"+String(i), sensor.enabled);
-                    }
-                    b.endGroup();
-                }
-                b.endMenu();
-            }
         }
         if (b.Button(F("Назад"), sets::Colors::Aqua)) {
             _curPage = WEB_PAGE_CONTROLLERS;
@@ -766,11 +701,46 @@ void WebGUIClass::_buildMeteoPage(sets::Builder& b)
         b.endGroup();
     }
 
-    if (b.beginGroup("Датчики")) {
-        for (auto sensor : sensors) {
-            b.Label(su::SH(("meteo_sens_" + String(sensor->id)).c_str()), sensor->name, String(sensor->data.temp) + "°");
+    if (MeteoCtrl.getEnabled()) {
+        std::vector<uint64_t> owSens;
+        MeteoCtrl.findDsSensors(owSens);
+        String sOwSens = "";
+
+        for (auto s : owSens) {
+            sOwSens += String(s, 16) + ";";
         }
-        b.endGroup();
+
+        for (auto *sensor : sensors) {
+            if (b.beginGroup(String(F("Датчик #")) + String(sensor->id))) {
+                if (b.Switch(su::SH(String("ctrl_meteo_en" + String(sensor->id)).c_str()), F("Включен"), &sensor->enabled)) {
+                    b.reload();
+                }
+                if (sensor->enabled) {
+                    b.Input(su::SH(String("ctrl_meteo_name" + String(sensor->id)).c_str()), F("Имя"), &sensor->name);
+                    if (b.Select(su::SH(String("ctrl_meteo_typ" + String(sensor->id)).c_str()), F("Тип"), F("AM2302;DS18B20;BME280;DHT22"), (uint8_t *)&sensor->type)) {
+                        b.reload();
+                    }
+                    if (sensor->type == METEO_SENSOR_DS18B20) {
+                        size_t curAddr = owSens.size();
+                        for (size_t i = 0; i < owSens.size(); i++) {
+                            if (sensor->addr == owSens[i]) {
+                                curAddr = i;
+                                break;
+                            }
+                        }
+                        if (b.Select(su::SH(String("ctrl_meteo_ds_addr" + String(sensor->id)).c_str()), F("Адрес"), sOwSens, &curAddr)) {
+                            if (b.build.value.toInt32() < owSens.size()) {
+                                sensor->addr = owSens[b.build.value.toInt32()];
+                            } else {
+                                Log.error(F("WEBGUI"), F("Incorrect OW sensor id"));
+                            }
+                        }
+                        b.Label(su::SH(("ctrl_meteo_temp" + String(sensor->id)).c_str()), F("Температура"), String(sensor->data.temp) + "°");
+                    }
+                }
+                b.endGroup();
+            }
+        }
     }
 }
 
@@ -778,22 +748,26 @@ void WebGUIClass::_updateMeteoPage(sets::Updater& upd)
 {
     std::vector<MeteoSensor *>    sensors;
 
-    MeteoCtrl.getEnabledSensors(sensors);
+    MeteoCtrl.getSensors(false, sensors);
 
-    upd.update(WEB_GUI_CTRL_METEO_NAME, _meteo.Name);
-    upd.update(WEB_GUI_CTRL_METEO_ENABLE_SENS, _meteo.Enabled);
-    upd.update(WEB_GUI_CTRL_METEO_TYPE, _meteo.curType);
-    upd.update(WEB_GUI_CTRL_METEO_ADDR, _meteo.Addr);
-
-    for (auto sensor : sensors) {
-        String data = String(sensor->data.temp) + "°";
-        upd.update(su::SH(("meteo_sens_" + String(sensor->id)).c_str()), data);
+    for (auto *sensor : sensors) {
+        upd.update(su::SH(String("ctrl_meteo_en" + String(sensor->id)).c_str()), sensor->enabled);
+        if (sensor->enabled) {
+            upd.update(su::SH(String("ctrl_meteo_name" + String(sensor->id)).c_str()), sensor->name);
+            upd.update(su::SH(String("ctrl_meteo_typ" + String(sensor->id)).c_str()), (uint8_t)sensor->type);
+            if (sensor->type == METEO_SENSOR_DS18B20) {
+                upd.update(su::SH(String("ctrl_meteo_temp" + String(sensor->id)).c_str()), String(String(sensor->data.temp) + "°"));
+            }
+        }
     }
 }
 
 void WebGUIClass::_buildClimatePage(sets::Builder& b)
 {
-    std::vector<ClimateZone *> zones;
+    std::vector<ClimateZone *>  zones;
+    std::vector<MeteoSensor *>  sensors;
+    std::vector<GpioPin *>      relays, buttons;
+    String                      sSensors = "", sBtns = "", sRlys = "";
 
     ClimateCtrl.getZones(false, zones);
 
@@ -809,6 +783,30 @@ void WebGUIClass::_buildClimatePage(sets::Builder& b)
     }
 
     if (ClimateCtrl.getEnabled()) {
+        MeteoCtrl.getSensors(true, sensors);
+        for (auto sensor : sensors) {
+            sSensors += sensor->name + ";";
+        }
+
+        Gpio.getPinsByType(GPIO_TYPE_RELAY, relays);
+        Gpio.getPinsByType(GPIO_TYPE_INPUT, buttons);
+
+        for (size_t i = 0; i < buttons.size(); i++) {
+            if (buttons[i]->ext == nullptr) {
+                sBtns += "in-1/0/" + String(i) + ";";
+            } else {
+                sBtns += "in-" + String(buttons[i]->ext->i2c->id) + "/" + String(buttons[i]->ext->id) + "/" + String(i) + ";";
+            }
+        }
+
+        for (size_t i = 0; i < relays.size(); i++) {
+            if (relays[i]->ext == nullptr) {
+                sRlys += "rly-1/0/" + String(i) + ";";
+            } else {
+                sRlys += "rly-" + String(relays[i]->ext->i2c->id) + "/" + String(relays[i]->ext->id) + "/" + String(i) + ";";
+            }
+        }
+
         for (auto *zone : zones) {
             if (b.beginGroup(String(F("Зона #")) + String(zone->id))) {
                 if (b.Switch(su::SH(String("ctrl_clmt_en_" + String(zone->id)).c_str()), F("Включить"), &zone->enabled)) {
@@ -825,8 +823,7 @@ void WebGUIClass::_buildClimatePage(sets::Builder& b)
                     if (b.Slider(su::SH(("ctrl_clmt_dlt_" + String(zone->id)).c_str()), "Дельта", 0, 10, 1, F("°"), &zone->delta)) {
                         ClimateCtrl.setDelta(zone, b.build.value.toInt(), true);
                     }
-                    unsigned modeNum = static_cast<unsigned>(zone->type);
-                    if (b.Select(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), F("Режим"), F("Обогрев;Охлаждение"), &modeNum)) {
+                    if (b.Select(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), F("Режим"), F("Обогрев;Охлаждение"), (uint8_t *)&zone->type)) {
                         switch (b.build.value.toInt32()) {
                             case 0:
                                 zone->type = CLIMATE_TYPE_HEAT;
@@ -835,9 +832,60 @@ void WebGUIClass::_buildClimatePage(sets::Builder& b)
                                 zone->type = CLIMATE_TYPE_COOL;
                                 break;
                         }
+                        zone->work = false;
+                    }
+                    size_t  curSensor = sensors.size();
+                    if (zone->sensor != nullptr) {
+                        for (size_t i = 0; i < sensors.size(); i++) {
+                            if (sensors[i]->name == zone->sensor->name) {
+                                curSensor = i;
+                                break;
+                            }
+                        }
+                    }
+                    if (b.Select(su::SH(("ctrl_clmt_s" + String(zone->id)).c_str()), F("Датчик"), sSensors, &curSensor)) {
+                        if (b.build.value.toInt32() < sensors.size()) {
+                            zone->sensor = sensors[b.build.value.toInt32()];
+                        } else {
+                            Log.error(F("WEBGUI"), F("Incorrect meteo sensor id"));
+                        }
+                    }
+                    size_t  curRelay = relays.size();
+                    if (zone->relay != nullptr) {
+                        for (size_t i = 0; i < relays.size(); i++) {
+                            if (relays[i]->id == zone->relay->id) {
+                                curRelay = i;
+                                break;
+                            }
+                        }
+                    }
+                    if (b.Select(su::SH(("ctrl_clmt_rly" + String(zone->id)).c_str()), F("Реле"), sRlys, &curRelay)) {
+                        if (b.build.value.toInt32() < relays.size()) {
+                            zone->relay = relays[b.build.value.toInt32()];
+                            ClimateCtrl.begin(false);
+                        } else {
+                            Log.error(F("WEBGUI"), F("Incorrect GPIO relay id"));
+                        }
+                    }
+                    size_t  curButton = buttons.size();
+                    if (zone->button != nullptr) {
+                        for (size_t i = 0; i < buttons.size(); i++) {
+                            if (buttons[i]->id == zone->button->id) {
+                                curButton = i;
+                                break;
+                            }
+                        }
+                    }
+                    if (b.Select(su::SH(("ctrl_clmt_btn" + String(zone->id)).c_str()), F("Кнопка"), sBtns, &curButton)) {
+                        if (b.build.value.toInt32() < buttons.size()) {
+                            zone->button = buttons[b.build.value.toInt32()];
+                            ClimateCtrl.begin(false);
+                        } else {
+                            Log.error(F("WEBGUI"), F("Incorrect GPIO button id"));
+                        }
                     }
                     b.Label(su::SH(("ctrl_clmt_sens_" + String(zone->id)).c_str()), F("Температура"), (zone->sensor != nullptr) ? (String(zone->sensor->data.temp) + "°") : String("N/A"));
-                    b.LED(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), F("В работе"), &zone->work);
+                    b.LED(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), F("Активен"), &zone->work);
                 }
                 b.endGroup();
             }
@@ -859,8 +907,7 @@ void WebGUIClass::_updateClimatePage(sets::Updater& upd)
             upd.update(su::SH(("ctrl_clmt_sens_" + String(zone->id)).c_str()), (zone->sensor != nullptr) ? (String(zone->sensor->data.temp) + "°") : String("N/A"));
             upd.update(su::SH(("ctrl_clmt_temp_" + String(zone->id)).c_str()), zone->temp);
             upd.update(su::SH(("ctrl_clmt_dlt_" + String(zone->id)).c_str()), zone->delta);
-            unsigned modeNum = static_cast<unsigned>(zone->type);
-            upd.update(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), modeNum);
+            upd.update(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), (uint8_t)zone->type);
             upd.update(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), zone->work);
         }
     }

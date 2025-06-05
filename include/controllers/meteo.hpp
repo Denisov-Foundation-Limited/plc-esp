@@ -55,7 +55,8 @@ class MeteoCtrlClass
 public:
     MeteoCtrlClass();
     bool setSensor(size_t index, MeteoSensor *sensor);
-    void getEnabledSensors(std::vector<MeteoSensor *> &sensors);
+    bool getSensor(const String &name, MeteoSensor **sens);
+    void getSensors(bool enabled, std::vector<MeteoSensor *> &sensors);
     std::array<MeteoSensor, METEO_SENSOR_COUNT> getSensors();
     bool getSensor(size_t index, MeteoSensor **sens);
     void findDsSensors(std::vector<uint64_t> &sensors);
