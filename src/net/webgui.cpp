@@ -14,6 +14,9 @@
 #include "net/core/wifi.hpp"
 #include "controllers/meteo.hpp"
 #include "controllers/socket.hpp"
+#include "controllers/climate.hpp"
+#include "controllers/security.hpp"
+#include "controllers/tank.hpp"
 #include "core/clock.hpp"
 
 #include <StringUtils.h>
@@ -48,6 +51,15 @@ void WebGUIClass::begin()
             case WEB_PAGE_METEO:
                 _buildMeteoPage(b);
                 break;
+            case WEB_PAGE_CLIMATE:
+                _buildClimatePage(b);
+                break;
+            case WEB_PAGE_SECURITY:
+                _buildSecurityPage(b);
+                break;
+            case WEB_PAGE_TANK:
+                _buildTankPage(b);
+                break;
         }
     });
 
@@ -70,6 +82,15 @@ void WebGUIClass::begin()
                 break;
             case WEB_PAGE_METEO:
                 _updateMeteoPage(upd);
+                break;
+            case WEB_PAGE_CLIMATE:
+                _updateClimatePage(upd);
+                break;
+            case WEB_PAGE_SECURITY:
+                _updateSecurityPage(upd);
+                break;
+            case WEB_PAGE_TANK:
+                _updateTankPage(upd);
                 break;
         }
     });
@@ -347,7 +368,28 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
             }
             b.endButtons();
         }
+        if (b.beginButtons()) {
+            if (b.Button(WEB_GUI_CTRL_CLIMATE, F("Климат"))) {
+                _curPage = WEB_PAGE_CLIMATE;
+                b.reload();
+            }
+            b.endButtons();
+        }
+        if (b.beginButtons()) {
+            if (b.Button(WEB_GUI_CTRL_SECURITY, F("Охрана"))) {
+                _curPage = WEB_PAGE_SECURITY;
+                b.reload();
+            }
+            b.endButtons();
+        }
         b.endGroup();
+        if (b.beginButtons()) {
+            if (b.Button(WEB_GUI_CTRL_TANK, F("Баки"))) {
+                _curPage = WEB_PAGE_TANK;
+                b.reload();
+            }
+            b.endButtons();
+        }
     }
 
     if (b.Button(WEB_GUI_CTRL_BACK, F("Назад"), sets::Colors::Aqua)) {
@@ -747,6 +789,101 @@ void WebGUIClass::_updateMeteoPage(sets::Updater& upd)
         String data = String(sensor->data.temp) + "°";
         upd.update(su::SH(("meteo_sens_" + String(sensor->id)).c_str()), data);
     }
+}
+
+void WebGUIClass::_buildClimatePage(sets::Builder& b)
+{
+    std::vector<ClimateZone *> zones;
+
+    ClimateCtrl.getZones(false, zones);
+
+    if (b.beginGroup(F("Общее"))) {
+        if (b.Switch(WEB_GUI_CTRL_CLIMATE_ENABLE, F("Включен"), &ClimateCtrl.getEnabled())) {
+            b.reload();
+        }
+        if (b.Button(F("Назад"), sets::Colors::Aqua)) {
+            _curPage = WEB_PAGE_CONTROLLERS;
+            b.reload();
+        }
+        b.endGroup();
+    }
+
+    if (ClimateCtrl.getEnabled()) {
+        for (auto *zone : zones) {
+            if (b.beginGroup(String(F("Зона #")) + String(zone->id))) {
+                if (b.Switch(su::SH(String("ctrl_clmt_en_" + String(zone->id)).c_str()), F("Включить"), &zone->enabled)) {
+                    b.reload();
+                }
+                if (zone->enabled) {
+                    if (b.Switch(su::SH(String("ctrl_clmt_sts_" + String(zone->id)).c_str()), F("Статус"), &ClimateCtrl.getStatus(zone))) {
+                        ClimateCtrl.setStatus(zone, b.build.value.toBool(), true);
+                    }
+                    b.Input(su::SH(String("ctrl_clmt_name_" + String(zone->id)).c_str()), F("Имя"), &zone->name);
+                    if (b.Slider(su::SH(("ctrl_clmt_temp_" + String(zone->id)).c_str()), "Порог", -20, 40, 1, F("°"), &zone->temp)) {
+                        ClimateCtrl.setTemp(zone, b.build.value.toInt(), true);
+                    }
+                    if (b.Slider(su::SH(("ctrl_clmt_dlt_" + String(zone->id)).c_str()), "Дельта", 0, 10, 1, F("°"), &zone->delta)) {
+                        ClimateCtrl.setDelta(zone, b.build.value.toInt(), true);
+                    }
+                    unsigned modeNum = static_cast<unsigned>(zone->type);
+                    if (b.Select(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), F("Режим"), F("Обогрев;Охлаждение"), &modeNum)) {
+                        switch (b.build.value.toInt32()) {
+                            case 0:
+                                zone->type = CLIMATE_TYPE_HEAT;
+                                break;
+                            case 1:
+                                zone->type = CLIMATE_TYPE_COOL;
+                                break;
+                        }
+                    }
+                    b.Label(su::SH(("ctrl_clmt_sens_" + String(zone->id)).c_str()), F("Температура"), (zone->sensor != nullptr) ? (String(zone->sensor->data.temp) + "°") : String("N/A"));
+                    b.LED(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), F("В работе"), &zone->work);
+                }
+                b.endGroup();
+            }
+        }
+    }
+}
+
+void WebGUIClass::_updateClimatePage(sets::Updater& upd)
+{
+    std::vector<ClimateZone *> zones;
+
+    ClimateCtrl.getZones(false, zones);
+
+    for (auto *zone : zones) {
+        upd.update(su::SH(String("ctrl_clmt_en_" + String(zone->id)).c_str()), zone->enabled);
+        if (zone->enabled) {
+            upd.update(su::SH(String("ctrl_clmt_sts_" + String(zone->id)).c_str()), zone->status);
+            upd.update(su::SH(String("ctrl_clmt_name_" + String(zone->id)).c_str()), zone->name);
+            upd.update(su::SH(("ctrl_clmt_sens_" + String(zone->id)).c_str()), (zone->sensor != nullptr) ? (String(zone->sensor->data.temp) + "°") : String("N/A"));
+            upd.update(su::SH(("ctrl_clmt_temp_" + String(zone->id)).c_str()), zone->temp);
+            upd.update(su::SH(("ctrl_clmt_dlt_" + String(zone->id)).c_str()), zone->delta);
+            unsigned modeNum = static_cast<unsigned>(zone->type);
+            upd.update(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), modeNum);
+            upd.update(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), zone->work);
+        }
+    }
+}
+
+void WebGUIClass::_buildSecurityPage(sets::Builder& b)
+{
+
+}
+
+void WebGUIClass::_updateSecurityPage(sets::Updater& upd)
+{
+
+}
+
+void WebGUIClass::_buildTankPage(sets::Builder& b)
+{
+
+}
+
+void WebGUIClass::_updateTankPage(sets::Updater& upd)
+{
+
 }
 
 WebGUIClass WebGUI;

@@ -56,11 +56,12 @@ public:
     void loop();
     bool &getStatus(ClimateZone *zone);
     void setStatus(ClimateZone *zone, bool status, bool save);
-    void getEnabledClimateZone(std::vector<ClimateZone*> &zones);
+    void getZones(bool enabled, std::vector<ClimateZone*> &zones);
     void setTemp(ClimateZone *zone, int temp, bool save);
     int getTemp(ClimateZone *zone);
     void setDelta(ClimateZone *zone, unsigned delta, bool save);
     unsigned getDelta(ClimateZone *zone);
+    std::array<ClimateZone, CLIMATE_ZONE_COUNT> *getZones();
 
 private:
     std::array<ClimateZone, CLIMATE_ZONE_COUNT>  _zones;

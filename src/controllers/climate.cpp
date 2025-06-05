@@ -23,6 +23,8 @@ ClimateCtrlClass::ClimateCtrlClass()
     for (size_t i = 0; i < _zones.size(); i++) {
         memset(&_zones[i], 0x0, sizeof(ClimateZone));
         _zones[i].id = i + 1;
+        _zones[i].delta = 1;
+        _zones[i].temp = 24;
     }
 }
 
@@ -47,10 +49,15 @@ bool &ClimateCtrlClass::getEnabled()
     return _enabled;
 }
 
-void ClimateCtrlClass::getEnabledClimateZone(std::vector<ClimateZone*> &zones)
+void ClimateCtrlClass::getZones(bool enabled, std::vector<ClimateZone*> &zones)
 {
     for (size_t i = 0; i < _zones.size(); i++) {
-        if (_zones[i].enabled) {
+        if (enabled) {
+            if (_zones[i].enabled) {
+                zones.push_back(&_zones[i]);
+            }
+        }
+        else {
             zones.push_back(&_zones[i]);
         }
     }
@@ -60,12 +67,9 @@ void ClimateCtrlClass::begin()
 {
     std::vector<ClimateZone *> zones;
 
-    getEnabledClimateZone(zones);
+    getZones(true, zones);
 
     for (size_t i = 0; i < zones.size(); i++) {
-        if (!zones[i]->enabled) {
-            continue;
-        }
         if (zones[i]->relay != nullptr) {
             Gpio.setMode(zones[i]->relay, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
         }
@@ -81,7 +85,7 @@ void ClimateCtrlClass::loop()
     if (!_enabled) return;
 
     std::vector<ClimateZone *> zones;
-    getEnabledClimateZone(zones);
+    getZones(true, zones);
 
     if (zones.size() == 0) return;
 
@@ -267,7 +271,7 @@ bool ClimateCtrlClass::_loadStates()
 {
     std::vector<ClimateZone *> zones;
 
-    getEnabledClimateZone(zones);
+    getZones(true, zones);
 
     if (EeDb.getEnabled()) {
         EeDbClimate db;

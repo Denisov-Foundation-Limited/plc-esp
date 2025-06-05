@@ -548,7 +548,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     auto jzones = jclimate["zones"];
     
     std::vector<ClimateZone *> zones;
-    ClimateCtrl.getEnabledClimateZone(zones);
+    ClimateCtrl.getZones(true, zones);
 
     for (size_t i = 0; i < zones.size(); i++) {
         jzones[i][F("id")] = zones[i]->id;
