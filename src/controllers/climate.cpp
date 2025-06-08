@@ -196,7 +196,9 @@ void ClimateCtrlClass::setStatus(ClimateZone *zone, bool status, bool save)
 
     Log.info(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" changed status to ")) + (zone->status ? "ON" : "OFF"));
 
-    if (zone->relay != nullptr) { Gpio.write(zone->relay, status); }
+    if (!status) {
+        if (zone->relay != nullptr) { Gpio.write(zone->relay, false); }
+    }
 
     if (save) {
         if (EeDb.getEnabled()) {

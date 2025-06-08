@@ -14,10 +14,12 @@
 #include "net/core/wifi.hpp"
 #include "controllers/meteo.hpp"
 #include "controllers/socket.hpp"
-#include "controllers/climate.hpp"
+
 #include "controllers/security.hpp"
 #include "controllers/tank.hpp"
 #include "core/clock.hpp"
+#include "net/pages/elements.hpp"
+#include "net/pages/climatep.hpp"
 
 #include <StringUtils.h>
 
@@ -52,7 +54,7 @@ void WebGUIClass::begin()
                 _buildMeteoPage(b);
                 break;
             case WEB_PAGE_CLIMATE:
-                _buildClimatePage(b);
+                ClimatePage.build(b);
                 break;
             case WEB_PAGE_SECURITY:
                 _buildSecurityPage(b);
@@ -84,7 +86,7 @@ void WebGUIClass::begin()
                 _updateMeteoPage(upd);
                 break;
             case WEB_PAGE_CLIMATE:
-                _updateClimatePage(upd);
+                ClimatePage.update(upd);
                 break;
             case WEB_PAGE_SECURITY:
                 _updateSecurityPage(upd);
@@ -758,157 +760,6 @@ void WebGUIClass::_updateMeteoPage(sets::Updater& upd)
             if (sensor->type == METEO_SENSOR_DS18B20) {
                 upd.update(su::SH(String("ctrl_meteo_temp" + String(sensor->id)).c_str()), String(String(sensor->data.temp) + "°"));
             }
-        }
-    }
-}
-
-void WebGUIClass::_buildClimatePage(sets::Builder& b)
-{
-    std::vector<ClimateZone *>  zones;
-    std::vector<MeteoSensor *>  sensors;
-    std::vector<GpioPin *>      relays, buttons;
-    String                      sSensors = "", sBtns = "", sRlys = "";
-
-    ClimateCtrl.getZones(false, zones);
-
-    if (b.beginGroup(F("Общее"))) {
-        if (b.Switch(WEB_GUI_CTRL_CLIMATE_ENABLE, F("Включен"), &ClimateCtrl.getEnabled())) {
-            b.reload();
-        }
-        if (b.Button(F("Назад"), sets::Colors::Aqua)) {
-            _curPage = WEB_PAGE_CONTROLLERS;
-            b.reload();
-        }
-        b.endGroup();
-    }
-
-    if (ClimateCtrl.getEnabled()) {
-        MeteoCtrl.getSensors(true, sensors);
-        for (auto sensor : sensors) {
-            sSensors += sensor->name + ";";
-        }
-
-        Gpio.getPinsByType(GPIO_TYPE_RELAY, relays);
-        Gpio.getPinsByType(GPIO_TYPE_INPUT, buttons);
-
-        for (size_t i = 0; i < buttons.size(); i++) {
-            if (buttons[i]->ext == nullptr) {
-                sBtns += "in-1/0/" + String(i) + ";";
-            } else {
-                sBtns += "in-" + String(buttons[i]->ext->i2c->id) + "/" + String(buttons[i]->ext->id) + "/" + String(i) + ";";
-            }
-        }
-
-        for (size_t i = 0; i < relays.size(); i++) {
-            if (relays[i]->ext == nullptr) {
-                sRlys += "rly-1/0/" + String(i) + ";";
-            } else {
-                sRlys += "rly-" + String(relays[i]->ext->i2c->id) + "/" + String(relays[i]->ext->id) + "/" + String(i) + ";";
-            }
-        }
-
-        for (auto *zone : zones) {
-            if (b.beginGroup(String(F("Зона #")) + String(zone->id))) {
-                if (b.Switch(su::SH(String("ctrl_clmt_en_" + String(zone->id)).c_str()), F("Включить"), &zone->enabled)) {
-                    b.reload();
-                }
-                if (zone->enabled) {
-                    if (b.Switch(su::SH(String("ctrl_clmt_sts_" + String(zone->id)).c_str()), F("Статус"), &ClimateCtrl.getStatus(zone))) {
-                        ClimateCtrl.setStatus(zone, b.build.value.toBool(), true);
-                    }
-                    b.Input(su::SH(String("ctrl_clmt_name_" + String(zone->id)).c_str()), F("Имя"), &zone->name);
-                    if (b.Slider(su::SH(("ctrl_clmt_temp_" + String(zone->id)).c_str()), "Порог", -20, 40, 1, F("°"), &zone->temp)) {
-                        ClimateCtrl.setTemp(zone, b.build.value.toInt(), true);
-                    }
-                    if (b.Slider(su::SH(("ctrl_clmt_dlt_" + String(zone->id)).c_str()), "Дельта", 0, 10, 1, F("°"), &zone->delta)) {
-                        ClimateCtrl.setDelta(zone, b.build.value.toInt(), true);
-                    }
-                    if (b.Select(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), F("Режим"), F("Обогрев;Охлаждение"), (uint8_t *)&zone->type)) {
-                        switch (b.build.value.toInt32()) {
-                            case 0:
-                                zone->type = CLIMATE_TYPE_HEAT;
-                                break;
-                            case 1:
-                                zone->type = CLIMATE_TYPE_COOL;
-                                break;
-                        }
-                        zone->work = false;
-                    }
-                    size_t  curSensor = sensors.size();
-                    if (zone->sensor != nullptr) {
-                        for (size_t i = 0; i < sensors.size(); i++) {
-                            if (sensors[i]->name == zone->sensor->name) {
-                                curSensor = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (b.Select(su::SH(("ctrl_clmt_s" + String(zone->id)).c_str()), F("Датчик"), sSensors, &curSensor)) {
-                        if (b.build.value.toInt32() < sensors.size()) {
-                            zone->sensor = sensors[b.build.value.toInt32()];
-                        } else {
-                            Log.error(F("WEBGUI"), F("Incorrect meteo sensor id"));
-                        }
-                    }
-                    size_t  curRelay = relays.size();
-                    if (zone->relay != nullptr) {
-                        for (size_t i = 0; i < relays.size(); i++) {
-                            if (relays[i]->id == zone->relay->id) {
-                                curRelay = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (b.Select(su::SH(("ctrl_clmt_rly" + String(zone->id)).c_str()), F("Реле"), sRlys, &curRelay)) {
-                        if (b.build.value.toInt32() < relays.size()) {
-                            zone->relay = relays[b.build.value.toInt32()];
-                            ClimateCtrl.begin(false);
-                        } else {
-                            Log.error(F("WEBGUI"), F("Incorrect GPIO relay id"));
-                        }
-                    }
-                    size_t  curButton = buttons.size();
-                    if (zone->button != nullptr) {
-                        for (size_t i = 0; i < buttons.size(); i++) {
-                            if (buttons[i]->id == zone->button->id) {
-                                curButton = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (b.Select(su::SH(("ctrl_clmt_btn" + String(zone->id)).c_str()), F("Кнопка"), sBtns, &curButton)) {
-                        if (b.build.value.toInt32() < buttons.size()) {
-                            zone->button = buttons[b.build.value.toInt32()];
-                            ClimateCtrl.begin(false);
-                        } else {
-                            Log.error(F("WEBGUI"), F("Incorrect GPIO button id"));
-                        }
-                    }
-                    b.Label(su::SH(("ctrl_clmt_sens_" + String(zone->id)).c_str()), F("Температура"), (zone->sensor != nullptr) ? (String(zone->sensor->data.temp) + "°") : String("N/A"));
-                    b.LED(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), F("Активен"), &zone->work);
-                }
-                b.endGroup();
-            }
-        }
-    }
-}
-
-void WebGUIClass::_updateClimatePage(sets::Updater& upd)
-{
-    std::vector<ClimateZone *> zones;
-
-    ClimateCtrl.getZones(false, zones);
-
-    for (auto *zone : zones) {
-        upd.update(su::SH(String("ctrl_clmt_en_" + String(zone->id)).c_str()), zone->enabled);
-        if (zone->enabled) {
-            upd.update(su::SH(String("ctrl_clmt_sts_" + String(zone->id)).c_str()), zone->status);
-            upd.update(su::SH(String("ctrl_clmt_name_" + String(zone->id)).c_str()), zone->name);
-            upd.update(su::SH(("ctrl_clmt_sens_" + String(zone->id)).c_str()), (zone->sensor != nullptr) ? (String(zone->sensor->data.temp) + "°") : String("N/A"));
-            upd.update(su::SH(("ctrl_clmt_temp_" + String(zone->id)).c_str()), zone->temp);
-            upd.update(su::SH(("ctrl_clmt_dlt_" + String(zone->id)).c_str()), zone->delta);
-            upd.update(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), (uint8_t)zone->type);
-            upd.update(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), zone->work);
         }
     }
 }

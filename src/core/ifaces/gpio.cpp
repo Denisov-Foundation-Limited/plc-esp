@@ -21,6 +21,8 @@
 
 bool GpioClass::begin()
 {
+    size_t in = 0, rly = 0, gen = 0, sens = 0, led = 0, bzr = 0, curId = 0;
+
     for (uint8_t i = 0; i < PROF_GPIO_MAX; i++) {
         auto gpio = ActiveBoard.interfaces.gpio[i];
 
@@ -34,33 +36,53 @@ bool GpioClass::begin()
         {
             case PROF_GPIO_GENERIC:
                 _pins[i].type = GPIO_TYPE_GENERIC;
+                gen++;
+                curId = gen;
+                _pins[i].name = "gen";
                 break;
 
             case PROF_GPIO_INPUT:
                 _pins[i].type = GPIO_TYPE_INPUT;
+                _pins[i].name = "in";
+                in++;
+                curId = in;
                 break;
 
             case PROF_GPIO_RELAY:
                 _pins[i].type = GPIO_TYPE_RELAY;
+                _pins[i].name = "rly";
+                rly++;
+                curId = rly;
                 break;
 
             case PROF_GPIO_SENSOR:
                 _pins[i].type = GPIO_TYPE_SENSOR;
+                _pins[i].name = "sens";
+                sens++;
+                curId = sens;
                 break;
 
             case PROF_GPIO_LED:
                 _pins[i].type = GPIO_TYPE_LED;
+                _pins[i].name = "led";
+                led++;
+                curId = led;
                 break;
 
             case PROF_GPIO_BUZZER:
                 _pins[i].type = GPIO_TYPE_BUZZER;
+                _pins[i].name = "bzr";
+                bzr++;
+                curId = bzr;
                 break;
         }
 
         if (!Extenders.getExtenderById(gpio.ext, &_pins[i].ext)) {
-            Log.info(F("GPIO"), "GPIO id: " +String(_pins[i].id)+ " inited at CPU pin: " +String(_pins[i].pin));
+            _pins[i].name += "-1/0/" + String(curId);
+            Log.info(F("GPIO"), "GPIO " + _pins[i].name + " inited at CPU pin: " + String(_pins[i].pin));
         } else {
-            Log.info(F("GPIO"), "GPIO id: " +String(_pins[i].id)+ " inited at Extender ext: " +String(_pins[i].ext->id)+" pin: " +String(_pins[i].pin));
+            _pins[i].name += "-" + String(_pins[i].ext->i2c->id) + "/" + String(_pins[i].ext->id) + "/" + String(curId);
+            Log.info(F("GPIO"), "GPIO " + _pins[i].name + " inited at Extender ext: " +String(_pins[i].ext->id)+" pin: " +String(_pins[i].pin));
         }
 
         _beginPin(&_pins[i]);

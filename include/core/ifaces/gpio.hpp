@@ -42,6 +42,7 @@ typedef enum {
 
 typedef struct {
     uint16_t    id;
+    String      name;
     uint8_t     pin;
     GpioType    type;
     GpioMode    mode;
