@@ -206,15 +206,15 @@ void ClimateCtrlClass::setStatus(ClimateZone *zone, bool status, bool save)
             if (EeDb.loadClimateDb(db)) {
                 if (EeDb.setClimateData(db, zone->id, status, zone->temp, zone->delta)) {
                     if (EeDb.saveClimateDb(db)) {
-                        Log.info(F("CLIMATE"), String(F("Climate status saved to EEPROM. Id: ")) + String(zone->id));
+                        Log.info(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" status saved to EEPROM")));
                     } else {
-                        Log.error(F("CLIMATE"), String(F("Failed to save climate status to EEPROM. Id: ")) + String(zone->id));
+                        Log.error(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" failed to save status to EEPROM")));
                     }
                 } else {
-                    Log.error(F("CLIMATE"), String(F("Failed to set climate status to EEPROM. Id: ")) + String(zone->id));
+                    Log.error(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" failed to set status to DB")));
                 }
             } else {
-                Log.error(F("CLIMATE"), String(F("Failed to load climate status from EEPROM. Id: ")) + String(zone->id));
+                Log.error(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" failed to load ClimateDB")));
             }
         }
     }

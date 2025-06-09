@@ -130,6 +130,17 @@ bool GpioClass::getPinById(uint16_t id, GpioPin **pin)
     return false;
 }
 
+bool GpioClass::getPinByName(const String &name, GpioPin **pin)
+{
+    for (uint16_t i = 0; i < _pins.size(); i++) {
+        if (_pins[i].name == name && _pins[i].enabled) {
+            *pin = &_pins[i];
+            return true;
+        }
+    }
+    return false;
+}
+
 void GpioClass::getPins(std::vector<GpioPin *> &pins)
 {
     for (uint16_t i = 0; i < _pins.size(); i++) {

@@ -52,10 +52,6 @@ private:
         size_t  curLED = 0;
     } _socket;
 
-    struct {
-        size_t  curSensor = 0;
-    } _meteo;
-
     void _buildMenu(sets::Builder& b);
     void _updateMainPage(sets::Updater& upd);
     void _buildMainPage(sets::Builder& b);
@@ -67,14 +63,6 @@ private:
     void _updateSettingsPage(sets::Updater& upd);
     void _buildSocketsPage(sets::Builder& b);
     void _updateSocketsPage(sets::Updater& upd);
-    void _buildMeteoPage(sets::Builder& b);
-    void _updateMeteoPage(sets::Updater& upd);
-    void _buildClimatePage(sets::Builder& b);
-    void _updateClimatePage(sets::Updater& upd);
-    void _buildSecurityPage(sets::Builder& b);
-    void _updateSecurityPage(sets::Updater& upd);
-    void _buildTankPage(sets::Builder& b);
-    void _updateTankPage(sets::Updater& upd);
 };
 
 extern WebGUIClass WebGUI;

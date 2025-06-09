@@ -60,6 +60,7 @@ public:
     bool read(GpioPin *pin);
     bool getState(GpioPin *pin);
     bool getPinById(uint16_t id, GpioPin **pin);
+    bool getPinByName(const String &name, GpioPin **pin);
     void getPins(std::vector<GpioPin *> &pins);
     void getPinsByType(GpioType type, std::vector<GpioPin *> &pins);
     void setMode(GpioPin *pin, GpioMode mode, GpioPull pull);

@@ -339,11 +339,14 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             zone.type = CLIMATE_TYPE_HEAT;
         }
 
-        Gpio.getPinById(jzones[i][F("relay")].as<unsigned>(), &zone.relay);
-        Gpio.getPinById(jzones[i][F("button")].as<unsigned>(), &zone.button);
+        Gpio.getPinByName(jzones[i][F("relay")].as<String>(), &zone.relay);
+        Gpio.getPinByName(jzones[i][F("button")].as<String>(), &zone.button);
 
         ClimateCtrl.setZone(zone.id - 1, &zone);
     }
+
+    doc.clear();
+    return true;
 
     /*
      * Security controller
@@ -564,8 +567,8 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
                 break;
         }
 
-        (zones[i]->relay == nullptr) ? jzones[i][F("relay")] = 0 : jzones[i][F("relay")] = zones[i]->relay->id;
-        (zones[i]->button == nullptr) ? jzones[i][F("button")] = 0 : jzones[i][F("button")] = zones[i]->button->id;
+        (zones[i]->relay == nullptr) ? jzones[i][F("relay")] = 0 : jzones[i][F("relay")] = zones[i]->relay->name;
+        (zones[i]->button == nullptr) ? jzones[i][F("button")] = 0 : jzones[i][F("button")] = zones[i]->button->name;
     }
 
     /*

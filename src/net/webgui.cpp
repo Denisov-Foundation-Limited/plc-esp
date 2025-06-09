@@ -20,6 +20,7 @@
 #include "core/clock.hpp"
 #include "net/pages/elements.hpp"
 #include "net/pages/climatep.hpp"
+#include "net/pages/meteop.hpp"
 
 #include <StringUtils.h>
 
@@ -51,16 +52,14 @@ void WebGUIClass::begin()
                 _buildSocketsPage(b);
                 break;
             case WEB_PAGE_METEO:
-                _buildMeteoPage(b);
+                _curPage = MeteoPage.build(b);
                 break;
             case WEB_PAGE_CLIMATE:
-                ClimatePage.build(b);
+                _curPage = ClimatePage.build(b);
                 break;
             case WEB_PAGE_SECURITY:
-                _buildSecurityPage(b);
                 break;
             case WEB_PAGE_TANK:
-                _buildTankPage(b);
                 break;
         }
     });
@@ -83,16 +82,14 @@ void WebGUIClass::begin()
                 _updateSettingsPage(upd);
                 break;
             case WEB_PAGE_METEO:
-                _updateMeteoPage(upd);
+                MeteoPage.update(upd);
                 break;
             case WEB_PAGE_CLIMATE:
                 ClimatePage.update(upd);
                 break;
             case WEB_PAGE_SECURITY:
-                _updateSecurityPage(upd);
                 break;
             case WEB_PAGE_TANK:
-                _updateTankPage(upd);
                 break;
         }
     });
@@ -137,8 +134,6 @@ void WebGUIClass::_buildMenu(sets::Builder& b)
             _curPage = WEB_PAGE_TELEGRAM;
             b.reload();
         }
-        b.endButtons();
-        b.beginButtons();
         if (b.Button(WEB_GUI_MENU_BTN_CTRL, F("Контроллеры"), sets::Colors::Aqua)) {
             _curPage = WEB_PAGE_CONTROLLERS;
             b.reload();
@@ -356,47 +351,31 @@ void WebGUIClass::_updateTgBotPage(sets::Updater& upd)
 void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 {
     if (b.beginGroup(F("Контроллеры"))) {
-        if (b.beginButtons()) {
-            if (b.Button(WEB_GUI_CTRL_SOCKET, F("Розетки"))) {
-                _curPage = WEB_PAGE_SOCKETS;
-                b.reload();
-            }
-            b.endButtons();
+        if (b.Button(WEB_GUI_CTRL_SOCKET, F("Розетки"))) {
+            _curPage = WEB_PAGE_SOCKETS;
+            b.reload();
         }
-        if (b.beginButtons()) {
-            if (b.Button(WEB_GUI_CTRL_METEO, F("Метео"))) {
-                _curPage = WEB_PAGE_METEO;
-                b.reload();
-            }
-            b.endButtons();
+        if (b.Button(WEB_GUI_CTRL_METEO, F("Метео"))) {
+            _curPage = WEB_PAGE_METEO;
+            b.reload();
         }
-        if (b.beginButtons()) {
-            if (b.Button(WEB_GUI_CTRL_CLIMATE, F("Климат"))) {
-                _curPage = WEB_PAGE_CLIMATE;
-                b.reload();
-            }
-            b.endButtons();
+        if (b.Button(WEB_GUI_CTRL_CLIMATE, F("Климат"))) {
+            _curPage = WEB_PAGE_CLIMATE;
+            b.reload();
         }
-        if (b.beginButtons()) {
-            if (b.Button(WEB_GUI_CTRL_SECURITY, F("Охрана"))) {
-                _curPage = WEB_PAGE_SECURITY;
-                b.reload();
-            }
-            b.endButtons();
+        if (b.Button(WEB_GUI_CTRL_SECURITY, F("Охрана"))) {
+            _curPage = WEB_PAGE_SECURITY;
+            b.reload();
+        }
+        if (b.Button(WEB_GUI_CTRL_TANK, F("Баки"))) {
+            _curPage = WEB_PAGE_TANK;
+            b.reload();
+        }
+        if (b.Button(WEB_GUI_CTRL_BACK, F("Назад"), sets::Colors::Aqua)) {
+            _curPage = WEB_PAGE_MAIN;
+            b.reload();
         }
         b.endGroup();
-        if (b.beginButtons()) {
-            if (b.Button(WEB_GUI_CTRL_TANK, F("Баки"))) {
-                _curPage = WEB_PAGE_TANK;
-                b.reload();
-            }
-            b.endButtons();
-        }
-    }
-
-    if (b.Button(WEB_GUI_CTRL_BACK, F("Назад"), sets::Colors::Aqua)) {
-        _curPage = WEB_PAGE_MAIN;
-        b.reload();
     }
 }
 
@@ -684,104 +663,6 @@ void WebGUIClass::_updateSettingsPage(sets::Updater& upd)
     upd.update(WEB_GUI_SYS_DATE, time.dateToString());
     upd.update(WEB_GUI_SYS_TIME, time.timeToString());
     upd.update(WEB_GUI_SYS_UTC, String("+" + String(Clock.getUTC())));
-}
-
-void WebGUIClass::_buildMeteoPage(sets::Builder& b)
-{
-    std::vector<MeteoSensor *>    sensors;
-
-    MeteoCtrl.getSensors(false, sensors);
-    
-    if (b.beginGroup(F("Общее"))) {
-        if (b.Switch(WEB_GUI_CTRL_METEO_ENABLE, F("Включен"), &MeteoCtrl.getEnabled())) {
-            b.reload();
-        }
-        if (b.Button(F("Назад"), sets::Colors::Aqua)) {
-            _curPage = WEB_PAGE_CONTROLLERS;
-            b.reload();
-        }
-        b.endGroup();
-    }
-
-    if (MeteoCtrl.getEnabled()) {
-        std::vector<uint64_t> owSens;
-        MeteoCtrl.findDsSensors(owSens);
-        String sOwSens = "";
-
-        for (auto s : owSens) {
-            sOwSens += String(s, 16) + ";";
-        }
-
-        for (auto *sensor : sensors) {
-            if (b.beginGroup(String(F("Датчик #")) + String(sensor->id))) {
-                if (b.Switch(su::SH(String("ctrl_meteo_en" + String(sensor->id)).c_str()), F("Включен"), &sensor->enabled)) {
-                    b.reload();
-                }
-                if (sensor->enabled) {
-                    b.Input(su::SH(String("ctrl_meteo_name" + String(sensor->id)).c_str()), F("Имя"), &sensor->name);
-                    if (b.Select(su::SH(String("ctrl_meteo_typ" + String(sensor->id)).c_str()), F("Тип"), F("AM2302;DS18B20;BME280;DHT22"), (uint8_t *)&sensor->type)) {
-                        b.reload();
-                    }
-                    if (sensor->type == METEO_SENSOR_DS18B20) {
-                        size_t curAddr = owSens.size();
-                        for (size_t i = 0; i < owSens.size(); i++) {
-                            if (sensor->addr == owSens[i]) {
-                                curAddr = i;
-                                break;
-                            }
-                        }
-                        if (b.Select(su::SH(String("ctrl_meteo_ds_addr" + String(sensor->id)).c_str()), F("Адрес"), sOwSens, &curAddr)) {
-                            if (b.build.value.toInt32() < owSens.size()) {
-                                sensor->addr = owSens[b.build.value.toInt32()];
-                            } else {
-                                Log.error(F("WEBGUI"), F("Incorrect OW sensor id"));
-                            }
-                        }
-                        b.Label(su::SH(("ctrl_meteo_temp" + String(sensor->id)).c_str()), F("Температура"), String(sensor->data.temp) + "°");
-                    }
-                }
-                b.endGroup();
-            }
-        }
-    }
-}
-
-void WebGUIClass::_updateMeteoPage(sets::Updater& upd)
-{
-    std::vector<MeteoSensor *>    sensors;
-
-    MeteoCtrl.getSensors(false, sensors);
-
-    for (auto *sensor : sensors) {
-        upd.update(su::SH(String("ctrl_meteo_en" + String(sensor->id)).c_str()), sensor->enabled);
-        if (sensor->enabled) {
-            upd.update(su::SH(String("ctrl_meteo_name" + String(sensor->id)).c_str()), sensor->name);
-            upd.update(su::SH(String("ctrl_meteo_typ" + String(sensor->id)).c_str()), (uint8_t)sensor->type);
-            if (sensor->type == METEO_SENSOR_DS18B20) {
-                upd.update(su::SH(String("ctrl_meteo_temp" + String(sensor->id)).c_str()), String(String(sensor->data.temp) + "°"));
-            }
-        }
-    }
-}
-
-void WebGUIClass::_buildSecurityPage(sets::Builder& b)
-{
-
-}
-
-void WebGUIClass::_updateSecurityPage(sets::Updater& upd)
-{
-
-}
-
-void WebGUIClass::_buildTankPage(sets::Builder& b)
-{
-
-}
-
-void WebGUIClass::_updateTankPage(sets::Updater& upd)
-{
-
 }
 
 WebGUIClass WebGUI;
