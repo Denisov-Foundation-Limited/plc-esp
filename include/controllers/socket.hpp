@@ -41,14 +41,12 @@ public:
     void setEnabled(bool enabled);
     bool &getEnabled();
     bool setSocket(size_t id, Socket *sock);
-    void getEnabledSockets(std::vector<Socket *> &socks);
-    std::array<Socket, SOCKET_COUNT> *getSockets();
-    bool isExists(const String &name);
+    void getSockets(bool enabled, std::vector<Socket *> &sockets);
     bool getSocket(const String &name, Socket **sock);
     bool getSocket(size_t index, Socket **sock);
     void setStatus(Socket *sock, bool status, bool save);
     bool &getStatus(Socket *sock);
-    void begin();
+    void begin(bool load);
     void loop();
 
 private:

@@ -94,7 +94,7 @@ void APIServerClass::_socketHandler(Socket *sock, AsyncWebServerRequest *req, Js
     }
 
     std::vector<Socket *> socks;
-    SocketCtrl.getEnabledSockets(socks);
+    SocketCtrl.getSockets(true, socks);
 
     for (size_t i = 0; i < socks.size(); i++) {
         (*out)[F("sockets")][i][F("name")] = socks[i]->name;

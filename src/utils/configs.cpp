@@ -279,9 +279,9 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         sock.id = jsocks[i][F("id")].as<unsigned>();
         sock.name = jsocks[i][F("name")].as<String>();
         sock.enabled = true;
-        Gpio.getPinById(jsocks[i][F("relay")].as<unsigned>(), &sock.relay);
-        Gpio.getPinById(jsocks[i][F("button")].as<unsigned>(), &sock.button);
-        Gpio.getPinById(jsocks[i][F("led")].as<unsigned>(), &sock.led);
+        Gpio.getPinByName(jsocks[i][F("relay")].as<String>(), &sock.relay);
+        Gpio.getPinByName(jsocks[i][F("button")].as<String>(), &sock.button);
+        Gpio.getPinByName(jsocks[i][F("led")].as<String>(), &sock.led);
         SocketCtrl.setSocket(jsocks[i][F("id")].as<unsigned>() - 1, &sock);
     }
 
@@ -313,7 +313,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             sensor.type = METEO_SENSOR_BME280;
         }
 
-        Gpio.getPinById(jsensors[i][F("pin")].as<unsigned>(), &sensor.pin);
+        Gpio.getPinByName(jsensors[i][F("pin")].as<String>(), &sensor.pin);
         MeteoCtrl.setSensor(sensor.id - 1, &sensor);
     }
 
@@ -495,14 +495,14 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     auto jsocks = jsock[F("sockets")];
     
     std::vector<Socket *> socks;
-    SocketCtrl.getEnabledSockets(socks);
+    SocketCtrl.getSockets(true, socks);
 
     for (size_t i = 0; i < socks.size(); i++) {
         jsocks[i][F("id")] = socks[i]->id;
         jsocks[i][F("name")] = socks[i]->name;
-        (socks[i]->button == nullptr) ? jsocks[i][F("button")] = 0 : jsocks[i][F("button")] = socks[i]->button->id;
-        (socks[i]->relay == nullptr) ? jsocks[i][F("relay")] = 0 : jsocks[i][F("relay")] = socks[i]->relay->id;
-        (socks[i]->led == nullptr) ? jsocks[i][F("led")] = 0 : jsocks[i][F("led")] = socks[i]->led->id;
+        (socks[i]->button == nullptr) ? jsocks[i][F("button")] = "" : jsocks[i][F("button")] = socks[i]->button->name;
+        (socks[i]->relay == nullptr) ? jsocks[i][F("relay")] = "" : jsocks[i][F("relay")] = socks[i]->relay->name;
+        (socks[i]->led == nullptr) ? jsocks[i][F("led")] = "" : jsocks[i][F("led")] = socks[i]->led->name;
     }
 
     /*
@@ -539,7 +539,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
                 break;
         }
 
-        (sens[i]->pin == nullptr) ? jmsens[i][F("pin")] = 0 : jmsens[i][F("pin")] = sens[i]->pin->id;
+        (sens[i]->pin == nullptr) ? jmsens[i][F("pin")] = "" : jmsens[i][F("pin")] = sens[i]->pin->name;
     }
 
     /*
@@ -567,9 +567,11 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
                 break;
         }
 
-        (zones[i]->relay == nullptr) ? jzones[i][F("relay")] = 0 : jzones[i][F("relay")] = zones[i]->relay->name;
-        (zones[i]->button == nullptr) ? jzones[i][F("button")] = 0 : jzones[i][F("button")] = zones[i]->button->name;
+        (zones[i]->relay == nullptr) ? jzones[i][F("relay")] = "" : jzones[i][F("relay")] = zones[i]->relay->name;
+        (zones[i]->button == nullptr) ? jzones[i][F("button")] = "" : jzones[i][F("button")] = zones[i]->button->name;
     }
+
+    return true;
 
     /*
      * Security controller

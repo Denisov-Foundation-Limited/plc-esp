@@ -28,18 +28,17 @@ SocketCtrlClass::SocketCtrlClass()
     }
 }
 
-void SocketCtrlClass::getEnabledSockets(std::vector<Socket *> &socks)
+void SocketCtrlClass::getSockets(bool enabled, std::vector<Socket *> &sockets)
 {
     for (size_t i = 0; i < _sockets.size(); i++) {
-        if (_sockets[i].enabled) {
-            socks.push_back(&_sockets[i]);
+        if (enabled) {
+            if (_sockets[i].enabled) {
+                sockets.push_back(&_sockets[i]);
+            }
+        } else {
+            sockets.push_back(&_sockets[i]);
         }
     }
-}
-
-std::array<Socket, SOCKET_COUNT> *SocketCtrlClass::getSockets()
-{
-    return &_sockets;
 }
 
 bool SocketCtrlClass::setSocket(size_t index, Socket *sock)
@@ -51,16 +50,6 @@ bool SocketCtrlClass::setSocket(size_t index, Socket *sock)
     memcpy(&_sockets[index], sock, sizeof(Socket));
 
     return true;
-}
-
-bool SocketCtrlClass::isExists(const String &name)
-{
-    for (size_t i = 0; i < _sockets.size(); i++) {
-        if (_sockets[i].name == name) {
-            return true;
-        }
-    }
-    return false;
 }
 
 bool SocketCtrlClass::getSocket(const String &name, Socket **sock)
@@ -85,11 +74,11 @@ bool SocketCtrlClass::getSocket(size_t index, Socket **sock)
     return false;
 }
 
-void SocketCtrlClass::begin()
+void SocketCtrlClass::begin(bool load)
 {
     std::vector<Socket *> sockets;
 
-    getEnabledSockets(sockets);
+    getSockets(true, sockets);
 
     for (size_t i = 0; i < sockets.size(); i++) {
         if (!sockets[i]->enabled) {
@@ -105,7 +94,10 @@ void SocketCtrlClass::begin()
             Gpio.setMode(sockets[i]->button, GPIO_MOD_INPUT, GPIO_PULL_UP);
         }
     }
-    _loadStates();
+
+    if (load) {
+        _loadStates();
+    }
 }
 
 void SocketCtrlClass::loop()
@@ -113,7 +105,7 @@ void SocketCtrlClass::loop()
     if (!_enabled) return;
 
     std::vector<Socket *> sockets;
-    getEnabledSockets(sockets);
+    getSockets(true, sockets);
 
     if (sockets.size() == 0) return;
 
@@ -137,6 +129,9 @@ void SocketCtrlClass::loop()
 
 void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
 {
+    if (sock->status == status)
+        return;
+
     sock->status = status;
 
     Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" changed status to ")) + (sock->status ? "ON" : "OFF"));
@@ -155,15 +150,15 @@ void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
             if (EeDb.loadSocketDb(db)) {
                 if (EeDb.setSocketStatus(db, sock->id, status)) {
                     if (EeDb.saveSocketDb(db)) {
-                        Log.info(F("SOCKET"), String(F("Socket status saved to EEPROM. Id: ")) + String(sock->id));
+                        Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + ((" status saved to EEPROM.")));
                     } else {
-                        Log.error(F("SOCKET"), String(F("Failed to save socket status to EEPROM. Id: ")) + String(sock->id));
+                        Log.error(F("SOCKET"), String(F("Socket ")) + sock->name + ((" failed to save status to EEPROM.")));
                     }
                 } else {
-                    Log.error(F("SOCKET"), String(F("Failed to set socket status to EEPROM. Id: ")) + String(sock->id));
+                    Log.error(F("SOCKET"), String(F("Socket ")) + sock->name + ((" failed to set status to EEPROM.")));
                 }
             } else {
-                Log.error(F("SOCKET"), String(F("Failed to load socket status from EEPROM. Id: ")) + String(sock->id));
+                Log.error(F("SOCKET"), String(F("Socket ")) + sock->name + ((" failed to load status from EEPROM.")));
             }
         } else {
             SocketDB    db;
@@ -221,7 +216,7 @@ bool SocketCtrlClass::_loadStates()
 {
     std::vector<Socket *> sockets;
 
-    getEnabledSockets(sockets);
+    getSockets(true, sockets);
 
     if (EeDb.getEnabled()) {
         EeDbSocket  db;

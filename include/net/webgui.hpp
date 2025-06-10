@@ -43,15 +43,6 @@ private:
         unsigned    ChatID;
     } _tgUser;
 
-    struct {
-        String  Name;
-        bool    Enabled;
-        size_t  curRly = 0;
-        size_t  curBtn = 0;
-        size_t  curSock = 0;
-        size_t  curLED = 0;
-    } _socket;
-
     void _buildMenu(sets::Builder& b);
     void _updateMainPage(sets::Updater& upd);
     void _buildMainPage(sets::Builder& b);
@@ -61,8 +52,6 @@ private:
     void _updateCtrlsPage(sets::Updater& upd);
     void _buildSettingsPage(sets::Builder& b);
     void _updateSettingsPage(sets::Updater& upd);
-    void _buildSocketsPage(sets::Builder& b);
-    void _updateSocketsPage(sets::Updater& upd);
 };
 
 extern WebGUIClass WebGUI;

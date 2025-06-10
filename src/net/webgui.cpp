@@ -21,6 +21,7 @@
 #include "net/pages/elements.hpp"
 #include "net/pages/climatep.hpp"
 #include "net/pages/meteop.hpp"
+#include "net/pages/socketp.hpp"
 
 #include <StringUtils.h>
 
@@ -49,7 +50,7 @@ void WebGUIClass::begin()
                 _buildSettingsPage(b);
                 break;
             case WEB_PAGE_SOCKETS:
-                _buildSocketsPage(b);
+                _curPage = SocketPage.build(b);
                 break;
             case WEB_PAGE_METEO:
                 _curPage = MeteoPage.build(b);
@@ -76,7 +77,7 @@ void WebGUIClass::begin()
                 _updateCtrlsPage(upd);
                 break;
             case WEB_PAGE_SOCKETS:
-                _updateSocketsPage(upd);
+                SocketPage.update(upd);
                 break;
             case WEB_PAGE_SETTINGS:
                 _updateSettingsPage(upd);
@@ -381,210 +382,6 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 
 void WebGUIClass::_updateCtrlsPage(sets::Updater& upd)
 {
-}
-
-void WebGUIClass::_buildSocketsPage(sets::Builder& b)
-{
-    if (b.beginGroup(F("Общее"))) {
-        if (b.Switch(WEB_GUI_CTRL_SOCKET_ENABLE, F("Включен"), &SocketCtrl.getEnabled())) {
-            b.reload();
-        }
-        if (SocketCtrl.getEnabled()) {
-            if (b.beginMenu(F("Настройки"))) {
-                if (b.beginGroup(F("Редактировать"))) {
-                    String                  sSocks = "", sBtns = F("N/U;"), sRlys = F("N/U;"), sLeds = F("N/U;");
-                    std::vector<GpioPin *>  pins;
-                    size_t                  bt = 1, rl = 1, ld = 1;
-
-                    Gpio.getPins(pins);
-
-                    for (size_t i = 0; i < SOCKET_COUNT; i++) {
-                        sSocks += ("#"+String(i + 1));
-                        if (i < (SOCKET_COUNT - 1)) {
-                            sSocks += ";";
-                        }
-                    }
-                    for (auto pin : pins) {
-                        if (pin->type == GPIO_TYPE_INPUT) {
-                            if (pin->ext == nullptr) {
-                                sBtns += "in-1/0/" + String(bt) + ";";
-                            } else {
-                                sBtns += "in-" + String(pin->ext->i2c->id) + "/" + String(pin->ext->id) + "/" + String(bt) + ";";
-                            }
-                            bt++;
-                        }
-                        if (pin->type == GPIO_TYPE_RELAY) {
-                            if (pin->ext == nullptr) {
-                                sRlys += "rly-1/0/" + String(rl) + ";";
-                            } else {
-                                sRlys += "rly-" + String(pin->ext->i2c->id) + "/" + String(pin->ext->id) + "/" + String(rl) + ";";
-                            }
-                            rl++;
-                        }
-                        if (pin->type == GPIO_TYPE_LED) {
-                            if (pin->ext == nullptr) {
-                                sLeds += "led-1/0/" + String(ld) + ";";
-                            } else {
-                                sLeds += "led-" + String(pin->ext->i2c->id) + "/" + String(pin->ext->id) + "/" + String(ld) + ";";
-                            }
-                            ld++;
-                        }
-                    }
-                    sBtns.remove(sBtns.length() - 1);
-                    sRlys.remove(sRlys.length() - 1);
-                    sLeds.remove(sLeds.length() - 1);
-
-                    if (b.Select(WEB_GUI_CTRL_SOCKET_SEL, F("Выбрать"), sSocks, (uint8_t *)&_socket.curSock)) {
-                        Socket *sock;
-                        SocketCtrl.getSocket(_socket.curSock, &sock);
-                        _socket.Name = sock->name;
-                        _socket.Enabled = sock->enabled;
-                        bt = 1; rl = 1; ld = 1;
-                        for (auto pin : pins) {
-                            if (pin->type == GPIO_TYPE_INPUT) {
-                                if (sock->button != nullptr && pin->id == sock->button->id) {
-                                    _socket.curBtn = bt;
-                                    break;
-                                } else {
-                                    _socket.curBtn = 0;
-                                }
-                                bt++;
-                            }
-                        }
-                        for (auto pin : pins) {
-                            if (pin->type == GPIO_TYPE_RELAY) {
-                                if (sock->relay != nullptr && pin->id == sock->relay->id) {
-                                    _socket.curRly = rl;
-                                    break;
-                                } else {
-                                    _socket.curRly = 0;
-                                }
-                                rl++;
-                            }
-                        }
-                        for (auto pin : pins) {
-                            if (pin->type == GPIO_TYPE_LED) {
-                                if (sock->led != nullptr && pin->id == sock->led->id) {
-                                    _socket.curLED = ld;
-                                    break;
-                                } else {
-                                    _socket.curLED = 0;
-                                }
-                                ld++;
-                            }
-                        }
-                    }
-
-                    b.Input(WEB_GUI_CTRL_SOCKET_NAME, F("Имя"), &_socket.Name);
-                    b.Switch(WEB_GUI_CTRL_SOCKET_ENABLE_SOCK, F("Включен"), &_socket.Enabled);
-                    b.Select(WEB_GUI_CTRL_SOCKET_RLY, F("Реле"), sRlys, (uint8_t *)&_socket.curRly);
-                    b.Select(WEB_GUI_CTRL_SOCKET_BTN, F("Кнопка"), sBtns, (uint8_t *)&_socket.curBtn);
-                    b.Select(WEB_GUI_CTRL_SOCKET_LED, F("Индикатор"), sLeds, (uint8_t *)&_socket.curLED);
-
-                    if (b.Button(F("Применить"))) {
-                        Socket *sock;
-                        if (SocketCtrl.getSocket(_socket.curSock, &sock)) {
-                            sock->name = _socket.Name;
-                            sock->enabled = _socket.Enabled;
-                            bt = 1; rl = 1; ld = 1;
-                            for (auto pin : pins) {
-                                if (pin->type == GPIO_TYPE_INPUT) {
-                                    if (_socket.curBtn == bt) {
-                                        Gpio.getPinById(pin->id, &sock->button);
-                                    }
-                                    bt++;
-                                }
-                                if (pin->type == GPIO_TYPE_RELAY) {
-                                    if (_socket.curRly == rl) {
-                                        Gpio.getPinById(pin->id, &sock->relay);
-                                    }
-                                    rl++;
-                                }
-                                if (pin->type == GPIO_TYPE_LED) {
-                                    if (_socket.curLED == ld) {
-                                        Gpio.getPinById(pin->id, &sock->led);
-                                    }
-                                    ld++;
-                                }
-                            }
-                        }
-                        SocketCtrl.begin();
-                        b.reload();
-                    }
-                    b.endGroup();
-                }
-
-                if (b.beginGroup(F("Активные розетки"))) {
-                    size_t i = 1;
-                    for (auto sock : *SocketCtrl.getSockets()) {
-                        b.LED(su::SH(String("ctrl_sock_en_" + String(i)).c_str()), 
-                            "#"+String(i), sock.enabled);
-                        i++;
-                    }
-                    b.endGroup();
-                }
-                b.endMenu();
-            }
-            b.beginButtons();           
-            if (b.Button(WEB_GUI_CTRL_SOCKET_ON_ALL, F("Включить все"))) {
-                std::vector<Socket *> socks;
-                SocketCtrl.getEnabledSockets(socks);
-                for (auto s : socks) {
-                    SocketCtrl.setStatus(s, true, true);
-                }
-                b.reload();
-            }
-            if (b.Button(WEB_GUI_CTRL_SOCKET_OFF_ALL, F("Отключить все"), sets::Colors::Red)) {
-                std::vector<Socket *> socks;
-                SocketCtrl.getEnabledSockets(socks);
-                for (auto s : socks) {
-                    SocketCtrl.setStatus(s, false, true);
-                }
-                b.reload();
-            }
-            b.endButtons();
-        }
-        b.endGroup();
-    }
-
-    if (SocketCtrl.getEnabled()) {
-        if (b.beginGroup(F("Розетки"))) {
-            std::vector<Socket *> socks;
-            SocketCtrl.getEnabledSockets(socks);
-            for (size_t i = 0; i < socks.size(); i++) {
-                if (b.Switch(su::SH(String("ctrl_sock_sw_" + String(i)).c_str()), socks[i]->name, &SocketCtrl.getStatus(socks[i]))) {
-                    SocketCtrl.setStatus(socks[i], b.build.value.toBool(), true);
-                }
-            }
-            b.endGroup();
-        }
-    }
-
-    if (b.Button(WEB_GUI_CTRL_SOCKET_BACK, F("Назад"), sets::Colors::Aqua)) {
-        _curPage = WEB_PAGE_CONTROLLERS;
-        b.reload();
-    }
-}
-
-void WebGUIClass::_updateSocketsPage(sets::Updater& upd)
-{
-    upd.update(WEB_GUI_CTRL_SOCKET_NAME, _socket.Name);
-    upd.update(WEB_GUI_CTRL_SOCKET_ENABLE_SOCK, _socket.Enabled);
-    upd.update(WEB_GUI_CTRL_SOCKET_RLY, _socket.curRly);
-    upd.update(WEB_GUI_CTRL_SOCKET_BTN, _socket.curBtn);
-    upd.update(WEB_GUI_CTRL_SOCKET_LED, _socket.curLED);
-
-    size_t i = 1;
-    for (auto sock : *SocketCtrl.getSockets()) {
-        upd.update(su::SH(String("ctrl_sock_en_" + String(i)).c_str()), sock.enabled);
-        i++;
-    }
-
-    std::vector<Socket *> socks;
-    SocketCtrl.getEnabledSockets(socks);
-    for (size_t i = 0; i < socks.size(); i++) {
-        upd.update(su::SH(String("ctrl_sock_sw_" + String(i)).c_str()), SocketCtrl.getStatus(socks[i]));
-    }
 }
 
 void WebGUIClass::_buildSettingsPage(sets::Builder& b)

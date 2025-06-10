@@ -331,7 +331,7 @@ bool TgBotClass::_socketsHandler(TgUser *user, const String &msg)
     menu.addButton(F("Откл.все"));
     menu.newRow();
 
-    SocketCtrl.getEnabledSockets(socks);
+    SocketCtrl.getSockets(true, socks);
 
     for (auto *socket : socks) {
         if (msg == socket->name) {

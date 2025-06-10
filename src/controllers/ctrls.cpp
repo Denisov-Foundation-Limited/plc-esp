@@ -25,7 +25,7 @@
 
 void ControllersClass::begin()
 {
-    SocketCtrl.begin();
+    SocketCtrl.begin(true);
     MeteoCtrl.begin();
     ClimateCtrl.begin(true);
     SecurityCtrl.begin();
