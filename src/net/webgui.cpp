@@ -22,6 +22,7 @@
 #include "net/pages/climatep.hpp"
 #include "net/pages/meteop.hpp"
 #include "net/pages/socketp.hpp"
+#include "net/pages/tgbotp.hpp"
 
 #include <StringUtils.h>
 
@@ -41,7 +42,7 @@ void WebGUIClass::begin()
                 _buildMainPage(b);
                 break;
             case WEB_PAGE_TELEGRAM:
-                _buildTgBotPage(b);
+                _curPage = TgbotPage.build(b);
                 break;
             case WEB_PAGE_CONTROLLERS:
                 _buildCtrlsPage(b);
@@ -71,7 +72,7 @@ void WebGUIClass::begin()
                 _updateMainPage(upd);
                 break;
             case WEB_PAGE_TELEGRAM:
-                _updateTgBotPage(upd);
+                TgbotPage.update(upd);
                 break;
             case WEB_PAGE_CONTROLLERS:
                 _updateCtrlsPage(upd);
@@ -180,173 +181,6 @@ void WebGUIClass::_updateMainPage(sets::Updater& upd)
     upd.update(WEB_GUI_MAIN_WIFI_IP, Wireless.getIP());
     upd.update(WEB_GUI_MAIN_WIFI_AP, Wireless.getAP());
     upd.update(WEB_GUI_MAIN_WIFI_EN, Wireless.getEnabled());
-}
-
-void WebGUIClass::_buildTgBotPage(sets::Builder& b)
-{
-    if (b.beginGroup(F("Telegram"))) {
-        if (b.Switch(WEB_GUI_TG_EN, F("Enabled"), &TgBot.getEnabled())) {
-            TgBot.setEnabled(b.build.value.toBool());
-            TgBot.begin();
-            b.reload();
-        }
-        if (TgBot.getEnabled()) {
-            String token = TgBot.getToken();
-            if (b.Pass(WEB_GUI_TG_TOKEN, F("Токен"), &token)) {
-                TgBot.setToken(b.build.value);
-                TgBot.begin();
-            }
-            auto mode = TgBot.getPollMode();
-            uint8_t modeNum = 0;
-            switch (mode) {
-                case fb::Poll::Long:
-                    modeNum = 0;
-                    break;
-                case fb::Poll::Sync:
-                    modeNum = 1;
-                    break;
-                case fb::Poll::Async:
-                    modeNum = 2;
-                    break;
-            }
-            if (b.Select(WEB_GUI_TG_POLL, F("Режим"), F("Long;Sync;Async"), &modeNum)) {
-                switch (b.build.value.toInt32()) {
-                    case 0:
-                        TgBot.setPollMode(fb::Poll::Long, TgBot.getPollPeriod());
-                        break;
-                    case 1:
-                        TgBot.setPollMode(fb::Poll::Sync, TgBot.getPollPeriod());
-                        break;
-                    case 2:
-                        TgBot.setPollMode(fb::Poll::Async, TgBot.getPollPeriod());
-                        break;
-                }
-                TgBot.begin();
-            }
-
-            uint16_t period = TgBot.getPollPeriod();
-            if (b.Slider(WEB_GUI_TG_PERIOD, "Период", 100, 100000, 10, F("msec"), &period)) {
-                TgBot.setPollMode(TgBot.getPollMode(), b.build.value.toInt32());
-                TgBot.begin();
-            }
-            b.Label(WEB_GUI_TG_LAST_ID, F("LastID"), String(TgBot.getLastID()));
-        }
-
-        if (b.beginMenu(F("Настройка"))) {
-            String                  sUsers = "";
-            std::vector<TgUser *>   users;
-
-            TgBot.getEnabledUsers(users);
-
-            for (size_t i = 0; i < TG_USERS_COUNT; i++) {
-                sUsers += ("#"+String(i + 1));
-                if (i < (TG_USERS_COUNT - 1)) {
-                    sUsers += ";";
-                }
-            }
-
-            if (b.beginGroup(F("Редактировать"))) {
-                if (b.Select(WEB_GUI_CTRL_SOCKET_SEL, F("Выбрать"), sUsers, (uint8_t *)&_tgUser.curUser)) {
-                    TgUser *user;
-                    TgBot.getUser(_tgUser.curUser, &user);
-                    _tgUser.Name = user->name;
-                    _tgUser.Enabled = user->enabled;
-                    _tgUser.ChatID = user->chatId;
-                    _tgUser.Admin = user->admin;
-                    _tgUser.Notify = user->notify;
-                }
-
-                b.Input(WEB_GUI_TG_USER_NAME, F("Имя"), &_tgUser.Name);
-                b.Switch(WEB_GUI_TG_USER_EN, F("Включен"), &_tgUser.Enabled);
-                b.Number(WEB_GUI_TG_USER_CHATID, F("ChatID"), &_tgUser.ChatID);
-                b.Switch(WEB_GUI_TG_USER_ADMIN, F("Админ"), &_tgUser.Admin);
-                b.Switch(WEB_GUI_TG_USER_NTF, F("Уведомления"), &_tgUser.Notify);
-
-                if (b.Button(F("Применить"))) {
-                    TgUser *user;
-                    if (TgBot.getUser(_tgUser.curUser, &user)) {
-                        user->name = _tgUser.Name;
-                        user->enabled = _tgUser.Enabled;
-                        user->admin = _tgUser.Admin;
-                        user->chatId = _tgUser.ChatID;
-                        user->notify = _tgUser.Notify;
-                        b.reload();
-                    }
-                }
-            }
-            b.endGroup();
-
-            if (b.beginGroup(F("Активные пользователи"))) {
-                size_t i = 1;
-                for (auto user : *TgBot.getUsers()) {
-                    b.LED(su::SH(String("tg_users_en_" + String(i)).c_str()), 
-                        "#"+String(i), user.enabled);
-                    i++;
-                }
-                b.endGroup();
-            }
-            b.endMenu();
-        }
-        b.endGroup();
-    }
-
-    std::vector<TgUser *> users;
-    TgBot.getEnabledUsers(users);
-    size_t i = 1;
-    for (auto *user : users) {
-        if (b.beginGroup("Пользователь #" +String(i))) {
-            b.Label(su::SH(("tg_user_name_"+String(i)).c_str()), "Имя", user->name);
-            b.Label(su::SH(("tg_user_chid_"+String(i)).c_str()), "ChatID", String(user->chatId));
-            b.LED(su::SH(("tg_user_admin_"+String(i)).c_str()), "Админ", user->admin);
-            b.LED(su::SH(("tg_user_ntf_"+String(i)).c_str()), "Уведомления", user->notify);
-            b.endGroup();
-        }
-        i++;
-    }
-}
-
-void WebGUIClass::_updateTgBotPage(sets::Updater& upd)
-{
-    upd.update(WEB_GUI_TG_EN, TgBot.getEnabled());
-    upd.update(WEB_GUI_TG_TOKEN, TgBot.getToken());
-    upd.update(WEB_GUI_TG_PERIOD, TgBot.getPollPeriod());
-
-    uint8_t modeNum = 0;
-    switch (TgBot.getPollMode()) {
-        case fb::Poll::Long:
-            modeNum = 0;
-            break;
-        case fb::Poll::Sync:
-            modeNum = 1;
-            break;
-        case fb::Poll::Async:
-            modeNum = 2;
-            break;
-    }
-    upd.update(WEB_GUI_TG_POLL, modeNum);
-
-    std::vector<TgUser *> users;
-    TgBot.getEnabledUsers(users);
-    size_t i = 1;
-    for (auto *user : users) {
-        upd.update(su::SH(("tg_user_name_"+String(i)).c_str()), user->name);
-        upd.update(su::SH(("tg_user_chid_"+String(i)).c_str()), user->chatId);
-        upd.update(su::SH(("tg_user_admin_"+String(i)).c_str()), user->admin);
-        upd.update(su::SH(("tg_user_ntf_"+String(i)).c_str()), user->notify);
-        i++;
-    }
-
-    upd.update(WEB_GUI_TG_USER_NAME, _tgUser.Name);
-    upd.update(WEB_GUI_TG_USER_EN, _tgUser.Enabled);
-    upd.update(WEB_GUI_TG_USER_CHATID, _tgUser.ChatID);
-    upd.update(WEB_GUI_TG_USER_ADMIN, _tgUser.Admin);
-    upd.update(WEB_GUI_TG_USER_NTF, _tgUser.Notify);
-
-    i = 1;
-    for (auto user : *TgBot.getUsers()) {
-        upd.update(su::SH(String("tg_users_en_" + String(i)).c_str()), user.enabled);
-        i++;
-    }
 }
 
 void WebGUIClass::_buildCtrlsPage(sets::Builder& b)

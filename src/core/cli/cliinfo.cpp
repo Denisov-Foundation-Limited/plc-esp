@@ -338,7 +338,7 @@ void CLIInformerClass::showTgBot()
     Serial.println(F("\tId    Name           ChatId      Notify   Admin"));
     Serial.println(F("\t---   ------------   ---------   ------   -----"));
     
-    TgBot.getEnabledUsers(users);
+    TgBot.getUsers(true, users);
     for (auto *user : users) {
         Serial.printf("\t%-3d   %-12s   %-9d   %-6s   %-5s\n", i, user->name.c_str(), user->chatId,
                     user->notify ? F("On") : F("Off"), user->admin ? F("True") : F("False"));

@@ -9,39 +9,24 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __WEB_GUI_HPP__
-#define __WEB_GUI_HPP__
+#ifndef __TGBOT_PAGE_HPP__
+#define __TGBOT_PAGE_HPP__
 
-#include <Arduino.h>
 #include <SettingsAsync.h>
+#include "pages.hpp"
+#include "controllers/meteo.hpp"
 
-#include "controllers/ctrls.hpp"
-#include "controllers/ctrl.hpp"
-#include "pages/pages.hpp"
-
-class WebGUIClass : public SettingsAsync
+class TgbotPageClass
 {
 public:
-    void begin();
-    void loop();
-    void setPassword(const String &pwd);
-    const String &getPassword();
+    WebGuiPage build(sets::Builder& b);
+    void update(sets::Updater& upd);
 
 private:
-    String      _password = "";
-    WebGuiPage  _curPage = WEB_PAGE_MAIN;
 
-    unsigned _time;
-
-    void _buildMenu(sets::Builder& b);
-    void _updateMainPage(sets::Updater& upd);
-    void _buildMainPage(sets::Builder& b);
-    void _buildCtrlsPage(sets::Builder& b);
-    void _updateCtrlsPage(sets::Updater& upd);
-    void _buildSettingsPage(sets::Builder& b);
-    void _updateSettingsPage(sets::Updater& upd);
 };
 
-extern WebGUIClass WebGUI;
+extern TgbotPageClass TgbotPage; 
 
-#endif /* __WEB_GUI_HPP__ */
+#endif /* __TGBOT_PAGE_HPP__ */
+

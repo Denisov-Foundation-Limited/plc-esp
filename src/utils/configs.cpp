@@ -469,7 +469,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
     unsigned k = 0;
     std::vector<TgUser *> users;
-    TgBot.getEnabledUsers(users);
+    TgBot.getUsers(true, users);
 
     for (auto *usr : users) {
         jusers[k][F("name")] = usr->name;

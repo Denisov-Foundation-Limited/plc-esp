@@ -46,6 +46,7 @@ typedef struct {
 } TgUserRight;
 
 typedef struct {
+    size_t      id;
     String      name;
     unsigned    chatId;
     bool        notify;
@@ -59,15 +60,15 @@ typedef struct {
 class TgBotClass : public FastBot2
 {
 public:
+    TgBotClass();
     void setEnabled(bool status);
     bool &getEnabled();
     bool setUser(size_t index, TgUser *user);
     bool getUser(const String &name, TgUser **user);
     bool getUser(size_t index, TgUser **user);
     bool getUserByChatId(unsigned chatId, TgUser **user);
-    std::array<TgUser, TG_USERS_COUNT> *getUsers();
-    void getEnabledUsers(std::vector<TgUser *> &users);
-    unsigned getLastID() const;
+    void getUsers(bool enabled, std::vector<TgUser *> &users);
+    unsigned &getLastID();
     bool isUserExists(const String &name) const;
     void begin();
     void loop();

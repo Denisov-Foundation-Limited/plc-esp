@@ -20,6 +20,14 @@
 /*                                                                   */
 /*********************************************************************/
 
+TgBotClass::TgBotClass()
+{
+    for (size_t i = 0; i < _users.size(); i++) {
+        memset(&_users[i], 0x0, sizeof(TgUser));
+        _users[i].id = i + 1;
+    }
+}
+
 void TgBotClass::setEnabled(bool status)
 {
     _enabled = status;
@@ -55,7 +63,7 @@ bool TgBotClass::getUser(size_t index, TgUser **user)
 bool TgBotClass::getUserByChatId(unsigned chatId, TgUser **user)
 {
     for (size_t i = 0; i < _users.size(); i++) {
-        if (_users[i].chatId == chatId) {
+        if (_users[i].chatId == chatId && _users[i].enabled) {
             *user = &_users[i];
             return true;
         }
@@ -66,7 +74,7 @@ bool TgBotClass::getUserByChatId(unsigned chatId, TgUser **user)
 bool TgBotClass::isUserExists(const String &name) const
 {
     for (auto u : _users) {
-        if (u.name == name) {
+        if (u.name == name && u.enabled) {
             return true;
         }
     }
@@ -83,18 +91,17 @@ bool TgBotClass::setUser(size_t index, TgUser *user)
     return true;
 }
 
-void TgBotClass::getEnabledUsers(std::vector<TgUser *> &users)
+void TgBotClass::getUsers(bool enabled, std::vector<TgUser *> &users)
 {
     for (size_t i = 0; i < _users.size(); i++) {
-        if (_users[i].enabled) {
+        if (enabled) {
+            if (_users[i].enabled) {
+                users.push_back(&_users[i]);
+            }
+        } else {
             users.push_back(&_users[i]);
         }
     }
-}
-
-std::array<TgUser, TG_USERS_COUNT> *TgBotClass::getUsers()
-{
-    return &_users;
 }
 
 void TgBotClass::begin()
@@ -119,7 +126,7 @@ void TgBotClass::loop()
     tick();
 }
 
-unsigned TgBotClass::getLastID() const
+unsigned &TgBotClass::getLastID()
 {
     return _lastID;
 }
