@@ -28,7 +28,7 @@ WebGuiPage ClimatePageClass::build(sets::Builder& b)
 
     ClimateCtrl.getZones(false, zones);
 
-    if (b.beginGroup(F("Общее"))) {
+    if (b.beginGroup(F("Климат"))) {
         if (b.Switch(WEB_GUI_CTRL_CLIMATE_ENABLE, F("Включен"), &ClimateCtrl.getEnabled())) {
             b.reload();
         }

@@ -25,7 +25,7 @@ WebGuiPage MeteoPageClass::build(sets::Builder& b)
 
     MeteoCtrl.getSensors(false, sensors);
     
-    if (b.beginGroup(F("Общее"))) {
+    if (b.beginGroup(F("Метео"))) {
         if (b.Switch(WEB_GUI_CTRL_METEO_ENABLE, F("Включен"), &MeteoCtrl.getEnabled())) {
             b.reload();
         }

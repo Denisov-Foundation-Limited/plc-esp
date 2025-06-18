@@ -77,20 +77,7 @@ WebGuiPage TgbotPageClass::build(sets::Builder& b)
 
 void TgbotPageClass::update(sets::Updater& upd)
 {
-    std::vector<MeteoSensor *>    sensors;
-
-    MeteoCtrl.getSensors(false, sensors);
-
-    for (auto *sensor : sensors) {
-        upd.update(su::SH(String("ctrl_meteo_en" + String(sensor->id)).c_str()), sensor->enabled);
-        if (sensor->enabled) {
-            upd.update(su::SH(String("ctrl_meteo_name" + String(sensor->id)).c_str()), sensor->name);
-            upd.update(su::SH(String("ctrl_meteo_typ" + String(sensor->id)).c_str()), (uint8_t)sensor->type);
-            if (sensor->type == METEO_SENSOR_DS18B20) {
-                upd.update(su::SH(String("ctrl_meteo_temp" + String(sensor->id)).c_str()), String(String(sensor->data.temp) + "°"));
-            }
-        }
-    }    
+    upd.update(WEB_GUI_TG_LAST_ID, TgBot.getLastID());  
 }
 
 /*********************************************************************/
@@ -98,7 +85,5 @@ void TgbotPageClass::update(sets::Updater& upd)
 /*                          PRIVATE FUNCTIONS                        */
 /*                                                                   */
 /*********************************************************************/
-
-
 
 TgbotPageClass TgbotPage;

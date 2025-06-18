@@ -27,12 +27,12 @@ WebGuiPage SocketPageClass::build(sets::Builder& b)
 
     SocketCtrl.getSockets(false, sockets);
     
-    if (b.beginGroup(F("Общее"))) {
+    if (b.beginGroup(F("Розетки"))) {
         if (b.Switch(WEB_GUI_CTRL_SOCKET_ENABLE, F("Включен"), &SocketCtrl.getEnabled())) {
             b.reload();
         }
         if (b.beginButtons()) {
-            if (b.Button(WEB_GUI_CTRL_SOCKET_ON_ALL, F("Включить все"))) {
+            if (b.Button(F("Включить все"))) {
                 std::vector<Socket *> socks;
                 SocketCtrl.getSockets(true, socks);
                 for (auto s : socks) {
@@ -40,7 +40,7 @@ WebGuiPage SocketPageClass::build(sets::Builder& b)
                 }
                 b.reload();
             }
-            if (b.Button(WEB_GUI_CTRL_SOCKET_OFF_ALL, F("Отключить все"), sets::Colors::Red)) {
+            if (b.Button(F("Отключить все"), sets::Colors::Red)) {
                 std::vector<Socket *> socks;
                 SocketCtrl.getSockets(true, socks);
                 for (auto s : socks) {

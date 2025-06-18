@@ -10,19 +10,15 @@
 /**********************************************************************/
 
 #include "net/webgui.hpp"
-#include "utils/configs.hpp"
-#include "net/core/wifi.hpp"
-#include "controllers/meteo.hpp"
-#include "controllers/socket.hpp"
 
-#include "controllers/security.hpp"
-#include "controllers/tank.hpp"
-#include "core/clock.hpp"
+#include "net/core/wifi.hpp"
+
 #include "net/pages/elements.hpp"
 #include "net/pages/climatep.hpp"
 #include "net/pages/meteop.hpp"
 #include "net/pages/socketp.hpp"
 #include "net/pages/tgbotp.hpp"
+#include "net/pages/settingsp.hpp"
 
 #include <StringUtils.h>
 
@@ -48,7 +44,7 @@ void WebGUIClass::begin()
                 _buildCtrlsPage(b);
                 break;
             case WEB_PAGE_SETTINGS:
-                _buildSettingsPage(b);
+                SettingsPage.build(b);
                 break;
             case WEB_PAGE_SOCKETS:
                 _curPage = SocketPage.build(b);
@@ -81,7 +77,7 @@ void WebGUIClass::begin()
                 SocketPage.update(upd);
                 break;
             case WEB_PAGE_SETTINGS:
-                _updateSettingsPage(upd);
+                SettingsPage.update(upd);
                 break;
             case WEB_PAGE_METEO:
                 MeteoPage.update(upd);
@@ -216,84 +212,6 @@ void WebGUIClass::_buildCtrlsPage(sets::Builder& b)
 
 void WebGUIClass::_updateCtrlsPage(sets::Updater& upd)
 {
-}
-
-void WebGUIClass::_buildSettingsPage(sets::Builder& b)
-{
-    if (b.beginGroup(F("Часы"))) {
-        Datime  time;
-        Clock.getTime(time);
-
-        b.Label(WEB_GUI_SYS_DATE, F("Дата"), time.dateToString());
-        b.Label(WEB_GUI_SYS_TIME, F("Время"), time.timeToString());
-        b.Label(WEB_GUI_SYS_UTC, F("UTC"), "+" + String(Clock.getUTC()));
-
-        if (b.beginMenu(F("Настройка"))) {
-            if (b.beginGroup(F("Часы"))) {
-                uint32_t t = time.getUnix();
-                if (b.DateTime(WEB_GUI_SYS_DTIME, F("Дата и время"), &t)) {
-                    _time = b.build.value.toInt32();
-                }
-                b.Slider(WEB_GUI_SYS_UTC_SET, "UTC", CLOCK_UTC_MIN, CLOCK_UTC_MAX, 1, "h", &Clock.getUTC());
-                if (b.Button(WEB_GUI_SYS_UTC_APPLY, F("Применить"))) {
-                    Datime  t(_time);
-                    Clock.setTimeUTC(t);
-                    b.reload();
-                }
-                b.endGroup();
-            }
-            b.endMenu();
-        }
-        
-        b.endGroup();
-    }
-
-    if (b.beginGroup(F("Охлаждение"))) {
-        b.Number(WEB_GUI_SYS_TEMP, F("Температура"), &Plc.getBoardTemp());
-        if (b.Switch(WEB_GUI_SYS_FAN_EN, F("Мониторинг"), &Plc.getFanEnabled())) {
-            Plc.setFanEnabled(b.build.value.toBool());
-        }
-        b.LED(WEB_GUI_SYS_FAN_STATUS, F("Вентилятор"), &Plc.getFanStatus());
-        b.endGroup();
-    }
-
-    if (b.beginGroup(F("Настройки"))) {
-        b.beginButtons();
-        if (b.Button(WEB_GUI_SYS_SAVE, F("Сохранить"))) {
-            Configs.writeAll();
-            _curPage = WEB_PAGE_MAIN;
-            b.reload();
-        }
-        if (b.Button(WEB_GUI_SYS_DEL, F("Удалить"), sets::Colors::Red)) {
-            Configs.eraseAll();
-            _curPage = WEB_PAGE_MAIN;
-            b.reload();
-        }
-        b.endButtons();
-        b.endGroup();
-    }
-
-    if (b.beginGroup(F("Система"))) {
-        b.beginButtons();
-        if (b.Button(WEB_GUI_SYS_RESTART, F("Рестарт"))) {
-            ESP.restart();
-        }
-        b.endButtons();
-        b.endGroup();
-    }
-}
-
-void WebGUIClass::_updateSettingsPage(sets::Updater& upd)
-{
-    Datime  time;
-    Clock.getTime(time);
-
-    upd.update(WEB_GUI_SYS_TEMP, Plc.getBoardTemp());
-    upd.update(WEB_GUI_SYS_FAN_EN, Plc.getFanEnabled());
-    upd.update(WEB_GUI_SYS_FAN_STATUS, Plc.getFanStatus());
-    upd.update(WEB_GUI_SYS_DATE, time.dateToString());
-    upd.update(WEB_GUI_SYS_TIME, time.timeToString());
-    upd.update(WEB_GUI_SYS_UTC, String("+" + String(Clock.getUTC())));
 }
 
 WebGUIClass WebGUI;
