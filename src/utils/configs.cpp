@@ -241,8 +241,11 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         poll = fb::Poll::Async;
     } else if (jtgbot[F("mode")] == "long") {
         poll = fb::Poll::Long;
+    } else {
+        Log.error(F("CONFIGS"), "TgBot mode " + jtgbot[F("mode")].as<String>() + " not known");
     }
     TgBot.setPollMode(poll, jtgbot[F("period")]);
+
     JsonArray jusers = jtgbot[F("users")];
     unsigned k = 0;
     for (auto usr : jusers) {
@@ -279,9 +282,19 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         sock.id = jsocks[i][F("id")].as<unsigned>();
         sock.name = jsocks[i][F("name")].as<String>();
         sock.enabled = true;
+
         Gpio.getPinByName(jsocks[i][F("relay")].as<String>(), &sock.relay);
+        if (sock.relay == nullptr && jsocks[i][F("relay")].as<String>() != "") {
+            Log.error(F("CONFIGS"), "Socket relay GPIO " + jsocks[i][F("relay")].as<String>() + " not found");
+        }
         Gpio.getPinByName(jsocks[i][F("button")].as<String>(), &sock.button);
+        if (sock.button == nullptr && jsocks[i][F("button")].as<String>() != "") {
+            Log.error(F("CONFIGS"), "Socket button GPIO " + jsocks[i][F("button")].as<String>() + " not found");
+        }
         Gpio.getPinByName(jsocks[i][F("led")].as<String>(), &sock.led);
+        if (sock.led == nullptr && jsocks[i][F("led")].as<String>() != "") {
+            Log.error(F("CONFIGS"), "Socket LED GPIO " + jsocks[i][F("led")].as<String>() + " not found");
+        }
         SocketCtrl.setSocket(jsocks[i][F("id")].as<unsigned>() - 1, &sock);
     }
 
@@ -307,13 +320,20 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             sensor.addr = strtoull(jsensors[i][F("addr")].as<String>().c_str(), NULL, 16);
         } else if (mtype == "dht22") {
             sensor.type = METEO_SENSOR_DHT22;
+            Gpio.getPinByName(jsensors[i][F("pin")].as<String>(), &sensor.pin);
+            if (sensor.pin == nullptr && jsensors[i][F("pin")].as<String>() != "") {
+                Log.error(F("CONFIGS"), "Meteo pin " + jsensors[i][F("pin")].as<String>() + " not found");
+            }
         } else if (mtype == "am2302") {
             sensor.type = METEO_SENSOR_AM2302;
+            Gpio.getPinByName(jsensors[i][F("pin")].as<String>(), &sensor.pin);
+            if (sensor.pin == nullptr && jsensors[i][F("pin")].as<String>() != "") {
+                Log.error(F("CONFIGS"), "Meteo pin " + jsensors[i][F("pin")].as<String>() + " not found");
+            }
         } else if (mtype == "bme280") {
             sensor.type = METEO_SENSOR_BME280;
         }
 
-        Gpio.getPinByName(jsensors[i][F("pin")].as<String>(), &sensor.pin);
         MeteoCtrl.setSensor(sensor.id - 1, &sensor);
     }
 
@@ -337,16 +357,25 @@ bool ConfigsClass::_readAll(ConfigsSource src)
             zone.type = CLIMATE_TYPE_COOL;
         } else if (jzones[i][F("type")].as<String>() == "heat") {
             zone.type = CLIMATE_TYPE_HEAT;
+        } else {
+            Log.error(F("CONFIGS"), "Climate type " + jzones[i][F("type")].as<String>() + " not known");
         }
 
         Gpio.getPinByName(jzones[i][F("relay")].as<String>(), &zone.relay);
+        if (zone.relay == nullptr && jzones[i][F("relay")].as<String>() != "") {
+            Log.error(F("CONFIGS"), "Climate GPIO " + jzones[i][F("relay")].as<String>() + " not found");
+        }
         Gpio.getPinByName(jzones[i][F("button")].as<String>(), &zone.button);
+        if (zone.button == nullptr && jzones[i][F("button")].as<String>() != "") {
+            Log.error(F("CONFIGS"), "Climate GPIO " + jzones[i][F("button")].as<String>() + " not found");
+        }
+        MeteoCtrl.getSensor(jzones[i][F("sensor")].as<String>(), &zone.sensor);
+        if (zone.sensor == nullptr && jzones[i][F("sensor")].as<String>() != "") {
+            Log.error(F("CONFIGS"), "Climate MteoSensor " + jzones[i][F("sensor")].as<String>() + " not found");
+        }
 
         ClimateCtrl.setZone(zone.id - 1, &zone);
     }
-
-    doc.clear();
-    return true;
 
     /*
      * Security controller
@@ -354,7 +383,12 @@ bool ConfigsClass::_readAll(ConfigsSource src)
 
     auto jsecurity = jctrls["security"];
     SecurityCtrl.setEnabled(jsecurity["enabled"].as<bool>());
-    Gpio.getPinById(jsecurity[F("relay")].as<unsigned>(), SecurityCtrl.getRelay());
+
+    Gpio.getPinByName(jsecurity[F("relay")].as<String>(), SecurityCtrl.getRelay());
+    if (SecurityCtrl.getRelay() == nullptr && jsecurity[F("relay")].as<String>() != "") {
+        Log.error(F("CONFIGS"), "Security relay " + jsecurity[F("relay")].as<String>() + " not found");
+    }
+
     jsensors = jsecurity["sensors"];
     
     for (size_t i = 0; i < jsensors.size(); i++) {
@@ -369,7 +403,11 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         } else if (jsensors[i][F("type")].as<String>() == "pir") {
             sensor.type = SECURITY_SENSOR_PIR;
         }
-        Gpio.getPinById(jsensors[i][F("pin")].as<unsigned>(), &sensor.pin);
+
+        Gpio.getPinByName(jsensors[i][F("pin")].as<String>(), &sensor.pin);
+        if (sensor.pin == nullptr && jsensors[i][F("pin")].as<String>() != "") {
+            Log.error(F("CONFIGS"), "Security sensor pin " + jsensors[i][F("pin")].as<String>() + " not found");
+        }
 
         SecurityCtrl.setSensor(sensor.id - 1, &sensor);
     }
@@ -387,11 +425,16 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         SecurityCtrl.setKey(key.id - 1, &key);
     }
 
+    
+
+    doc.clear();
+    return true;
+
     /*
      * Tank configurations
      */
     
-    auto jtank = jctrls["tank"];
+    /*auto jtank = jctrls["tank"];
     TankCtrl.setEnabled(jtank["enabled"].as<bool>());
 
     JsonArray jtanks = jtank["tanks"];
@@ -409,7 +452,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         Gpio.getPinById(jtanks[i][F("levels")][2].as<unsigned>(), &tank.levels[2]);
 
         TankCtrl.setTank(tank.id - 1, &tank);
-    }
+    }*/
 
     doc.clear();
     return true;
@@ -569,6 +612,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
         (zones[i]->relay == nullptr) ? jzones[i][F("relay")] = "" : jzones[i][F("relay")] = zones[i]->relay->name;
         (zones[i]->button == nullptr) ? jzones[i][F("button")] = "" : jzones[i][F("button")] = zones[i]->button->name;
+        (zones[i]->sensor == nullptr) ? jzones[i][F("sensor")] = "" : jzones[i][F("sensor")] = zones[i]->sensor->name;
     }
 
     return true;
@@ -583,7 +627,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     auto jsensors = jsecurity["sensors"];
     
     std::vector<SecuritySensor *> sensors;
-    SecurityCtrl.getEnabledSensors(sensors);
+    SecurityCtrl.getSensors(true, sensors);
 
     for (size_t i = 0; i < zones.size(); i++) {
         jsensors[i][F("id")] = zones[i]->id;

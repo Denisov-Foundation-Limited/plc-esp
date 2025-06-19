@@ -19,6 +19,7 @@
 #include "net/pages/socketp.hpp"
 #include "net/pages/tgbotp.hpp"
 #include "net/pages/settingsp.hpp"
+#include "net/pages/securityp.hpp"
 
 #include <StringUtils.h>
 
@@ -56,6 +57,7 @@ void WebGUIClass::begin()
                 _curPage = ClimatePage.build(b);
                 break;
             case WEB_PAGE_SECURITY:
+                _curPage = SecurityPage.build(b);
                 break;
             case WEB_PAGE_TANK:
                 break;
@@ -86,6 +88,7 @@ void WebGUIClass::begin()
                 ClimatePage.update(upd);
                 break;
             case WEB_PAGE_SECURITY:
+                SecurityPage.update(upd);
                 break;
             case WEB_PAGE_TANK:
                 break;

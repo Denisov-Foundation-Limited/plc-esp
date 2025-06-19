@@ -52,7 +52,7 @@ class SecurityCtrlClass
 {
 public:
     SecurityCtrlClass();
-    void getEnabledSensors(std::vector<SecuritySensor *> &sens);
+    void getSensors(bool enabled, std::vector<SecuritySensor *> &sens);
     void getEnabledKeys(std::vector<SecurityKey *> &keys);
     void setStatus(bool status, bool save);
     bool &getStatus();
@@ -60,7 +60,7 @@ public:
     bool &getEnabled();
     bool setSensor(size_t index, SecuritySensor *sensor);
     bool setKey(size_t index, SecurityKey *key);
-    void begin();
+    void begin(bool load);
     void loop();
     void setAlarm(bool alarm);
     GpioPin **getRelay();

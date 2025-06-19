@@ -42,10 +42,14 @@ SecurityCtrlClass::SecurityCtrlClass()
     }
 }
 
-void SecurityCtrlClass::getEnabledSensors(std::vector<SecuritySensor *> &sens)
+void SecurityCtrlClass::getSensors(bool enabled, std::vector<SecuritySensor *> &sens)
 {
     for (size_t i = 0; i < _sensors.size(); i++) {
-        if (_sensors[i].enabled) {
+        if (enabled) {
+            if (_sensors[i].enabled) {
+                sens.push_back(&_sensors[i]);
+            }
+        } else {
             sens.push_back(&_sensors[i]);
         }
     }
@@ -62,9 +66,12 @@ void SecurityCtrlClass::getEnabledKeys(std::vector<SecurityKey *> &keys)
 
 void SecurityCtrlClass::setStatus(bool status, bool save)
 {
+    if (_status == status)
+        return;
+
     _status = status;
 
-    Log.info(F("SECURITY"), String(F("Security status changed to ")) + String(status));
+    Log.info(F("SECURITY"), String(F("Security status changed to ")) + ((status) ? "ON" : "OFF"));
 
     if (!status) {
         setAlarm(false);
@@ -109,11 +116,11 @@ bool SecurityCtrlClass::setKey(size_t index, SecurityKey *key)
     return true;
 }
 
-void SecurityCtrlClass::begin()
+void SecurityCtrlClass::begin(bool load)
 {
     std::vector<SecuritySensor *> sensors;
 
-    getEnabledSensors(sensors);
+    getSensors(true, sensors);
 
     for (size_t i = 0; i < sensors.size(); i++) {
         if (!sensors[i]->enabled) {
@@ -123,7 +130,9 @@ void SecurityCtrlClass::begin()
             Gpio.setMode(sensors[i]->pin, GPIO_MOD_INPUT, GPIO_PULL_UP);
         }
     }
-    _loadStates();
+    if (load) {
+        _loadStates();
+    }
 }
 
 void SecurityCtrlClass::loop()
@@ -132,7 +141,7 @@ void SecurityCtrlClass::loop()
     if (!_status) return;
 
     std::vector<SecuritySensor *> sensors;
-    getEnabledSensors(sensors);
+    getSensors(true, sensors);
 
     if (sensors.size() == 0) return;
 
@@ -172,7 +181,7 @@ void SecurityCtrlClass::setAlarm(bool alarm)
 
     if (!alarm) {
         std::vector<SecuritySensor *> sensors;
-        getEnabledSensors(sensors);
+        getSensors(true, sensors);
         
         for (size_t i = 0; i < sensors.size(); i++) {
             sensors[i]->detected = false;
@@ -251,7 +260,7 @@ bool SecurityCtrlClass::_loadStates()
 {
     std::vector<SecuritySensor *> sensors;
 
-    getEnabledSensors(sensors);
+    getSensors(true, sensors);
 
     if (EeDb.getEnabled()) {
         EeDbSecurity    db;
