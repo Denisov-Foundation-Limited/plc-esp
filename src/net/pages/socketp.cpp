@@ -28,7 +28,9 @@ WebGuiPage SocketPageClass::build(sets::Builder& b)
     SocketCtrl.getSockets(false, sockets);
     
     if (b.beginGroup(F("Розетки"))) {
-        if (b.Switch(WEB_GUI_CTRL_SOCKET_ENABLE, F("Включен"), &SocketCtrl.getEnabled())) {
+        bool enabled = SocketCtrl.getEnabled();
+        if (b.Switch(F("Включен"), &enabled)) {
+            SocketCtrl.setEnabled(b.build.value.toBool());
             b.reload();
         }
         if (b.beginButtons()) {
@@ -82,7 +84,8 @@ WebGuiPage SocketPageClass::build(sets::Builder& b)
                     size_t  curLed = _getCurLed(socket, leds);
 
                     b.Input(su::SH(String("ctrl_socket_name" + String(socket->id)).c_str()), F("Имя"), &socket->name);
-                    if (b.Switch(su::SH(String("ctrl_socket_sts_" + String(socket->id)).c_str()), F("Статус"), &SocketCtrl.getStatus(socket))) {
+                    bool status = socket->status;
+                    if (b.Switch(su::SH(String("ctrl_socket_sts_" + String(socket->id)).c_str()), F("Статус"), &status)) {
                         SocketCtrl.setStatus(socket, b.build.value.toBool(), true);
                     }
                     if (b.Select(su::SH(("ctrl_socket_rly" + String(socket->id)).c_str()), F("Реле"), sRlys, &curRelay)) {
@@ -125,9 +128,8 @@ void SocketPageClass::update(sets::Updater& upd)
     SocketCtrl.getSockets(false, sockets);
 
     for (auto *socket : sockets) {
-        upd.update(su::SH(String("ctrl_socket_en" + String(socket->id)).c_str()), socket->enabled);
         if (socket->enabled) {
-            upd.update(su::SH(String("ctrl_socket_name" + String(socket->id)).c_str()), socket->name);
+            upd.update(su::SH(String("ctrl_socket_sts_" + String(socket->id)).c_str()), socket->status);
         }
     }    
 }

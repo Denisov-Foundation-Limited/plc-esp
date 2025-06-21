@@ -62,7 +62,7 @@ class TgBotClass : public FastBot2
 public:
     TgBotClass();
     void setEnabled(bool status);
-    bool &getEnabled();
+    bool getEnabled() const;
     bool setUser(size_t index, TgUser *user);
     bool getUser(const String &name, TgUser **user);
     bool getUser(size_t index, TgUser **user);

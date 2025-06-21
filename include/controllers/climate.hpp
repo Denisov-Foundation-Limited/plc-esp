@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "core/ifaces/gpio.hpp"
-#include "controllers/ctrl.hpp"
 #include "controllers/meteo.hpp"
 
 #define CLIMATE_BUTTON_WAIT_MS  1000
@@ -51,17 +50,13 @@ public:
     ClimateCtrlClass();
     bool setZone(size_t id, ClimateZone *zone);
     void setEnabled(bool enabled);
-    bool &getEnabled();
+    bool getEnabled() const;
     void begin(bool load);
     void loop();
-    bool &getStatus(ClimateZone *zone);
     void setStatus(ClimateZone *zone, bool status, bool save);
     void getZones(bool enabled, std::vector<ClimateZone*> &zones);
     void setTemp(ClimateZone *zone, int temp, bool save);
-    int getTemp(ClimateZone *zone);
     void setDelta(ClimateZone *zone, unsigned delta, bool save);
-    unsigned getDelta(ClimateZone *zone);
-    std::array<ClimateZone, CLIMATE_ZONE_COUNT> *getZones();
 
 private:
     std::array<ClimateZone, CLIMATE_ZONE_COUNT>  _zones;

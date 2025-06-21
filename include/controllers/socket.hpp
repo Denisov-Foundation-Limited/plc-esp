@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "core/ifaces/gpio.hpp"
-#include "controllers/ctrl.hpp"
 
 #define SOCKET_BUTTON_WAIT_MS   1000
 #define SOCKET_BUTTON_READ_MS   100
@@ -39,13 +38,13 @@ class SocketCtrlClass
 public:
     SocketCtrlClass();
     void setEnabled(bool enabled);
-    bool &getEnabled();
+    bool getEnabled() const;
     bool setSocket(size_t id, Socket *sock);
     void getSockets(bool enabled, std::vector<Socket *> &sockets);
     bool getSocket(const String &name, Socket **sock);
     bool getSocket(size_t index, Socket **sock);
     void setStatus(Socket *sock, bool status, bool save);
-    bool &getStatus(Socket *sock);
+    bool getStatus(Socket *sock) const;
     void begin(bool load);
     void loop();
 

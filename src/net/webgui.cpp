@@ -151,7 +151,7 @@ void WebGUIClass::_buildMenu(sets::Builder& b)
 void WebGUIClass::_buildMainPage(sets::Builder& b)
 {
     if (b.beginGroup(F("Беспроводная сеть"))) {
-        if (b.Switch(WEB_GUI_MAIN_WIFI_EN, F("Enabled"), &Wireless.getEnabled())) {
+        if (b.Switch(WEB_GUI_MAIN_WIFI_EN, F("Включен"), &Wireless.getEnabled())) {
             Wireless.setEnabled(b.build.value.toBool());
             b.reload();
         }
@@ -159,14 +159,14 @@ void WebGUIClass::_buildMainPage(sets::Builder& b)
             if (b.Input(WEB_GUI_MAIN_WIFI_SSID, F("SSID"), &Wireless.getSSID())) {
                 Wireless.setCreds(b.build.value, Wireless.getPasswd());
             }
-            if (b.Pass(WEB_GUI_MAIN_WIFI_PWD, F("Password"), &Wireless.getPasswd())) {
+            if (b.Pass(WEB_GUI_MAIN_WIFI_PWD, F("Пароль"), &Wireless.getPasswd())) {
                 Wireless.setCreds(Wireless.getSSID(), b.build.value);
             }
             if (b.Switch(WEB_GUI_MAIN_WIFI_AP, F("AP"), &Wireless.getAP())) {
                 Wireless.setAP(b.build.value.toBool());
             }
             b.Label(WEB_GUI_MAIN_WIFI_IP, F("IP"), Wireless.getIP());
-            b.LED(WEB_GUI_MAIN_WIFI_STATUS, F("Connection"), Wireless.getStatus() == WL_CONNECTED);
+            b.LED(WEB_GUI_MAIN_WIFI_STATUS, F("Соединение"), Wireless.getStatus() == WL_CONNECTED);
         }
         b.endGroup();
     }

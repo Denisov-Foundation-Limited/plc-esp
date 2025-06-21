@@ -16,7 +16,6 @@
 #include <vector>
 
 #include "core/ifaces/gpio.hpp"
-#include "controllers/ctrl.hpp"
 
 #define SECURITY_SENSORS_COUNT  64
 #define SECURITY_SENSOR_READ_MS 1000
@@ -53,15 +52,17 @@ class SecurityCtrlClass
 public:
     SecurityCtrlClass();
     void getSensors(bool enabled, std::vector<SecuritySensor *> &sens);
-    void getEnabledKeys(std::vector<SecurityKey *> &keys);
+    void getKeys(bool enabled, std::vector<SecurityKey *> &sens);
     void setStatus(bool status, bool save);
-    bool &getStatus();
+    bool getStatus() const;
+    bool getAlarm() const;
     void setEnabled(bool enabled);
-    bool &getEnabled();
+    bool getEnabled() const;
     bool setSensor(size_t index, SecuritySensor *sensor);
     bool setKey(size_t index, SecurityKey *key);
     void begin(bool load);
     void loop();
+    void readKeysFromBus(std::vector<uint64_t> &serials);
     void setAlarm(bool alarm);
     GpioPin **getRelay();
     void setRelay(GpioPin *relay);
@@ -86,7 +87,7 @@ private:
     void _processSensor(SecuritySensor *sensor);
     bool _loadStates();
     bool _checkKey(uint64_t serial, SecurityKey **key);
-    void _readKeys();
+    void _detectKeys();
 };
 
 extern SecurityCtrlClass SecurityCtrl;

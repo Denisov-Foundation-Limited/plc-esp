@@ -27,7 +27,9 @@ WebGuiPage TgbotPageClass::build(sets::Builder& b)
     TgBot.getUsers(false, users);
     
     if (b.beginGroup(F("Телеграм"))) {
-        if (b.Switch(WEB_GUI_TG_EN, F("Включен"), &TgBot.getEnabled())) {
+        bool enabled = TgBot.getEnabled();
+        if (b.Switch(WEB_GUI_TG_EN, F("Включен"), &enabled)) {
+            TgBot.setEnabled(b.build.value.toBool());
             b.reload();
         }
         if (TgBot.getEnabled()) {

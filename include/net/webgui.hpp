@@ -16,7 +16,6 @@
 #include <SettingsAsync.h>
 
 #include "controllers/ctrls.hpp"
-#include "controllers/ctrl.hpp"
 #include "pages/pages.hpp"
 
 class WebGUIClass : public SettingsAsync

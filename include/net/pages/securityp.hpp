@@ -24,7 +24,7 @@ public:
 
 private:
     size_t _getCurInput(const SecuritySensor *sensor, const std::vector<GpioPin *> &inputs) const;
-
+    size_t _getCurKey(const SecurityKey *key, const std::vector<uint64_t> &serials) const;
 };
 
 extern SecurityPageClass SecurityPage; 

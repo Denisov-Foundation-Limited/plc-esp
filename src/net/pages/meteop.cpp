@@ -26,7 +26,9 @@ WebGuiPage MeteoPageClass::build(sets::Builder& b)
     MeteoCtrl.getSensors(false, sensors);
     
     if (b.beginGroup(F("Метео"))) {
-        if (b.Switch(WEB_GUI_CTRL_METEO_ENABLE, F("Включен"), &MeteoCtrl.getEnabled())) {
+        bool enabled = MeteoCtrl.getEnabled();
+        if (b.Switch(WEB_GUI_CTRL_METEO_ENABLE, F("Включен"), &enabled)) {
+            MeteoCtrl.setEnabled(b.build.value.toBool());
             b.reload();
         }
         if (b.Button(F("Назад"), sets::Colors::Aqua)) {
@@ -57,7 +59,17 @@ WebGuiPage MeteoPageClass::build(sets::Builder& b)
                     }
                     if (sensor->type == METEO_SENSOR_DS18B20) {
                         size_t curAddr = _getCurAddr(sensor, owSens);
-                        if (b.Select(su::SH(String("ctrl_meteo_ds_addr" + String(sensor->id)).c_str()), F("Адрес"), sOwSens, &curAddr)) {
+                        String localAddrs;
+
+                        if (owSens.size() == 0 && sensor->addr != 0) {
+                            localAddrs = String(sensor->addr, 16);
+                        } else {
+                            localAddrs = sOwSens;
+                            curAddr = 0;
+                        }
+                        localAddrs.toUpperCase();
+            
+                        if (b.Select(su::SH(String("ctrl_meteo_ds_addr" + String(sensor->id)).c_str()), F("Адрес"), localAddrs, &curAddr)) {
                             if (b.build.value.toInt32() < owSens.size()) {
                                 sensor->addr = owSens[b.build.value.toInt32()];
                             } else {
@@ -82,10 +94,7 @@ void MeteoPageClass::update(sets::Updater& upd)
     MeteoCtrl.getSensors(false, sensors);
 
     for (auto *sensor : sensors) {
-        upd.update(su::SH(String("ctrl_meteo_en" + String(sensor->id)).c_str()), sensor->enabled);
         if (sensor->enabled) {
-            upd.update(su::SH(String("ctrl_meteo_name" + String(sensor->id)).c_str()), sensor->name);
-            upd.update(su::SH(String("ctrl_meteo_typ" + String(sensor->id)).c_str()), (uint8_t)sensor->type);
             if (sensor->type == METEO_SENSOR_DS18B20) {
                 upd.update(su::SH(String("ctrl_meteo_temp" + String(sensor->id)).c_str()), String(String(sensor->data.temp) + "°"));
             }

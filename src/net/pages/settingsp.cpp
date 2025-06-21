@@ -86,7 +86,6 @@ void SettingsPageClass::update(sets::Updater& upd)
     upd.update(WEB_GUI_SYS_DTIME, t);      
     upd.update(WEB_GUI_SYS_UTC_SET, Clock.getUTC());
     upd.update(WEB_GUI_SYS_TEMP, Plc.getBoardTemp());
-    upd.update(WEB_GUI_SYS_FAN_EN, Plc.getFanEnabled());
     upd.update(WEB_GUI_SYS_FAN_STATUS, Plc.getFanStatus());
 }
 

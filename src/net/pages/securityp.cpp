@@ -11,6 +11,7 @@
 
 #include "net/pages/securityp.hpp"
 #include "net/pages/elements.hpp"
+#include "core/ifaces/ow.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -21,19 +22,68 @@
 WebGuiPage SecurityPageClass::build(sets::Builder& b)
 {
     std::vector<SecuritySensor *>   sensors;
+    std::vector<SecurityKey *>      keys;
     WebGuiPage                      curPage = WEB_PAGE_SECURITY;
     std::vector<GpioPin *>          inputs;
     String                          sIns = "";
+    std::vector<uint64_t>           keySerials;
 
     SecurityCtrl.getSensors(false, sensors);
+    SecurityCtrl.getKeys(false, keys);
     
     if (b.beginGroup(F("Охрана"))) {
-        if (b.Switch(F("Включен"), &SecurityCtrl.getEnabled())) {
+        bool enabled = SecurityCtrl.getEnabled();
+        if (b.Switch(F("Включен"), &enabled)) {
+            SecurityCtrl.setEnabled(b.build.value.toBool());
             b.reload();
         }
         if (SecurityCtrl.getEnabled()) {
-            if (b.Switch(F("Статус"), &SecurityCtrl.getStatus())) {
+            bool status = SecurityCtrl.getStatus();
+            bool alarm = SecurityCtrl.getAlarm();
+            if (b.Switch(WEB_GUI_CTRL_SECURITY_STATUS, F("Статус"), &status)) {
                 SecurityCtrl.setStatus(b.build.value.toBool(), true);
+            }
+            b.LED(WEB_GUI_CTRL_SECURITY_ALARM, F("Сирена"), &alarm);
+
+            if (b.beginMenu(F("Ключи"))) {
+                String sKeys = "";
+
+                SecurityCtrl.readKeysFromBus(keySerials);
+
+                for (auto k : keySerials) {
+                    sKeys += String(k, 16) + ";";
+                }
+
+                for (auto *key : keys) {
+                    if (b.beginGroup(String(F("Ключ #")) + String(key->id))) {
+                        if (b.Switch(su::SH(String("ctrl_sec_ken" + String(key->id)).c_str()), F("Включен"), &key->enabled)) {
+                            b.reload();
+                        }
+                        if (key->enabled) {
+                            size_t curKey = _getCurKey(key, keySerials);
+                            String localKeys;
+
+                            if (keySerials.size() == 0 && key->serial != 0) {
+                                localKeys = String(key->serial, 16);
+                            } else {
+                                localKeys = sKeys;
+                                curKey = 0;
+                            }
+                            localKeys.toUpperCase();
+
+                            b.Input(su::SH(String("ctrl_sec_kname" + String(key->id)).c_str()), F("Имя"), &key->name);
+                            if (b.Select(su::SH(String("ctrl_sec_kserial" + String(key->id)).c_str()), F("Серийный номер"), localKeys, &curKey)) {
+                                if (b.build.value.toInt32() < keySerials.size()) {
+                                    key->serial = keySerials[b.build.value.toInt32()];
+                                } else {
+                                    Log.error(F("SECURITYP"), F("Incorrect key serial id"));
+                                }
+                            }
+                        }
+                        b.endGroup();
+                    }
+                }
+                b.endMenu();
             }
         }
         if (b.Button(F("Назад"), sets::Colors::Aqua)) {
@@ -84,11 +134,11 @@ void SecurityPageClass::update(sets::Updater& upd)
 
     SecurityCtrl.getSensors(false, sensors);
 
+    upd.update(WEB_GUI_CTRL_SECURITY_STATUS, SecurityCtrl.getStatus());
+    upd.update(WEB_GUI_CTRL_SECURITY_ALARM, SecurityCtrl.getAlarm());
+
     for (auto *sensor : sensors) {
-        upd.update(su::SH(String("ctrl_sec_en" + String(sensor->id)).c_str()), sensor->enabled);
         if (sensor->enabled) {
-            upd.update(su::SH(String("ctrl_sec_name" + String(sensor->id)).c_str()), sensor->name);
-            upd.update(su::SH(String("ctrl_sec_typ" + String(sensor->id)).c_str()), (uint8_t)sensor->type);
             upd.update(su::SH(String("ctrl_sec_dtct" + String(sensor->id)).c_str()), sensor->detected);
         }
     }    
@@ -114,6 +164,22 @@ size_t SecurityPageClass::_getCurInput(const SecuritySensor *sensor, const std::
     }
 
     return curInput;
+}
+
+size_t SecurityPageClass::_getCurKey(const SecurityKey *key, const std::vector<uint64_t> &serials) const
+{
+    size_t  curKey = serials.size();
+
+    if (key->serial != 0) {
+        for (size_t i = 0; i < serials.size(); i++) {
+            if (serials[i]== key->serial) {
+                curKey = i;
+                break;
+            }
+        }
+    }
+
+    return curKey;
 }
 
 SecurityPageClass SecurityPage;

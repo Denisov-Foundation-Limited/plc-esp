@@ -15,8 +15,6 @@
 #include <Arduino.h>
 #include <vector>
 
-#include "ctrl.hpp"
-
 class ControllersClass
 {
 public:

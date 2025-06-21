@@ -44,7 +44,7 @@ void ClimateCtrlClass::setEnabled(bool enabled)
     _enabled = enabled;
 }
 
-bool &ClimateCtrlClass::getEnabled()
+bool ClimateCtrlClass::getEnabled() const
 {
     return _enabled;
 }
@@ -151,11 +151,6 @@ void ClimateCtrlClass::setTemp(ClimateZone *zone, int temp, bool save)
     }
 }
 
-int ClimateCtrlClass::getTemp(ClimateZone *zone)
-{
-    return zone->temp;
-}
-
 void ClimateCtrlClass::setDelta(ClimateZone *zone, unsigned delta, bool save)
 {
     if (zone->delta == delta)
@@ -183,11 +178,6 @@ void ClimateCtrlClass::setDelta(ClimateZone *zone, unsigned delta, bool save)
             }
         }
     }
-}
-
-unsigned ClimateCtrlClass::getDelta(ClimateZone *zone)
-{
-    return zone->delta;
 }
 
 void ClimateCtrlClass::setStatus(ClimateZone *zone, bool status, bool save)
@@ -220,11 +210,6 @@ void ClimateCtrlClass::setStatus(ClimateZone *zone, bool status, bool save)
     }
 }
 
-bool &ClimateCtrlClass::getStatus(ClimateZone *zone)
-{
-    return zone->status;
-}
-
 /*********************************************************************/
 /*                                                                   */
 /*                         PRIVATE FUNCTIONS                         */
@@ -238,7 +223,7 @@ void ClimateCtrlClass::_readButton(ClimateZone *zone)
     if (!zone->reading) {
         if (Gpio.read(zone->button)) {
             Log.info(F("CLIMATE"), String(F("Climate zone ")) + zone->name + String(F(" button pressed")));
-            setStatus(zone, !getStatus(zone), true);
+            setStatus(zone, !zone->status, true);
             zone->reading = true;
             zone->timer = millis();
         }
@@ -251,7 +236,7 @@ void ClimateCtrlClass::_readButton(ClimateZone *zone)
 
 void ClimateCtrlClass::_processTemp(ClimateZone *zone)
 {
-    if (!getStatus(zone)) return;
+    if (!zone->status) return;
     if (zone == nullptr) return;
     if (zone->sensor == nullptr) return;
     if (zone->relay == nullptr) return;

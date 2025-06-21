@@ -33,7 +33,7 @@ void TgBotClass::setEnabled(bool status)
     _enabled = status;
 }
 
-bool &TgBotClass::getEnabled()
+bool TgBotClass::getEnabled() const
 {
     return _enabled;
 }

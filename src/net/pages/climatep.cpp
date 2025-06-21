@@ -29,7 +29,9 @@ WebGuiPage ClimatePageClass::build(sets::Builder& b)
     ClimateCtrl.getZones(false, zones);
 
     if (b.beginGroup(F("Климат"))) {
-        if (b.Switch(WEB_GUI_CTRL_CLIMATE_ENABLE, F("Включен"), &ClimateCtrl.getEnabled())) {
+        bool enabled = ClimateCtrl.getEnabled();
+        if (b.Switch(F("Включен"), &enabled)) {
+            ClimateCtrl.setEnabled(b.build.value.toBool());
             b.reload();
         }
         if (b.Button(F("Назад"), sets::Colors::Aqua)) {
@@ -64,7 +66,8 @@ WebGuiPage ClimatePageClass::build(sets::Builder& b)
                     size_t  curRelay = _getCurRelay(zone, relays);
                     size_t  curButton = _getCurButton(zone, buttons);
 
-                    if (b.Switch(su::SH(String("ctrl_clmt_sts_" + String(zone->id)).c_str()), F("Статус"), &ClimateCtrl.getStatus(zone))) {
+                    bool status = zone->status;
+                    if (b.Switch(su::SH(String("ctrl_clmt_sts_" + String(zone->id)).c_str()), F("Статус"), &status)) {
                         ClimateCtrl.setStatus(zone, b.build.value.toBool(), true);
                     }
                     b.Input(su::SH(String("ctrl_clmt_name_" + String(zone->id)).c_str()), F("Имя"), &zone->name);
@@ -117,14 +120,11 @@ void ClimatePageClass::update(sets::Updater& upd)
     ClimateCtrl.getZones(false, zones);
 
     for (auto *zone : zones) {
-        upd.update(su::SH(String("ctrl_clmt_en_" + String(zone->id)).c_str()), zone->enabled);
         if (zone->enabled) {
             upd.update(su::SH(String("ctrl_clmt_sts_" + String(zone->id)).c_str()), zone->status);
-            upd.update(su::SH(String("ctrl_clmt_name_" + String(zone->id)).c_str()), zone->name);
             upd.update(su::SH(("ctrl_clmt_sens_" + String(zone->id)).c_str()), (zone->sensor != nullptr) ? (String(zone->sensor->data.temp) + "°") : String("N/A"));
             upd.update(su::SH(("ctrl_clmt_temp_" + String(zone->id)).c_str()), zone->temp);
             upd.update(su::SH(("ctrl_clmt_dlt_" + String(zone->id)).c_str()), zone->delta);
-            upd.update(su::SH(("ctrl_clmt_mod_" + String(zone->id)).c_str()), (uint8_t)zone->type);
             upd.update(su::SH(("ctrl_clmt_work_" + String(zone->id)).c_str()), zone->work);
         }
     }

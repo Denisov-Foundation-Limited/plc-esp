@@ -615,8 +615,6 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
         (zones[i]->sensor == nullptr) ? jzones[i][F("sensor")] = "" : jzones[i][F("sensor")] = zones[i]->sensor->name;
     }
 
-    return true;
-
     /*
      * Security controller
      */
@@ -643,18 +641,21 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
                 break;
         }
 
-        (sensors[i]->pin == nullptr) ? jsensors[i][F("pin")] = 0 : jsensors[i][F("pin")] = sensors[i]->pin->id;
+        (sensors[i]->pin == nullptr) ? jsensors[i][F("pin")] = 0 : jsensors[i][F("pin")] = sensors[i]->pin->name;
     }
 
     auto jkeys = jsecurity["keys"];
     std::vector<SecurityKey *> keys;
-    SecurityCtrl.getEnabledKeys(keys);
+    SecurityCtrl.getKeys(true, keys);
 
     for (size_t i = 0; i < keys.size(); i++) {
         jkeys[i][F("id")] = keys[i]->id;
         jkeys[i][F("name")] = keys[i]->name;
         jkeys[i][F("serial")] = String(keys[i]->serial, 16);
     }
+
+    
+    return true;
 
     /*
      * Tank controller

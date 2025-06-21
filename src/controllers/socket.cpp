@@ -172,21 +172,15 @@ void SocketCtrlClass::setStatus(Socket *sock, bool status, bool save)
     }
 }
 
-bool &SocketCtrlClass::getStatus(Socket *sock)
-{
-    return sock->status;
-}
-
 void SocketCtrlClass::setEnabled(bool enabled)
 {
     _enabled = enabled;
 }
 
-bool &SocketCtrlClass::getEnabled()
+bool SocketCtrlClass::getEnabled() const
 {
     return _enabled;
 }
-
 
 /*********************************************************************/
 /*                                                                   */
@@ -200,7 +194,7 @@ void SocketCtrlClass::_readButton(Socket *sock)
         if (!sock->reading) {
             if (Gpio.read(sock->button)) {
                 Log.info(F("SOCKET"), String(F("Socket ")) + sock->name + String(F(" button pressed")));
-                setStatus(sock, !getStatus(sock), true);
+                setStatus(sock, !sock->status, true);
                 sock->reading = true;
                 sock->timer = millis();
             }

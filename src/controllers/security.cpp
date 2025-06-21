@@ -55,12 +55,27 @@ void SecurityCtrlClass::getSensors(bool enabled, std::vector<SecuritySensor *> &
     }
 }
 
-void SecurityCtrlClass::getEnabledKeys(std::vector<SecurityKey *> &keys)
+void SecurityCtrlClass::getKeys(bool enabled, std::vector<SecurityKey *> &sens)
 {
     for (size_t i = 0; i < _keys.size(); i++) {
-        if (_keys[i].enabled) {
-            keys.push_back(&_keys[i]);
+        if (enabled) {
+            if (_keys[i].enabled) {
+                sens.push_back(&_keys[i]);
+            }
+        } else {
+            sens.push_back(&_keys[i]);
         }
+    }
+}
+
+void SecurityCtrlClass::readKeysFromBus(std::vector<uint64_t> &serials)
+{
+    OneWireBus  *bus;
+
+    if (OneWireIf.getOWBusById(PROF_OW_SECURITY, &bus)) {
+        OneWireIf.findDevices(bus, serials);
+    } else {
+        Log.error(F("SECURITY"), F("I2C bus OneWireSecurity not found"));
     }
 }
 
@@ -79,9 +94,14 @@ void SecurityCtrlClass::setStatus(bool status, bool save)
     }
 }
 
-bool &SecurityCtrlClass::getStatus()
+bool SecurityCtrlClass::getStatus() const
 {
     return _status;
+}
+
+bool SecurityCtrlClass::getAlarm() const
+{
+    return _alarm;
 }
 
 void SecurityCtrlClass::setEnabled(bool enabled)
@@ -89,7 +109,7 @@ void SecurityCtrlClass::setEnabled(bool enabled)
     _enabled = enabled;
 }
 
-bool &SecurityCtrlClass::getEnabled()
+bool SecurityCtrlClass::getEnabled() const
 {
     return _enabled;
 }
@@ -164,7 +184,7 @@ void SecurityCtrlClass::loop()
 
     if (!_waitKey) {
         if ((millis() - _tmrKey) >= SECURITY_KEY_READ_MS) {
-            _readKeys();
+            _detectKeys();
             _tmrKey = millis();
         }
     } else {
@@ -293,7 +313,7 @@ bool SecurityCtrlClass::_checkKey(uint64_t serial, SecurityKey **key)
     return false;
 }
 
-void SecurityCtrlClass::_readKeys()
+void SecurityCtrlClass::_detectKeys()
 {
     OneWireBus              *bus;
     std::vector<uint64_t>   serials;

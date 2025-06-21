@@ -32,7 +32,7 @@ void MeteoCtrlClass::setEnabled(bool enabled)
     _enabled = enabled;
 }
 
-bool& MeteoCtrlClass::getEnabled()
+bool MeteoCtrlClass::getEnabled() const
 {
     return _enabled;
 }
@@ -57,17 +57,6 @@ void MeteoCtrlClass::findDsSensors(std::vector<uint64_t> &sensors)
     } else {
         Log.error(F("METEO"), F("I2C bus OneWireTemp not found"));
     }
-}
-
-bool MeteoCtrlClass::getSensor(size_t index, MeteoSensor **sens)
-{
-    for (size_t i = 0; i < _sensors.size(); i++) {
-        if (index == i) {
-            *sens = &_sensors[i];
-            return true;
-        }
-    }
-    return false;
 }
 
 bool MeteoCtrlClass::getSensor(const String &name, MeteoSensor **sens)
@@ -118,11 +107,6 @@ void MeteoCtrlClass::getSensors(bool enabled, std::vector<MeteoSensor *> &sensor
             sensors.push_back(&_sensors[i]);
         }
     }
-}
-
-std::array<MeteoSensor, METEO_SENSOR_COUNT> MeteoCtrlClass::getSensors()
-{
-    return _sensors;
 }
 
 void MeteoCtrlClass::loop()
