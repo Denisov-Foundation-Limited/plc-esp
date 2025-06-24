@@ -17,9 +17,15 @@
 
 #include "core/ifaces/gpio.hpp"
 
-#define TANK_LEVEL_COUNT    3
 #define TANK_COUNT          16
 #define TANK_PROCESS_MS     1000
+
+typedef enum {
+    TANK_LEVEL_LOW,
+    TANK_LEVEL_MIDDLE,
+    TANK_LEVEL_HIGH,
+    TANK_LEVEL_MAX
+} TankLevels;
 
 typedef struct {
     size_t  id;
@@ -29,7 +35,7 @@ typedef struct {
     uint8_t level;
     GpioPin *valve;
     GpioPin *pump;
-    GpioPin *levels[TANK_LEVEL_COUNT];
+    GpioPin *levels[TANK_LEVEL_MAX];
 } Tank;
 
 class TankCtrlClass
@@ -37,10 +43,10 @@ class TankCtrlClass
 public:
     TankCtrlClass();
     void setEnabled(bool enabled);
-    bool &getEnabled();
-    void getEnabledTanks(std::vector<Tank *> &tanks);
+    bool getEnabled() const;
+    void getTanks(bool enabled, std::vector<Tank *> &tanks);
     bool setTank(size_t index, Tank *tank);
-    void begin();
+    void begin(bool load);
     void loop();
     void setStatus(Tank *tank, bool status, bool save);
 
@@ -51,7 +57,7 @@ private:
     unsigned                        _curTank = 0;
     bool                            _enabled = false;
 
-    void _processTank(Tank *tank);
+    void _processTank(Tank *tank, bool force);
     bool _loadStates();
 };
 

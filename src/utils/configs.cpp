@@ -385,7 +385,7 @@ bool ConfigsClass::_readAll(ConfigsSource src)
     SecurityCtrl.setEnabled(jsecurity["enabled"].as<bool>());
 
     Gpio.getPinByName(jsecurity[F("relay")].as<String>(), SecurityCtrl.getRelay());
-    if (SecurityCtrl.getRelay() == nullptr && jsecurity[F("relay")].as<String>() != "") {
+    if (*SecurityCtrl.getRelay() == nullptr && jsecurity[F("relay")].as<String>() != "") {
         Log.error(F("CONFIGS"), "Security relay " + jsecurity[F("relay")].as<String>() + " not found");
     }
 
@@ -425,16 +425,11 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         SecurityCtrl.setKey(key.id - 1, &key);
     }
 
-    
-
-    doc.clear();
-    return true;
-
     /*
      * Tank configurations
      */
     
-    /*auto jtank = jctrls["tank"];
+    auto jtank = jctrls["tank"];
     TankCtrl.setEnabled(jtank["enabled"].as<bool>());
 
     JsonArray jtanks = jtank["tanks"];
@@ -445,14 +440,14 @@ bool ConfigsClass::_readAll(ConfigsSource src)
         tank.id = jtanks[i][F("id")].as<unsigned>();
         tank.name = jtanks[i][F("name")].as<String>();
         tank.enabled = true;
-        Gpio.getPinById(jtanks[i][F("pump")].as<unsigned>(), &tank.pump);
-        Gpio.getPinById(jtanks[i][F("valve")].as<unsigned>(), &tank.valve);
-        Gpio.getPinById(jtanks[i][F("levels")][0].as<unsigned>(), &tank.levels[0]);
-        Gpio.getPinById(jtanks[i][F("levels")][1].as<unsigned>(), &tank.levels[1]);
-        Gpio.getPinById(jtanks[i][F("levels")][2].as<unsigned>(), &tank.levels[2]);
+        Gpio.getPinByName(jtanks[i][F("pump")].as<String>(), &tank.pump);
+        Gpio.getPinByName(jtanks[i][F("valve")].as<String>(), &tank.valve);
+        Gpio.getPinByName(jtanks[i][F("levels")][0].as<String>(), &tank.levels[0]);
+        Gpio.getPinByName(jtanks[i][F("levels")][1].as<String>(), &tank.levels[1]);
+        Gpio.getPinByName(jtanks[i][F("levels")][2].as<String>(), &tank.levels[2]);
 
         TankCtrl.setTank(tank.id - 1, &tank);
-    }*/
+    }
 
     doc.clear();
     return true;
@@ -621,16 +616,16 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
 
     auto jsecurity = jctrls["security"];
     jsecurity["enabled"] = SecurityCtrl.getEnabled();
-    (SecurityCtrl.getRelay() == nullptr) ? jsecurity[F("relay")] = 0 : jsecurity[F("relay")] = (*SecurityCtrl.getRelay())->id;
+    (*SecurityCtrl.getRelay() == nullptr) ? jsecurity[F("relay")] = "" : jsecurity[F("relay")] = (*SecurityCtrl.getRelay())->name;
     auto jsensors = jsecurity["sensors"];
     
     std::vector<SecuritySensor *> sensors;
     SecurityCtrl.getSensors(true, sensors);
 
-    for (size_t i = 0; i < zones.size(); i++) {
-        jsensors[i][F("id")] = zones[i]->id;
-        jsensors[i][F("name")] = zones[i]->name;
-        
+    for (size_t i = 0; i < sensors.size(); i++) {
+        jsensors[i][F("id")] = sensors[i]->id;
+        jsensors[i][F("name")] = sensors[i]->name;
+       Serial.println("OK2"); 
         switch (sensors[i]->type) {
             case SECURITY_SENSOR_REED:
                 jsensors[i][F("type")] = "reed";
@@ -641,7 +636,7 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
                 break;
         }
 
-        (sensors[i]->pin == nullptr) ? jsensors[i][F("pin")] = 0 : jsensors[i][F("pin")] = sensors[i]->pin->name;
+        (sensors[i]->pin == nullptr) ? jsensors[i][F("pin")] = "" : jsensors[i][F("pin")] = sensors[i]->pin->name;
     }
 
     auto jkeys = jsecurity["keys"];
@@ -649,13 +644,11 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     SecurityCtrl.getKeys(true, keys);
 
     for (size_t i = 0; i < keys.size(); i++) {
+        Serial.println("OK5");
         jkeys[i][F("id")] = keys[i]->id;
         jkeys[i][F("name")] = keys[i]->name;
         jkeys[i][F("serial")] = String(keys[i]->serial, 16);
     }
-
-    
-    return true;
 
     /*
      * Tank controller
@@ -666,18 +659,17 @@ bool ConfigsClass::_generateRunning(JsonDocument &doc)
     auto jtanks = jtank["tanks"];
     
     std::vector<Tank *> tanks;
-    TankCtrl.getEnabledTanks(tanks);
+    TankCtrl.getTanks(true, tanks);
 
     for (size_t i = 0; i < tanks.size(); i++) {
         jtanks[i][F("id")] = tanks[i]->id;
         jtanks[i][F("name")] = tanks[i]->name;
 
-        (tanks[i]->pump == nullptr) ? jtanks[i][F("pump")] = 0 : jtanks[i][F("pump")] = tanks[i]->pump->id;
-        (tanks[i]->valve == nullptr) ? jtanks[i][F("valve")] = 0 : jtanks[i][F("valve")] = tanks[i]->valve->id;
-        (tanks[i]->valve == nullptr) ? jtanks[i][F("valve")] = 0 : jtanks[i][F("valve")] = tanks[i]->valve->id;
-        (tanks[i]->levels[0] == nullptr) ? jtanks[i][F("levels")][0] = 0 : jtanks[i][F("levels")][0] = tanks[i]->levels[0]->id;
-        (tanks[i]->levels[1] == nullptr) ? jtanks[i][F("levels")][1] = 0 : jtanks[i][F("levels")][1] = tanks[i]->levels[1]->id;
-        (tanks[i]->levels[2] == nullptr) ? jtanks[i][F("levels")][2] = 0 : jtanks[i][F("levels")][2] = tanks[i]->levels[2]->id;
+        (tanks[i]->pump == nullptr) ? jtanks[i][F("pump")] = 0 : jtanks[i][F("pump")] = tanks[i]->pump->name;
+        (tanks[i]->valve == nullptr) ? jtanks[i][F("valve")] = 0 : jtanks[i][F("valve")] = tanks[i]->valve->name;
+        (tanks[i]->levels[0] == nullptr) ? jtanks[i][F("levels")][0] = 0 : jtanks[i][F("levels")][0] = tanks[i]->levels[0]->name;
+        (tanks[i]->levels[1] == nullptr) ? jtanks[i][F("levels")][1] = 0 : jtanks[i][F("levels")][1] = tanks[i]->levels[1]->name;
+        (tanks[i]->levels[2] == nullptr) ? jtanks[i][F("levels")][2] = 0 : jtanks[i][F("levels")][2] = tanks[i]->levels[2]->name;
     }
 
     return true;

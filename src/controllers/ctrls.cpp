@@ -29,7 +29,7 @@ void ControllersClass::begin()
     MeteoCtrl.begin();
     ClimateCtrl.begin(true);
     SecurityCtrl.begin(true);
-    TankCtrl.begin();
+    TankCtrl.begin(true);
 }
 
 void ControllersClass::loop()

@@ -23,6 +23,7 @@ TankCtrlClass::TankCtrlClass()
     for (size_t i = 0; i < _tanks.size(); i++) {
         memset(&_tanks[i], 0x0, sizeof(Tank));
         _tanks[i].id = i + 1;
+        _tanks[i].level = 0xFF;
     }
 }
 
@@ -31,15 +32,19 @@ void TankCtrlClass::setEnabled(bool enabled)
     _enabled = enabled;
 }
 
-bool &TankCtrlClass::getEnabled()
+bool TankCtrlClass::getEnabled() const
 {
     return _enabled;
 }
 
-void TankCtrlClass::getEnabledTanks(std::vector<Tank *> &tanks)
+void TankCtrlClass::getTanks(bool enabled, std::vector<Tank *> &tanks)
 {
     for (size_t i = 0; i < _tanks.size(); i++) {
-        if (_tanks[i].enabled) {
+        if (enabled) {
+            if (_tanks[i].enabled) {
+                tanks.push_back(&_tanks[i]);
+            }
+        } else {
             tanks.push_back(&_tanks[i]);
         }
     }
@@ -56,29 +61,32 @@ bool TankCtrlClass::setTank(size_t index, Tank *tank)
     return true;
 }
 
-void TankCtrlClass::begin()
+void TankCtrlClass::begin(bool load)
 {
     std::vector<Tank *> tanks;
 
-    getEnabledTanks(tanks);
+    getTanks(true, tanks);
 
     for (size_t i = 0; i < tanks.size(); i++) {
-        if (!tanks[i]->enabled) {
-            continue;
-        }
         if (tanks[i]->pump != nullptr) {
             Gpio.setMode(tanks[i]->pump, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+            Gpio.write(tanks[i]->pump, false);
         }
+
         if (tanks[i]->valve != nullptr) {
             Gpio.setMode(tanks[i]->valve, GPIO_MOD_OUTPUT, GPIO_PULL_NONE);
+            Gpio.write(tanks[i]->valve, false);
         }
-        for (uint8_t j = 0; j < TANK_LEVEL_COUNT; j++) {
+
+        for (uint8_t j = 0; j < TANK_LEVEL_MAX; j++) {
             if (tanks[i]->levels[j] != nullptr) {
                 Gpio.setMode(tanks[i]->levels[j], GPIO_MOD_INPUT, GPIO_PULL_UP);
             }
         }
     }
-    _loadStates();
+    if (load) {
+        _loadStates();
+    }
 }
 
 void TankCtrlClass::loop()
@@ -86,7 +94,7 @@ void TankCtrlClass::loop()
     if (!_enabled) return;
 
     std::vector<Tank *> tanks;
-    getEnabledTanks(tanks);
+    getTanks(true, tanks);
 
     if (tanks.size() == 0) return;
 
@@ -96,7 +104,7 @@ void TankCtrlClass::loop()
             _timer = millis();
         }
     } else {
-        _processTank(&_tanks[_curTank]);
+        _processTank(&_tanks[_curTank], false);
 
         if (_curTank < (tanks.size() - 1)) {
             _curTank++;
@@ -110,6 +118,9 @@ void TankCtrlClass::loop()
 
 void TankCtrlClass::setStatus(Tank *tank, bool status, bool save)
 {
+    if (tank->status == status)
+        return;
+
     tank->status = status;
 
     Log.info(F("TANK"), String(F("Tank ")) + tank->name + String(F(" changed status to ")) + (tank->status ? "ON" : "OFF"));
@@ -132,6 +143,17 @@ void TankCtrlClass::setStatus(Tank *tank, bool status, bool save)
             }
         }
     }
+
+    _processTank(tank, true);
+
+    if (!status) {
+        if (tank->pump != nullptr) {
+            Gpio.write(tank->pump, false);
+        }
+        if (tank->valve != nullptr) {
+            Gpio.write(tank->valve, false);
+        }
+    }
 }
 
 /*********************************************************************/
@@ -140,11 +162,11 @@ void TankCtrlClass::setStatus(Tank *tank, bool status, bool save)
 /*                                                                   */
 /*********************************************************************/
 
-void TankCtrlClass::_processTank(Tank *tank)
+void TankCtrlClass::_processTank(Tank *tank, bool force)
 {
     uint8_t level = 0;
 
-    for (uint8_t j = 0; j < TANK_LEVEL_COUNT; j++) {
+    for (uint8_t j = 0; j < TANK_LEVEL_MAX; j++) {
         if (tank->levels[j] != nullptr) {
             if (Gpio.read(tank->levels[j])) {
                 level += 30;
@@ -155,7 +177,7 @@ void TankCtrlClass::_processTank(Tank *tank)
     if (level == 90)
         level = 100;
 
-    if (tank->level != level) {
+    if (tank->level != level || force) {
         tank->level = level;
 
         Log.info(F("TANK"), String(F("Tank ")) + tank->name + String(F(" water level changed to ")) + String(level) + "%");
@@ -191,7 +213,7 @@ bool TankCtrlClass::_loadStates()
 {
     std::vector<Tank *> tanks;
 
-    getEnabledTanks(tanks);
+    getTanks(true, tanks);
 
     if (EeDb.getEnabled()) {
         EeDbTank    db;

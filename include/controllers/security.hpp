@@ -80,7 +80,7 @@ private:
     unsigned    _curSensor = 0;
     unsigned    _curKey = 0;
     bool        _readingKey;
-    GpioPin    *_relay;
+    GpioPin    *_relay = nullptr;
     bool        _waitKey;
 
     void _readSensor(SecuritySensor *sensor);

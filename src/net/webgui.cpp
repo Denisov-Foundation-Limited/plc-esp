@@ -20,6 +20,7 @@
 #include "net/pages/tgbotp.hpp"
 #include "net/pages/settingsp.hpp"
 #include "net/pages/securityp.hpp"
+#include "net/pages/tankp.hpp"
 
 #include <StringUtils.h>
 
@@ -60,6 +61,7 @@ void WebGUIClass::begin()
                 _curPage = SecurityPage.build(b);
                 break;
             case WEB_PAGE_TANK:
+                _curPage = TankPage.build(b);
                 break;
         }
     });
@@ -91,6 +93,7 @@ void WebGUIClass::begin()
                 SecurityPage.update(upd);
                 break;
             case WEB_PAGE_TANK:
+                TankPage.update(upd);
                 break;
         }
     });
