@@ -24,11 +24,11 @@ void SocketHandler::registerHandler(AsyncWebServer *server)
         String          sOut;
         Socket          *socket = nullptr;
 
-        if (req->getParam(F("name")) == nullptr) {
+        if (!req->hasArg(F("name"))) {
             _socketShow(nullptr, req, &jOut);
         } else {
-            if (SocketCtrl.getSocket(req->getParam(F("name"))->value(), &socket)) {
-                if (req->getParam(F("status")) != nullptr) {
+            if (SocketCtrl.getSocket(req->arg(F("name")), &socket)) {
+                if (req->hasArg(F("status"))) {
                     if (!_socketStatus(socket, req, &jOut)) {
                         serializeJson(jOut, sOut);
                         req->send(403, F("application/json"), sOut);
@@ -59,6 +59,13 @@ void SocketHandler::registerHandler(AsyncWebServer *server)
 
 void SocketHandler::_socketShow(Socket *socket, AsyncWebServerRequest *req, JsonDocument *out)
 {
+    if (socket != nullptr) {
+        (*out)["name"] = socket->name;
+        (*out)["status"] = socket->status;
+        (*out)["result"] = true;
+        return;
+    }
+
     std::vector<Socket *> socks;
     SocketCtrl.getSockets(true, socks);
 
@@ -71,12 +78,12 @@ void SocketHandler::_socketShow(Socket *socket, AsyncWebServerRequest *req, Json
 
 bool SocketHandler::_socketStatus(Socket *socket, AsyncWebServerRequest *req, JsonDocument *out)
 {
-    if (req->getParam(F("status")) != nullptr) {
-        if (req->getParam(F("status"))->value() == "true") {
+    if (req->hasArg(F("status"))) {
+        if (req->arg(F("status")) == F("true")) {
             SocketCtrl.setStatus(socket, true, true);
-        } else if (req->getParam(F("status"))->value() == "false") {
+        } else if (req->arg(F("status")) == F("false")) {
             SocketCtrl.setStatus(socket, false, true);
-        } else if (req->getParam(F("status"))->value() == "toggle") {
+        } else if (req->arg(F("status")) == F("toggle")) {
             SocketCtrl.setStatus(socket, !socket->status, true);
         } else {
             (*out)["result"] = false;
@@ -84,6 +91,7 @@ bool SocketHandler::_socketStatus(Socket *socket, AsyncWebServerRequest *req, Js
             return false;
         }
     }
+
     (*out)["result"] = true;
     return true;
 }

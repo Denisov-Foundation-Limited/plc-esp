@@ -9,35 +9,16 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __API_SERVER_HPP__
-#define __API_SERVER_HPP__
+#ifndef __PLC_HANDLER_HPP__
+#define __PLC_HANDLER_HPP__
 
-#include "utils/log.hpp"
-#include <Arduino.h>
-#include <WiFi.h>
-#include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
 
-#include "net/api/handlers/socketh.hpp"
-#include "net/api/handlers/plch.hpp"
-
-#define API_SERVER_PORT 8080
-
-class APIServerClass
+class PlcHandler
 {
 public:
-    void setEnabled(bool status);
-    bool getEnabled() const;
-    void begin();
-
-private:
-    bool            _enabled = true;
-    SocketHandler   _socket;
-    PlcHandler      _plc;
+    void registerHandler(AsyncWebServer *server);
 };
 
-extern APIServerClass APIServer;
-extern AsyncWebServer WebServer;
-
-#endif /* __API_SERVER_HPP__ */
+#endif /* __PLC_HANDLER_HPP__ */

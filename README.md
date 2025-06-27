@@ -19,9 +19,12 @@ Programmable Logic Controller for ESP microcontrollers
 
 #### GET
 ```
-http://192.168.0.8:8080/socket?name=Розеткa
+http://192.168.0.8:8080/socket
+http://192.168.0.8:8080/socket?name=Room
 ```
 #### SET
 ```
-http://192.168.0.8:8080/socket?name=Розеткa&status=true
+http://192.168.0.8:8080/socket?name=Room&status=true
+http://192.168.0.8:8080/socket?name=Room&status=false
+http://192.168.0.8:8080/socket?name=Room&status=toggle
 ```

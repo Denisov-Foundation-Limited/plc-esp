@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/api/apiserver.hpp"
-#include "controllers/ctrls.hpp"
+#include "net/api/handlers/plch.hpp"
+#include "core/plc.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -18,43 +18,19 @@
 /*                                                                   */
 /*********************************************************************/
 
-void APIServerClass::setEnabled(bool status)
+void PlcHandler::registerHandler(AsyncWebServer *server)
 {
-    _enabled = status;
-}
-
-bool APIServerClass::getEnabled() const
-{
-    return _enabled;
-}
-
-void APIServerClass::begin()
-{
-    if (!_enabled) return;
-
-    Log.info(F("API"), String(F("Starting API server at :")) + String(API_SERVER_PORT));
-
-    WebServer.on("/", HTTP_GET, [](AsyncWebServerRequest *req) {
+    server->on("/plc", HTTP_GET, [this](AsyncWebServerRequest *req) {
         JsonDocument    jOut;
         String          sOut;
 
-        jOut["result"] = true;
+        jOut[F("name")] = Plc.getName();
+        jOut[F("temp")] = static_cast<int>(Plc.getBoardTemp());
+        jOut[F("fan")] = Plc.getFanStatus();
+        jOut[F("alarm")] = Plc.getAlarm();
+        jOut[F("status")] = Plc.getStatus();
 
         serializeJson(jOut, sOut);
-        req->send(200, "application/json", sOut);
+        req->send(200, F("application/json"), sOut);
     });
-
-    _socket.registerHandler(&WebServer);
-    _plc.registerHandler(&WebServer);
-
-    WebServer.begin();
 }
-
-/*********************************************************************/
-/*                                                                   */
-/*                          PRIVATE FUNCTIONS                        */
-/*                                                                   */
-/*********************************************************************/
-
-APIServerClass APIServer;
-AsyncWebServer WebServer(API_SERVER_PORT);

@@ -69,9 +69,11 @@ public:
     const String& getName() const;
     void setName(const String &name);
     void setFanEnabled(bool en);
-    bool &getFanEnabled();
-    bool &getFanStatus();
-    float &getBoardTemp();
+    bool getFanEnabled() const;
+    bool getFanStatus() const;
+    float getBoardTemp() const;
+    bool getAlarm() const;
+    bool getStatus() const;
     void begin();
     void loop();
 

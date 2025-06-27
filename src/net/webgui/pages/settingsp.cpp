@@ -41,11 +41,13 @@ WebGuiPage SettingsPage::build(sets::Builder& b)
     }
 
     if (b.beginGroup(F("Охлаждение"))) {
-        b.Number(WEB_GUI_SYS_TEMP, F("Температура"), &Plc.getBoardTemp());
-        if (b.Switch(WEB_GUI_SYS_FAN_EN, F("Мониторинг"), &Plc.getFanEnabled())) {
+        float temp = Plc.getBoardTemp();
+        b.Number(WEB_GUI_SYS_TEMP, F("Температура"), &temp);
+        bool enabled = Plc.getFanEnabled();
+        if (b.Switch(WEB_GUI_SYS_FAN_EN, F("Мониторинг"), &enabled)) {
             Plc.setFanEnabled(b.build.value.toBool());
         }
-        b.LED(WEB_GUI_SYS_FAN_STATUS, F("Вентилятор"), &Plc.getFanStatus());
+        b.LED(WEB_GUI_SYS_FAN_STATUS, F("Вентилятор"), Plc.getFanStatus());
         b.endGroup();
     }
 

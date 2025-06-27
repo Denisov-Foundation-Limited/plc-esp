@@ -201,19 +201,29 @@ void PlcClass::setFanEnabled(bool en)
     }
 }
 
-bool &PlcClass::getFanEnabled()
+bool PlcClass::getFanEnabled() const
 {
     return _fanEnabled;
 }
 
-bool &PlcClass::getFanStatus()
+bool PlcClass::getFanStatus() const
 {
     return _fanStatus;
 }
 
-float &PlcClass::getBoardTemp()
+float PlcClass::getBoardTemp() const
 {
     return _brdTemp;
+}
+
+bool PlcClass::getAlarm() const
+{
+    return (_alarm == 0) ? false : true;
+}
+
+bool PlcClass::getStatus() const
+{
+    return (_status == 0) ? false : true;
 }
 
 /*********************************************************************/
