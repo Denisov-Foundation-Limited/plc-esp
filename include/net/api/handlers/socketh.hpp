@@ -9,20 +9,21 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __WEB_PAGES_HPP__
-#define __WEB_PAGES_HPP__
+#ifndef __SOCKET_HANDLER_HPP__
+#define __SOCKET_HANDLER_HPP__
 
-typedef enum {
-    WEB_PAGE_MAIN,
-    WEB_PAGE_TELEGRAM,
-    WEB_PAGE_CONTROLLERS,
-    WEB_PAGE_SOCKETS,
-    WEB_PAGE_SETTINGS,
-    WEB_PAGE_SYSTEM,
-    WEB_PAGE_METEO,
-    WEB_PAGE_CLIMATE,
-    WEB_PAGE_SECURITY,
-    WEB_PAGE_TANK
-} WebGuiPage;
+#include <ESPAsyncWebServer.h>
+#include <ArduinoJson.h>
+#include "controllers/socket.hpp"
 
-#endif /* __WEB_PAGES_HPP__ */
+class SocketHandler
+{
+public:
+    void registerHandler(AsyncWebServer *server);
+
+private:
+    void _socketShow(Socket *socket, AsyncWebServerRequest *req, JsonDocument *out);
+    bool _socketStatus(Socket *socket, AsyncWebServerRequest *req, JsonDocument *out);
+};
+
+#endif /* __SOCKET_HANDLER_HPP__ */

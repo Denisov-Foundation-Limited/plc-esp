@@ -9,19 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/webgui.hpp"
-
+#include "net/webgui/webgui.hpp"
 #include "net/core/wifi.hpp"
-
-#include "net/pages/elements.hpp"
-#include "net/pages/climatep.hpp"
-#include "net/pages/meteop.hpp"
-#include "net/pages/socketp.hpp"
-#include "net/pages/tgbotp.hpp"
-#include "net/pages/settingsp.hpp"
-#include "net/pages/securityp.hpp"
-#include "net/pages/tankp.hpp"
-
 #include <StringUtils.h>
 
 /*********************************************************************/
@@ -40,28 +29,31 @@ void WebGUIClass::begin()
                 _buildMainPage(b);
                 break;
             case WEB_PAGE_TELEGRAM:
-                _curPage = TgbotPage.build(b);
+                _curPage = _tgbot.build(b);
                 break;
             case WEB_PAGE_CONTROLLERS:
                 _buildCtrlsPage(b);
                 break;
             case WEB_PAGE_SETTINGS:
-                SettingsPage.build(b);
+                _settings.build(b);
                 break;
             case WEB_PAGE_SOCKETS:
-                _curPage = SocketPage.build(b);
+                _curPage = _socket.build(b);
                 break;
             case WEB_PAGE_METEO:
-                _curPage = MeteoPage.build(b);
+                _curPage = _meteo.build(b);
                 break;
             case WEB_PAGE_CLIMATE:
-                _curPage = ClimatePage.build(b);
+                _curPage = _climate.build(b);
                 break;
             case WEB_PAGE_SECURITY:
-                _curPage = SecurityPage.build(b);
+                _curPage = _security.build(b);
                 break;
             case WEB_PAGE_TANK:
-                _curPage = TankPage.build(b);
+                _curPage = _tank.build(b);
+                break;
+            case WEB_PAGE_STACK:
+                _curPage = _stack.build(b);
                 break;
         }
     });
@@ -72,28 +64,31 @@ void WebGUIClass::begin()
                 _updateMainPage(upd);
                 break;
             case WEB_PAGE_TELEGRAM:
-                TgbotPage.update(upd);
+                _tgbot.update(upd);
                 break;
             case WEB_PAGE_CONTROLLERS:
                 _updateCtrlsPage(upd);
                 break;
             case WEB_PAGE_SOCKETS:
-                SocketPage.update(upd);
+                _socket.update(upd);
                 break;
             case WEB_PAGE_SETTINGS:
-                SettingsPage.update(upd);
+                _settings.update(upd);
                 break;
             case WEB_PAGE_METEO:
-                MeteoPage.update(upd);
+                _meteo.update(upd);
                 break;
             case WEB_PAGE_CLIMATE:
-                ClimatePage.update(upd);
+                _climate.update(upd);
                 break;
             case WEB_PAGE_SECURITY:
-                SecurityPage.update(upd);
+                _security.update(upd);
                 break;
             case WEB_PAGE_TANK:
-                TankPage.update(upd);
+                _tank.update(upd);
+                break;
+            case WEB_PAGE_STACK:
+                _stack.update(upd);
                 break;
         }
     });
@@ -128,25 +123,36 @@ const String &WebGUIClass::getPassword()
 void WebGUIClass::_buildMenu(sets::Builder& b)
 {
     if (b.beginGroup(F("Меню"))) {
-        b.beginButtons();
-        
-        if (b.Button(WEB_GUI_MENU_BTN_NET, F("Сеть"), sets::Colors::Aqua)) {
-            _curPage = WEB_PAGE_MAIN;
-            b.reload();
+        if (b.beginButtons()) {
+            if (b.Button(F("Сеть"), sets::Colors::Aqua)) {
+                _curPage = WEB_PAGE_MAIN;
+                b.reload();
+            }
+            if (b.Button(F("Telegram"), sets::Colors::Aqua)) {
+                _curPage = WEB_PAGE_TELEGRAM;
+                b.reload();
+            }
+            if (b.Button(F("Контроллеры"), sets::Colors::Aqua)) {
+                _curPage = WEB_PAGE_CONTROLLERS;
+                b.reload();
+            }
+            b.endButtons();
         }
-        if (b.Button(WEB_GUI_MENU_BTN_TG, F("Telegram"), sets::Colors::Aqua)) {
-            _curPage = WEB_PAGE_TELEGRAM;
-            b.reload();
+        if (b.beginButtons()) {
+            if (b.Button(F("Стек"), sets::Colors::Aqua)) {
+                _curPage = WEB_PAGE_STACK;
+                b.reload();
+            }
+            
+            if (b.Button(F("Система"), sets::Colors::Aqua)) {
+                _curPage = WEB_PAGE_SETTINGS;
+                b.reload();
+            }
+            b.endButtons();
         }
-        if (b.Button(WEB_GUI_MENU_BTN_CTRL, F("Контроллеры"), sets::Colors::Aqua)) {
-            _curPage = WEB_PAGE_CONTROLLERS;
-            b.reload();
+        if (b.beginButtons()) {
+            b.endButtons();
         }
-        if (b.Button(WEB_GUI_MENU_BTN_CFG, F("Система"), sets::Colors::Aqua)) {
-            _curPage = WEB_PAGE_SETTINGS;
-            b.reload();
-        }
-        b.endButtons();
         b.endGroup();
     }
 }

@@ -171,7 +171,7 @@ void SecurityCtrlClass::loop()
             _timer = millis();
         }
     } else {
-        _readSensor(&_sensors[_curSensor]);
+        _readSensor(sensors[_curSensor]);
 
         if (_curSensor < (sensors.size() - 1)) {
             _curSensor++;

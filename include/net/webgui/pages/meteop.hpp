@@ -9,26 +9,22 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __CLIMATE_PAGE_HPP__
-#define __CLIMATE_PAGE_HPP__
+#ifndef __METEO_PAGE_HPP__
+#define __METEO_PAGE_HPP__
 
 #include <SettingsAsync.h>
 #include "pages.hpp"
-#include "controllers/climate.hpp"
+#include "controllers/meteo.hpp"
 
-class ClimatePageClass
+class MeteoPage
 {
 public:
     WebGuiPage build(sets::Builder& b);
     void update(sets::Updater& upd);
 
 private:
-    size_t _getCurSensor(const ClimateZone *zone, const std::vector<MeteoSensor *> &sensors) const;
-    size_t _getCurRelay(const ClimateZone *zone, const std::vector<GpioPin *> &relays) const;
-    size_t _getCurButton(const ClimateZone *zone, const std::vector<GpioPin *> &buttons) const;
+    size_t _getCurAddr(MeteoSensor *sensor, const std::vector<uint64_t> &owSens) const;
 };
 
-extern ClimatePageClass ClimatePage; 
-
-#endif /* __CLIMATE_PAGE_HPP__ */
+#endif /* __METEO_PAGE_HPP__ */
 

@@ -17,7 +17,7 @@
 #include "core/ifaces/ow.hpp"
 #include "core/ifaces/uart.hpp"
 #include "net/tgbot.hpp"
-#include "net/apiserver.hpp"
+#include "net/api/apiserver.hpp"
 #include "controllers/meteo.hpp"
 #include "controllers/ctrls.hpp"
 #include "controllers/socket.hpp"

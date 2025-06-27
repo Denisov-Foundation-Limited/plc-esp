@@ -9,24 +9,24 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __SECURITY_PAGE_HPP__
-#define __SECURITY_PAGE_HPP__
+#ifndef __TANK_PAGE_HPP__
+#define __TANK_PAGE_HPP__
 
 #include <SettingsAsync.h>
 #include "pages.hpp"
-#include "controllers/security.hpp"
+#include "controllers/tank.hpp"
 
-class SecurityPageClass
+class TankPage
 {
 public:
     WebGuiPage build(sets::Builder& b);
     void update(sets::Updater& upd);
 
 private:
-    size_t _getCurInput(const SecuritySensor *sensor, const std::vector<GpioPin *> &inputs) const;
-    size_t _getCurKey(const SecurityKey *key, const std::vector<uint64_t> &serials) const;
+    size_t _getCurPump(const Tank *tank, const std::vector<GpioPin *> &relays) const;
+    size_t _getCurValve(const Tank *tank, const std::vector<GpioPin *> &relays) const;
+    size_t _getCurLevel(const Tank *tank, size_t level, const std::vector<GpioPin *> &inputs) const;
 };
 
-extern SecurityPageClass SecurityPage; 
+#endif /* __TANK_PAGE_HPP__ */
 
-#endif /* __SECURITY_PAGE_HPP__ */

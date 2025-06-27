@@ -9,24 +9,24 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __METEO_PAGE_HPP__
-#define __METEO_PAGE_HPP__
+#ifndef __SOCKET_PAGE_HPP__
+#define __SOCKET_PAGE_HPP__
 
 #include <SettingsAsync.h>
 #include "pages.hpp"
-#include "controllers/meteo.hpp"
+#include "controllers/socket.hpp"
 
-class MeteoPageClass
+class SocketPage
 {
 public:
     WebGuiPage build(sets::Builder& b);
     void update(sets::Updater& upd);
 
 private:
-    size_t _getCurAddr(MeteoSensor *sensor, const std::vector<uint64_t> &owSens) const;
+    size_t _getCurRelay(const Socket *socket, const std::vector<GpioPin *> &relays) const;
+    size_t _getCurButton(const Socket *socket, const std::vector<GpioPin *> &buttons) const;
+    size_t _getCurLed(const Socket *socket, const std::vector<GpioPin *> &led) const;
 };
 
-extern MeteoPageClass MeteoPage; 
-
-#endif /* __METEO_PAGE_HPP__ */
+#endif /* __SOCKET_PAGE_HPP__ */
 

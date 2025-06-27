@@ -20,13 +20,14 @@
 #include "core/cli/cliinfo.hpp"
 #include "core/cli/clicp.hpp"
 #include "net/tgbot.hpp"
-#include "net/apiserver.hpp"
+#include "net/api/apiserver.hpp"
 #include "controllers/ctrls.hpp"
-#include "net/webgui.hpp"
+#include "net/webgui/webgui.hpp"
 #include "core/ifaces/ow.hpp"
 #include "ftest.hpp"
 #include "db/eedb.h"
 #include "core/clock.hpp"
+#include "stack/stack.hpp"
 
 void setup()
 {
@@ -49,6 +50,7 @@ void setup()
     CLIProcessor.begin();
     WebGUI.begin();
     Clock.begin();
+    Stack.begin();
 }
 
 void loop()
@@ -63,4 +65,5 @@ void loop()
     TgBot.loop();
     Controllers.loop();
     WebGUI.loop();
+    Stack.loop();
 }

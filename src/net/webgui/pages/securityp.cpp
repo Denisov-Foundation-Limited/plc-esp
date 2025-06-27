@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/pages/securityp.hpp"
-#include "net/pages/elements.hpp"
+#include "net/webgui/pages/securityp.hpp"
+#include "net/webgui/pages/elements.hpp"
 #include "core/ifaces/ow.hpp"
 
 /*********************************************************************/
@@ -19,7 +19,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-WebGuiPage SecurityPageClass::build(sets::Builder& b)
+WebGuiPage SecurityPage::build(sets::Builder& b)
 {
     std::vector<SecuritySensor *>   sensors;
     std::vector<SecurityKey *>      keys;
@@ -128,7 +128,7 @@ WebGuiPage SecurityPageClass::build(sets::Builder& b)
     return curPage;
 }
 
-void SecurityPageClass::update(sets::Updater& upd)
+void SecurityPage::update(sets::Updater& upd)
 {
     std::vector<SecuritySensor *>   sensors;
 
@@ -150,7 +150,7 @@ void SecurityPageClass::update(sets::Updater& upd)
 /*                                                                   */
 /*********************************************************************/
 
-size_t SecurityPageClass::_getCurInput(const SecuritySensor *sensor, const std::vector<GpioPin *> &inputs) const
+size_t SecurityPage::_getCurInput(const SecuritySensor *sensor, const std::vector<GpioPin *> &inputs) const
 {
     size_t  curInput = inputs.size();
 
@@ -166,7 +166,7 @@ size_t SecurityPageClass::_getCurInput(const SecuritySensor *sensor, const std::
     return curInput;
 }
 
-size_t SecurityPageClass::_getCurKey(const SecurityKey *key, const std::vector<uint64_t> &serials) const
+size_t SecurityPage::_getCurKey(const SecurityKey *key, const std::vector<uint64_t> &serials) const
 {
     size_t  curKey = serials.size();
 
@@ -181,5 +181,3 @@ size_t SecurityPageClass::_getCurKey(const SecurityKey *key, const std::vector<u
 
     return curKey;
 }
-
-SecurityPageClass SecurityPage;

@@ -104,7 +104,7 @@ void TankCtrlClass::loop()
             _timer = millis();
         }
     } else {
-        _processTank(&_tanks[_curTank], false);
+        _processTank(tanks[_curTank], false);
 
         if (_curTank < (tanks.size() - 1)) {
             _curTank++;

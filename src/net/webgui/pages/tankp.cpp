@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/pages/tankp.hpp"
-#include "net/pages/elements.hpp"
+#include "net/webgui/pages/tankp.hpp"
+#include "net/webgui/pages/elements.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -18,7 +18,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-WebGuiPage TankPageClass::build(sets::Builder& b)
+WebGuiPage TankPage::build(sets::Builder& b)
 {
     std::vector<Tank *>     tanks;
     std::vector<GpioPin *>  relays, inputs;
@@ -121,7 +121,7 @@ WebGuiPage TankPageClass::build(sets::Builder& b)
     return curPage;
 }
 
-void TankPageClass::update(sets::Updater& upd)
+void TankPage::update(sets::Updater& upd)
 {
     std::vector<Tank *>    tanks;
 
@@ -144,7 +144,7 @@ void TankPageClass::update(sets::Updater& upd)
 /*                                                                   */
 /*********************************************************************/
 
-size_t TankPageClass::_getCurPump(const Tank *tank, const std::vector<GpioPin *> &relays) const
+size_t TankPage::_getCurPump(const Tank *tank, const std::vector<GpioPin *> &relays) const
 {
     size_t  curRelay = relays.size();
 
@@ -160,7 +160,7 @@ size_t TankPageClass::_getCurPump(const Tank *tank, const std::vector<GpioPin *>
     return curRelay;
 }
 
-size_t TankPageClass::_getCurValve(const Tank *tank, const std::vector<GpioPin *> &relays) const
+size_t TankPage::_getCurValve(const Tank *tank, const std::vector<GpioPin *> &relays) const
 {
     size_t  curRelay = relays.size();
 
@@ -176,7 +176,7 @@ size_t TankPageClass::_getCurValve(const Tank *tank, const std::vector<GpioPin *
     return curRelay;
 }
 
-size_t TankPageClass::_getCurLevel(const Tank *tank, size_t level, const std::vector<GpioPin *> &inputs) const
+size_t TankPage::_getCurLevel(const Tank *tank, size_t level, const std::vector<GpioPin *> &inputs) const
 {
     size_t  curInput = inputs.size();
 
@@ -191,5 +191,3 @@ size_t TankPageClass::_getCurLevel(const Tank *tank, size_t level, const std::ve
 
     return curInput;
 }
-
-TankPageClass TankPage;

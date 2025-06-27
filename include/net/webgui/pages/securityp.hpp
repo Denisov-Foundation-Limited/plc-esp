@@ -9,34 +9,22 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __API_SERVER_HPP__
-#define __API_SERVER_HPP__
+#ifndef __SECURITY_PAGE_HPP__
+#define __SECURITY_PAGE_HPP__
 
-#include "utils/log.hpp"
-#include "controllers/socket.hpp"
+#include <SettingsAsync.h>
+#include "pages.hpp"
+#include "controllers/security.hpp"
 
-#include <Arduino.h>
-#include <WiFi.h>
-#include <AsyncTCP.h>
-#include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
-
-#define API_SERVER_DEFAULT_PORT 8080
-
-class APIServerClass : private AsyncWebServer
+class SecurityPage
 {
 public:
-    APIServerClass(uint16_t port) : AsyncWebServer(port) {}
-    void setEnabled(bool status);
-    bool getEnabled() const;
-    void begin();
+    WebGuiPage build(sets::Builder& b);
+    void update(sets::Updater& upd);
 
 private:
-    bool    _enabled = true;
-    void    _socketHandler(Socket *sock, AsyncWebServerRequest *req, JsonDocument *out);
-    void    _sendError(JsonDocument *out, const String &msg);
+    size_t _getCurInput(const SecuritySensor *sensor, const std::vector<GpioPin *> &inputs) const;
+    size_t _getCurKey(const SecurityKey *key, const std::vector<uint64_t> &serials) const;
 };
 
-extern APIServerClass APIServer;
-
-#endif /* __API_SERVER_HPP__ */
+#endif /* __SECURITY_PAGE_HPP__ */

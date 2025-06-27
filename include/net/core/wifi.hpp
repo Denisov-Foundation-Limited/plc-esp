@@ -47,7 +47,7 @@ public:
 private:
     String      _ssid;
     String      _passwd;
-    GpioPin  *_statusLed = nullptr;
+    GpioPin     *_statusLed = nullptr;
     bool        _enabled = false;
     bool        _ap = true;
     wl_status_t _status = WL_NO_SHIELD;

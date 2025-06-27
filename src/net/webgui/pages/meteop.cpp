@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/pages/meteop.hpp"
-#include "net/pages/elements.hpp"
+#include "net/webgui/pages/meteop.hpp"
+#include "net/webgui/pages/elements.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -18,7 +18,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-WebGuiPage MeteoPageClass::build(sets::Builder& b)
+WebGuiPage MeteoPage::build(sets::Builder& b)
 {
     std::vector<MeteoSensor *>  sensors;
     WebGuiPage                  curPage = WEB_PAGE_METEO;
@@ -87,7 +87,7 @@ WebGuiPage MeteoPageClass::build(sets::Builder& b)
     return curPage;
 }
 
-void MeteoPageClass::update(sets::Updater& upd)
+void MeteoPage::update(sets::Updater& upd)
 {
     std::vector<MeteoSensor *>    sensors;
 
@@ -108,7 +108,7 @@ void MeteoPageClass::update(sets::Updater& upd)
 /*                                                                   */
 /*********************************************************************/
 
-size_t MeteoPageClass::_getCurAddr(MeteoSensor *sensor, const std::vector<uint64_t> &owSens) const
+size_t MeteoPage::_getCurAddr(MeteoSensor *sensor, const std::vector<uint64_t> &owSens) const
 {
     size_t curAddr = owSens.size();
 
@@ -121,5 +121,3 @@ size_t MeteoPageClass::_getCurAddr(MeteoSensor *sensor, const std::vector<uint64
 
     return curAddr;
 }
-
-MeteoPageClass MeteoPage;

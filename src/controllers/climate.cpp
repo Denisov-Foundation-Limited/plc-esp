@@ -97,7 +97,7 @@ void ClimateCtrlClass::loop()
             _tmrButton = millis();
         }
     } else {
-        _readButton(&_zones[_curZone]);
+        _readButton(zones[_curZone]);
 
         if (_curZone < (zones.size() - 1)) {
             _curZone++;
@@ -111,7 +111,7 @@ void ClimateCtrlClass::loop()
     if ((millis() - _tmrTemp) >= CLIMATE_TEMP_PROC_MS) {
         _tmrTemp = millis();
 
-        _processTemp(&_zones[_curZone2]);
+        _processTemp(zones[_curZone2]);
 
         if (_curZone2 < (zones.size() - 1)) {
             _curZone2++;

@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/pages/climatep.hpp"
-#include "net/pages/elements.hpp"
+#include "net/webgui/pages/climatep.hpp"
+#include "net/webgui/pages/elements.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -18,7 +18,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-WebGuiPage ClimatePageClass::build(sets::Builder& b)
+WebGuiPage ClimatePage::build(sets::Builder& b)
 {
     std::vector<ClimateZone *>  zones;
     std::vector<MeteoSensor *>  sensors;
@@ -113,7 +113,7 @@ WebGuiPage ClimatePageClass::build(sets::Builder& b)
     return curPage;
 }
 
-void ClimatePageClass::update(sets::Updater& upd)
+void ClimatePage::update(sets::Updater& upd)
 {
     std::vector<ClimateZone *> zones;
 
@@ -136,7 +136,7 @@ void ClimatePageClass::update(sets::Updater& upd)
 /*                                                                   */
 /*********************************************************************/
 
-size_t ClimatePageClass::_getCurSensor(const ClimateZone *zone, const std::vector<MeteoSensor *> &sensors) const
+size_t ClimatePage::_getCurSensor(const ClimateZone *zone, const std::vector<MeteoSensor *> &sensors) const
 {
     size_t  curSensor = sensors.size();
 
@@ -152,7 +152,7 @@ size_t ClimatePageClass::_getCurSensor(const ClimateZone *zone, const std::vecto
     return curSensor;
 }
 
-size_t ClimatePageClass::_getCurRelay(const ClimateZone *zone, const std::vector<GpioPin *> &relays) const
+size_t ClimatePage::_getCurRelay(const ClimateZone *zone, const std::vector<GpioPin *> &relays) const
 {
     size_t  curRelay = relays.size();
 
@@ -168,7 +168,7 @@ size_t ClimatePageClass::_getCurRelay(const ClimateZone *zone, const std::vector
     return curRelay;
 }
 
-size_t ClimatePageClass::_getCurButton(const ClimateZone *zone, const std::vector<GpioPin *> &buttons) const
+size_t ClimatePage::_getCurButton(const ClimateZone *zone, const std::vector<GpioPin *> &buttons) const
 {
     size_t  curButton = buttons.size();
 
@@ -183,5 +183,3 @@ size_t ClimatePageClass::_getCurButton(const ClimateZone *zone, const std::vecto
 
     return curButton;
 }
-
-ClimatePageClass ClimatePage;

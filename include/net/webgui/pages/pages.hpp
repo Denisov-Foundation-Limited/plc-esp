@@ -9,26 +9,21 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __SOCKET_PAGE_HPP__
-#define __SOCKET_PAGE_HPP__
+#ifndef __WEB_PAGES_HPP__
+#define __WEB_PAGES_HPP__
 
-#include <SettingsAsync.h>
-#include "pages.hpp"
-#include "controllers/socket.hpp"
+typedef enum {
+    WEB_PAGE_MAIN,
+    WEB_PAGE_TELEGRAM,
+    WEB_PAGE_CONTROLLERS,
+    WEB_PAGE_SOCKETS,
+    WEB_PAGE_SETTINGS,
+    WEB_PAGE_SYSTEM,
+    WEB_PAGE_METEO,
+    WEB_PAGE_CLIMATE,
+    WEB_PAGE_SECURITY,
+    WEB_PAGE_TANK,
+    WEB_PAGE_STACK
+} WebGuiPage;
 
-class SocketPageClass
-{
-public:
-    WebGuiPage build(sets::Builder& b);
-    void update(sets::Updater& upd);
-
-private:
-    size_t _getCurRelay(const Socket *socket, const std::vector<GpioPin *> &relays) const;
-    size_t _getCurButton(const Socket *socket, const std::vector<GpioPin *> &buttons) const;
-    size_t _getCurLed(const Socket *socket, const std::vector<GpioPin *> &led) const;
-};
-
-extern SocketPageClass SocketPage; 
-
-#endif /* __SOCKET_PAGE_HPP__ */
-
+#endif /* __WEB_PAGES_HPP__ */

@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/pages/socketp.hpp"
-#include "net/pages/elements.hpp"
+#include "net/webgui/pages/socketp.hpp"
+#include "net/webgui/pages/elements.hpp"
 
 /*********************************************************************/
 /*                                                                   */
@@ -18,7 +18,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-WebGuiPage SocketPageClass::build(sets::Builder& b)
+WebGuiPage SocketPage::build(sets::Builder& b)
 {
     std::vector<Socket *>   sockets;
     std::vector<GpioPin *>  relays, buttons, leds;
@@ -121,7 +121,7 @@ WebGuiPage SocketPageClass::build(sets::Builder& b)
     return curPage;
 }
 
-void SocketPageClass::update(sets::Updater& upd)
+void SocketPage::update(sets::Updater& upd)
 {
     std::vector<Socket *>    sockets;
 
@@ -140,7 +140,7 @@ void SocketPageClass::update(sets::Updater& upd)
 /*                                                                   */
 /*********************************************************************/
 
-size_t SocketPageClass::_getCurRelay(const Socket *socket, const std::vector<GpioPin *> &relays) const
+size_t SocketPage::_getCurRelay(const Socket *socket, const std::vector<GpioPin *> &relays) const
 {
     size_t  curRelay = relays.size();
 
@@ -156,7 +156,7 @@ size_t SocketPageClass::_getCurRelay(const Socket *socket, const std::vector<Gpi
     return curRelay;
 }
 
-size_t SocketPageClass::_getCurButton(const Socket *socket, const std::vector<GpioPin *> &buttons) const
+size_t SocketPage::_getCurButton(const Socket *socket, const std::vector<GpioPin *> &buttons) const
 {
     size_t  curButton = buttons.size();
 
@@ -172,7 +172,7 @@ size_t SocketPageClass::_getCurButton(const Socket *socket, const std::vector<Gp
     return curButton;
 }
 
-size_t SocketPageClass::_getCurLed(const Socket *socket, const std::vector<GpioPin *> &leds) const
+size_t SocketPage::_getCurLed(const Socket *socket, const std::vector<GpioPin *> &leds) const
 {
     size_t  curLED = leds.size();
 
@@ -187,5 +187,3 @@ size_t SocketPageClass::_getCurLed(const Socket *socket, const std::vector<GpioP
 
     return curLED;
 }
-
-SocketPageClass SocketPage;

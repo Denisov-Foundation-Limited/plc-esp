@@ -115,7 +115,7 @@ void SocketCtrlClass::loop()
             _timer = millis();
         }
     } else {
-        _readButton(&_sockets[_curSocket]);
+        _readButton(sockets[_curSocket]);
 
         if (_curSocket < (sockets.size() - 1)) {
             _curSocket++;

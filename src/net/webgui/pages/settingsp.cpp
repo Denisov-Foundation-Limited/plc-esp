@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/pages/settingsp.hpp"
-#include "net/pages/elements.hpp"
+#include "net/webgui/pages/settingsp.hpp"
+#include "net/webgui/pages/elements.hpp"
 #include "core/clock.hpp"
 #include "utils/configs.hpp"
 
@@ -20,7 +20,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-WebGuiPage SettingsPageClass::build(sets::Builder& b)
+WebGuiPage SettingsPage::build(sets::Builder& b)
 {
     WebGuiPage  curPage = WEB_PAGE_SETTINGS;
 
@@ -77,7 +77,7 @@ WebGuiPage SettingsPageClass::build(sets::Builder& b)
     return curPage;
 }
 
-void SettingsPageClass::update(sets::Updater& upd)
+void SettingsPage::update(sets::Updater& upd)
 {
     Datime  time;
     Clock.getTime(time);
@@ -88,11 +88,3 @@ void SettingsPageClass::update(sets::Updater& upd)
     upd.update(WEB_GUI_SYS_TEMP, Plc.getBoardTemp());
     upd.update(WEB_GUI_SYS_FAN_STATUS, Plc.getFanStatus());
 }
-
-/*********************************************************************/
-/*                                                                   */
-/*                          PRIVATE FUNCTIONS                        */
-/*                                                                   */
-/*********************************************************************/
-
-SettingsPageClass SettingsPage;

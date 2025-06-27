@@ -16,17 +16,12 @@
 #include "pages.hpp"
 #include "controllers/meteo.hpp"
 
-class SettingsPageClass
+class SettingsPage
 {
 public:
     WebGuiPage build(sets::Builder& b);
     void update(sets::Updater& upd);
-
-private:
-
 };
-
-extern SettingsPageClass SettingsPage; 
 
 #endif /* __SETTINGS_PAGE_HPP__ */
 

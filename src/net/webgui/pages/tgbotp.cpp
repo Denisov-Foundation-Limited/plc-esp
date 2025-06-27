@@ -9,8 +9,8 @@
 /*                                                                    */
 /**********************************************************************/
 
-#include "net/pages/tgbotp.hpp"
-#include "net/pages/elements.hpp"
+#include "net/webgui/pages/tgbotp.hpp"
+#include "net/webgui/pages/elements.hpp"
 #include "net/tgbot.hpp"
 
 /*********************************************************************/
@@ -19,7 +19,7 @@
 /*                                                                   */
 /*********************************************************************/
 
-WebGuiPage TgbotPageClass::build(sets::Builder& b)
+WebGuiPage TgbotPage::build(sets::Builder& b)
 {
     std::vector<TgUser *>   users;
     WebGuiPage              curPage = WEB_PAGE_TELEGRAM;
@@ -77,15 +77,7 @@ WebGuiPage TgbotPageClass::build(sets::Builder& b)
     return curPage;
 }
 
-void TgbotPageClass::update(sets::Updater& upd)
+void TgbotPage::update(sets::Updater& upd)
 {
     upd.update(WEB_GUI_TG_LAST_ID, TgBot.getLastID());  
 }
-
-/*********************************************************************/
-/*                                                                   */
-/*                          PRIVATE FUNCTIONS                        */
-/*                                                                   */
-/*********************************************************************/
-
-TgbotPageClass TgbotPage;
