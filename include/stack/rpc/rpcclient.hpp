@@ -9,23 +9,26 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __SOCKET_HANDLER_HPP__
-#define __SOCKET_HANDLER_HPP__
+#ifndef __RPC_CLIENT_HPP__
+#define __RPC_CLIENT_HPP__
 
-#include <ESPAsyncWebServer.h>
+#include <Arduino.h>
+#include <HTTPClient.h>
 #include <ArduinoJson.h>
 
-#include "stack/rpc/rpc.hpp"
+#include "stack/stack.hpp"
 
-class SocketHandler
+#define RPC_CLIENT_TIMEOUT_MS  500
+
+class RpcClient
 {
 public:
-    void registerHandler(AsyncWebServer *server);
+    RpcClient(StackUnit *unit);
+    bool call(const String &request, JsonDocument *out);
 
 private:
-    void _showSocketAll(uint8_t unitId, JsonDocument *out);
-    void _showSocket(uint8_t unitId, const String &name, JsonDocument *out);
-    bool _setSocketStatus(uint8_t unitId, const String &name, const String &status, JsonDocument *out);
+    HTTPClient  _client;
+    StackUnit   *_unit;
 };
 
-#endif /* __SOCKET_HANDLER_HPP__ */
+#endif /* __RPC_CLIENT_HPP__ */

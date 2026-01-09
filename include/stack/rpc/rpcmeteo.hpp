@@ -9,23 +9,33 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __SOCKET_HANDLER_HPP__
-#define __SOCKET_HANDLER_HPP__
+#ifndef __RPC_METEO_HPP__
+#define __RPC_METEO_HPP__
 
-#include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
+#include <Arduino.h>
+#include <vector>
 
-#include "stack/rpc/rpc.hpp"
+typedef enum {
+    RPC_METEO_SENSOR_AM2302,
+    RPC_METEO_SENSOR_DS18B20,
+    RPC_METEO_SENSOR_BME280,
+    RPC_METEO_SENSOR_DHT22    
+} RpcMeteoSensorType;
 
-class SocketHandler
+typedef struct {
+    RpcMeteoSensorType  type;
+    int                 temp;
+    int                 hum;
+    int                 pres;
+} RpcMeteoSensor;
+
+class RpcMeteo
 {
 public:
-    void registerHandler(AsyncWebServer *server);
+    bool getMeteoSensors(std::vector<RpcMeteoSensor *> &sensors) const;
 
 private:
-    void _showSocketAll(uint8_t unitId, JsonDocument *out);
-    void _showSocket(uint8_t unitId, const String &name, JsonDocument *out);
-    bool _setSocketStatus(uint8_t unitId, const String &name, const String &status, JsonDocument *out);
+
 };
 
-#endif /* __SOCKET_HANDLER_HPP__ */
+#endif /* __RPC_METEO_HPP__ */

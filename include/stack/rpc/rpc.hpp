@@ -9,23 +9,26 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __SOCKET_HANDLER_HPP__
-#define __SOCKET_HANDLER_HPP__
+#ifndef __RPC_HPP__
+#define __RPC_HPP__
 
-#include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
+#include "rpcmeteo.hpp"
+#include "rpcsocket.hpp"
+#include "stack/stack.hpp"
 
-#include "stack/rpc/rpc.hpp"
+#define RPC_DEFAULT_UNIT    STACK_DEFAULT_UNIT
 
-class SocketHandler
+class RpcClass
 {
 public:
-    void registerHandler(AsyncWebServer *server);
+    RpcMeteo *getMeteo() { return &_meteo; }
+    RpcSockets *getSocket() { return &_socket; }
 
 private:
-    void _showSocketAll(uint8_t unitId, JsonDocument *out);
-    void _showSocket(uint8_t unitId, const String &name, JsonDocument *out);
-    bool _setSocketStatus(uint8_t unitId, const String &name, const String &status, JsonDocument *out);
+    RpcMeteo    _meteo;
+    RpcSockets  _socket;
 };
 
-#endif /* __SOCKET_HANDLER_HPP__ */
+extern RpcClass Rpc;
+
+#endif /* __RPC_HPP__ */

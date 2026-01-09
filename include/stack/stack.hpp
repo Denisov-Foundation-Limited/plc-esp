@@ -17,8 +17,9 @@
 
 #include "HTTPClient.h"
 
-#define STACK_UNIT_PROC_MS    5000
-#define STACK_UNIT_COUNT      8
+#define STACK_UNIT_PROC_MS  5000
+#define STACK_UNIT_COUNT    8
+#define STACK_DEFAULT_UNIT  0
 
 typedef struct {
     size_t  id;
@@ -38,6 +39,7 @@ public:
     void begin();
     void loop();
     void getUnits(bool enabled, std::vector<StackUnit*> &units);
+    bool getUnit(uint8_t unitId, StackUnit** unit);
 
 private:
     std::array<StackUnit, STACK_UNIT_COUNT> _units;

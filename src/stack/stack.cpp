@@ -92,6 +92,17 @@ void StackClass::getUnits(bool enabled, std::vector<StackUnit*> &units)
     }
 }
 
+bool StackClass::getUnit(uint8_t unitId, StackUnit** unit)
+{
+    for (size_t i = 0; i < _units.size(); i++) {
+        if (_units[i].enabled && _units[i].id == unitId) {
+            *unit = &_units[i];
+            return true;
+        }
+    }
+    return false;
+}
+
 /*********************************************************************/
 /*                                                                   */
 /*                          PRIVATE FUNCTIONS                        */

@@ -22,27 +22,20 @@ void SocketHandler::registerHandler(AsyncWebServer *server)
     server->on("/socket", HTTP_GET, [this](AsyncWebServerRequest *req) {
         JsonDocument    jOut;
         String          sOut;
-        Socket          *socket = nullptr;
+        RpcSocket       *socket = nullptr;
+        uint8_t         unit = RPC_DEFAULT_UNIT;
+
+        if (req->hasArg(F("unit"))) {
+            unit = req->arg(F("unit")).toInt();
+        }
 
         if (!req->hasArg(F("name"))) {
-            _socketShow(nullptr, req, &jOut);
+            _showSocketAll(unit, &jOut);
         } else {
-            if (SocketCtrl.getSocket(req->arg(F("name")), &socket)) {
-                if (req->hasArg(F("status"))) {
-                    if (!_socketStatus(socket, req, &jOut)) {
-                        serializeJson(jOut, sOut);
-                        req->send(403, F("application/json"), sOut);
-                        return;
-                    }
-                } else {
-                    _socketShow(socket, req, &jOut);
-                }
+            if (req->hasArg(F("status"))) {
+                _setSocketStatus(unit, req->arg(F("name")), req->arg(F("status")), &jOut);
             } else {
-                jOut["result"] = false;
-                jOut["error"] = F("Socket not found");
-                serializeJson(jOut, sOut);
-                req->send(404, F("application/json"), sOut);
-                return;
+                _showSocket(unit, req->arg(F("name")), &jOut);
             }
         }
 
@@ -57,39 +50,58 @@ void SocketHandler::registerHandler(AsyncWebServer *server)
 /*                                                                   */
 /*********************************************************************/
 
-void SocketHandler::_socketShow(Socket *socket, AsyncWebServerRequest *req, JsonDocument *out)
+void SocketHandler::_showSocketAll(uint8_t unitId, JsonDocument *out)
 {
-    if (socket != nullptr) {
+    std::vector< std::shared_ptr<RpcSocket> > sockets;
+
+    if (Rpc.getSocket()->getSockets(unitId, sockets)) {
+        for (size_t i = 0; i < sockets.size(); i++) {
+            (*out)[F("sockets")][i][F("name")] = sockets[i]->name;
+            (*out)[F("sockets")][i][F("status")] = sockets[i]->status;
+        }
+        (*out)["result"] = true;
+        return;
+    }
+
+    (*out)["result"] = false;
+}
+
+void SocketHandler::_showSocket(uint8_t unitId, const String &name, JsonDocument *out)
+{
+    std::shared_ptr<RpcSocket> socket;
+
+    if (Rpc.getSocket()->getSocket(unitId, name, socket)) {
         (*out)["name"] = socket->name;
         (*out)["status"] = socket->status;
         (*out)["result"] = true;
         return;
     }
 
-    std::vector<Socket *> socks;
-    SocketCtrl.getSockets(true, socks);
-
-    for (size_t i = 0; i < socks.size(); i++) {
-        (*out)[F("sockets")][i][F("name")] = socks[i]->name;
-        (*out)[F("sockets")][i][F("status")] = socks[i]->status;
-    }
-    (*out)["result"] = true;
+    (*out)["error"] = F("Socket not found");
+    (*out)["result"] = false;
 }
 
-bool SocketHandler::_socketStatus(Socket *socket, AsyncWebServerRequest *req, JsonDocument *out)
+bool SocketHandler::_setSocketStatus(uint8_t unitId, const String &name, const String &status, JsonDocument *out)
 {
-    if (req->hasArg(F("status"))) {
-        if (req->arg(F("status")) == F("true")) {
-            SocketCtrl.setStatus(socket, true, true);
-        } else if (req->arg(F("status")) == F("false")) {
-            SocketCtrl.setStatus(socket, false, true);
-        } else if (req->arg(F("status")) == F("toggle")) {
-            SocketCtrl.setStatus(socket, !socket->status, true);
-        } else {
+    if (status == F("true")) {
+        if (!Rpc.getSocket()->setStatus(unitId, name, true)) {
             (*out)["result"] = false;
-            (*out)["error"] = F("Unknown socket status");
             return false;
         }
+    } else if (status == F("false")) {
+        if (!Rpc.getSocket()->setStatus(unitId, name, false)) {
+            (*out)["result"] = false;
+            return false;
+        }
+    } else if (status == F("toggle")) {
+        if (!Rpc.getSocket()->toggleStatus(unitId, name)) {
+            (*out)["result"] = false;
+            return false;
+        }
+    } else {
+        (*out)["result"] = false;
+        (*out)["error"] = F("Unknown socket status");
+        return false;
     }
 
     (*out)["result"] = true;

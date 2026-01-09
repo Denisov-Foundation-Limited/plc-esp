@@ -9,23 +9,25 @@
 /*                                                                    */
 /**********************************************************************/
 
-#ifndef __SOCKET_HANDLER_HPP__
-#define __SOCKET_HANDLER_HPP__
+#ifndef __RPC_SOCKET_HPP__
+#define __RPC_SOCKET_HPP__
 
-#include <ESPAsyncWebServer.h>
-#include <ArduinoJson.h>
+#include <Arduino.h>
+#include <vector>
+#include <memory>
 
-#include "stack/rpc/rpc.hpp"
+typedef struct {
+    String  name;
+    bool    status;
+} RpcSocket;
 
-class SocketHandler
+class RpcSockets
 {
 public:
-    void registerHandler(AsyncWebServer *server);
-
-private:
-    void _showSocketAll(uint8_t unitId, JsonDocument *out);
-    void _showSocket(uint8_t unitId, const String &name, JsonDocument *out);
-    bool _setSocketStatus(uint8_t unitId, const String &name, const String &status, JsonDocument *out);
+    bool getSocket(uint8_t unitId, const String &name, std::shared_ptr<RpcSocket> &socket) const;
+    bool getSockets(uint8_t unitId, std::vector< std::shared_ptr<RpcSocket> > &sockets) const;
+    bool setStatus(uint8_t unitId, const String &name, bool status);
+    bool toggleStatus(uint8_t unitId, const String &name);
 };
 
-#endif /* __SOCKET_HANDLER_HPP__ */
+#endif /* __RPC_SOCKET_HPP__ */
